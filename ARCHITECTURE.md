@@ -516,16 +516,20 @@ CoreUI uses CSS custom properties for theming:
 ```
 
 **Usage in Components**:
+{% raw %}
 ```javascript
 <div style={{ backgroundColor: 'var(--cui-primary)' }}>Content</div>
 ```
+{% endraw %}
 
 ### Component Styling
 
 **Inline Styles**:
+{% raw %}
 ```javascript
 <CCard style={{ marginBottom: '1rem' }}>
 ```
+{% endraw %}
 
 **Class Names** (with classnames utility):
 ```javascript
