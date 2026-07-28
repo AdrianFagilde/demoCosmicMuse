@@ -826,6 +826,7 @@ const handleSubmit = (e) => {
 
 ### Using Chart.js with CoreUI
 
+{% raw %}
 ```javascript
 import React from 'react'
 import { CCard, CCardBody, CCardHeader } from '@coreui/react'
@@ -864,6 +865,7 @@ const Dashboard = () => {
   )
 }
 ```
+{% endraw %}
 
 ### Chart Types
 
