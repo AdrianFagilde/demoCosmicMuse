@@ -1,0 +1,1 @@
+import{g as e,m as t}from"./jsx-runtime-isZM0QUB.js";var n=e(t());function r(...e){return(0,n.useMemo)(()=>e.every(e=>e==null)?null:t=>{e.forEach(e=>{i(e,t)})},e)}function i(e,t){if(e!=null)if(a(e))e(t);else try{e.current=t}catch{throw Error(`Cannot assign value "${t}" to ref "${e}"`)}}function a(e){return!!(e&&{}.toString.call(e)==`[object Function]`)}export{r as t};
