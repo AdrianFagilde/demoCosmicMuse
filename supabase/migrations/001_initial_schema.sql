@@ -250,60 +250,8 @@ SELECT 'Saxofón' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Saxo
 INSERT INTO instruments (name)
 SELECT 'Batería' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Batería');
 
--- Usuarios demo (se crean en auth.users + trigger crea profiles)
--- Admin
-INSERT INTO auth.users (
-  instance_id, id, aud, role, email, encrypted_password,
-  email_confirmed_at, raw_user_meta_data, created_at, updated_at
-)
-SELECT
-  '00000000-0000-0000-0000-000000000000',
-  gen_random_uuid(),
-  'authenticated',
-  'authenticated',
-  'admin@cosmomusic.com',
-  crypt('admin123', gen_salt('bf')),
-  now(),
-  '{"full_name": "Aurora Rivera", "username": "admin", "role": "admin"}'::jsonb,
-  now(),
-  now()
-WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@cosmomusic.com');
-
--- Estudiante 1
-INSERT INTO auth.users (
-  instance_id, id, aud, role, email, encrypted_password,
-  email_confirmed_at, raw_user_meta_data, created_at, updated_at
-)
-SELECT
-  '00000000-0000-0000-0000-000000000000',
-  gen_random_uuid(),
-  'authenticated',
-  'authenticated',
-  'maria.lopez@cosmomusic.com',
-  crypt('student123', gen_salt('bf')),
-  now(),
-  '{"full_name": "María López", "username": "maria", "role": "student", "instrument": "Piano", "level": "Intermedio", "teacher": "Clara Estévez", "phone": "+584121234567"}'::jsonb,
-  now(),
-  now()
-WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'maria.lopez@cosmomusic.com');
-
--- Estudiante 2
-INSERT INTO auth.users (
-  instance_id, id, aud, role, email, encrypted_password,
-  email_confirmed_at, raw_user_meta_data, created_at, updated_at
-)
-SELECT
-  '00000000-0000-0000-0000-000000000000',
-  gen_random_uuid(),
-  'authenticated',
-  'authenticated',
-  'javier.torres@cosmomusic.com',
-  crypt('student123', gen_salt('bf')),
-  now(),
-  '{"full_name": "Javier Torres", "username": "javier", "role": "student", "instrument": "Guitarra", "level": "Principiante", "teacher": "Luis Martínez", "phone": "+584123456789"}'::jsonb,
-  now(),
-  now()
-WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'javier.torres@cosmomusic.com');
+-- Usuarios demo: se crean via Supabase Dashboard → Authentication → Users
+-- O ejecutar el script seed-users.js despues del schema
 
 -- Completar perfiles de estudiantes con datos extra
 UPDATE profiles SET
