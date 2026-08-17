@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { routes } from '../routes'
 
 const AppContent = () => {
-  const { user } = useAuth()
+  const { profile } = useAuth()
   return (
     <CContainer className="px-4" lg>
       <Suspense fallback={<CSpinner color="primary" />}>
@@ -15,7 +15,7 @@ const AppContent = () => {
             if (!route.element) {
               return null
             }
-            const allowed = !route.roles || route.roles.includes(user?.role)
+            const allowed = !route.roles || route.roles.includes(profile?.role)
             return (
               <Route
                 key={idx}

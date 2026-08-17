@@ -17,7 +17,7 @@ import avatar8 from './../../assets/images/avatars/8.jpg'
 
 const AppHeaderDropdown = () => {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, profile, logout } = useAuth()
 
   const handleLogout = () => {
     logout()
@@ -31,11 +31,11 @@ const AppHeaderDropdown = () => {
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
         <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">
-          {user?.name ?? 'Usuario'}
+          {profile?.full_name ?? user?.email ?? 'Usuario'}
         </CDropdownHeader>
         <CDropdownItem disabled>
           <CIcon icon={cilUser} className="me-2" />
-          {user?.role === 'admin' ? 'Administrador' : 'Estudiante'}
+          {profile?.role === 'admin' ? 'Administrador' : 'Estudiante'}
         </CDropdownItem>
         <CDropdownDivider />
         <CDropdownItem

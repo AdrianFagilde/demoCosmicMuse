@@ -3,9 +3,9 @@ import CIcon from '@coreui/icons-react'
 import { cilSpeedometer, cilSchool, cilUser } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
-export const getNavigation = (user) => {
+export const getNavigation = (profile) => {
   const studentItems =
-    user?.role === 'student'
+    profile?.role === 'student'
       ? [
           {
             component: CNavItem,
@@ -23,7 +23,7 @@ export const getNavigation = (user) => {
       : []
 
   const adminItems =
-    user?.role === 'admin'
+    profile?.role === 'admin'
       ? [
           {
             component: CNavItem,

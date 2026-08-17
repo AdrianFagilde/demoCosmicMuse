@@ -18,8 +18,8 @@ import { getNavigation } from '../navigation'
 
 const AppSidebar = () => {
   const { sidebarShow, setSidebarShow, sidebarUnfoldable, toggleSidebarUnfoldable } = useApp()
-  const { user } = useAuth()
-  const navigation = useMemo(() => getNavigation(user), [user])
+  const { profile } = useAuth()
+  const navigation = useMemo(() => getNavigation(profile), [profile])
 
   return (
     <CSidebar
