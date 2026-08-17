@@ -170,8 +170,9 @@ CREATE POLICY "Authenticated read instruments" ON instruments
 -- 3. STORAGE
 -- =============================================
 
-INSERT INTO storage.buckets (id, name, public) VALUES ('payment-proofs', 'payment-proofs', false)
-ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public)
+SELECT 'payment-proofs', 'payment-proofs', false
+WHERE NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'payment-proofs');
 
 CREATE POLICY "Admin upload proof" ON storage.objects
   FOR INSERT TO authenticated
@@ -221,16 +222,24 @@ CREATE TRIGGER on_auth_user_created
 -- =============================================
 
 -- Instrumentos
-INSERT INTO instruments (name) VALUES
-  ('Piano'), ('Guitarra'), ('Violín'), ('Saxofón'), ('Batería')
-ON CONFLICT (name) DO NOTHING;
+INSERT INTO instruments (name)
+SELECT 'Piano' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Piano');
+INSERT INTO instruments (name)
+SELECT 'Guitarra' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Guitarra');
+INSERT INTO instruments (name)
+SELECT 'Violín' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Violín');
+INSERT INTO instruments (name)
+SELECT 'Saxofón' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Saxofón');
+INSERT INTO instruments (name)
+SELECT 'Batería' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Batería');
 
 -- Usuarios demo (se crean en auth.users + trigger crea profiles)
 -- Admin
 INSERT INTO auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, raw_user_meta_data, created_at, updated_at
-) VALUES (
+)
+SELECT
   '00000000-0000-0000-0000-000000000000',
   gen_random_uuid(),
   'authenticated',
@@ -241,13 +250,14 @@ INSERT INTO auth.users (
   '{"full_name": "Aurora Rivera", "username": "admin", "role": "admin"}'::jsonb,
   now(),
   now()
-) ON CONFLICT (email) DO NOTHING;
+WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@cosmomusic.com');
 
 -- Estudiante 1
 INSERT INTO auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, raw_user_meta_data, created_at, updated_at
-) VALUES (
+)
+SELECT
   '00000000-0000-0000-0000-000000000000',
   gen_random_uuid(),
   'authenticated',
@@ -258,13 +268,14 @@ INSERT INTO auth.users (
   '{"full_name": "María López", "username": "maria", "role": "student", "instrument": "Piano", "level": "Intermedio", "teacher": "Clara Estévez", "phone": "+584121234567"}'::jsonb,
   now(),
   now()
-) ON CONFLICT (email) DO NOTHING;
+WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'maria.lopez@cosmomusic.com');
 
 -- Estudiante 2
 INSERT INTO auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, raw_user_meta_data, created_at, updated_at
-) VALUES (
+)
+SELECT
   '00000000-0000-0000-0000-000000000000',
   gen_random_uuid(),
   'authenticated',
@@ -275,7 +286,7 @@ INSERT INTO auth.users (
   '{"full_name": "Javier Torres", "username": "javier", "role": "student", "instrument": "Guitarra", "level": "Principiante", "teacher": "Luis Martínez", "phone": "+584123456789"}'::jsonb,
   now(),
   now()
-) ON CONFLICT (email) DO NOTHING;
+WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'javier.torres@cosmomusic.com');
 
 -- Completar perfiles de estudiantes con datos extra
 UPDATE profiles SET
