@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 const Login = React.lazy(() => import('./views/pages/login/Login'))
+const Register = React.lazy(() => import('./views/pages/register/Register'))
 
 const RequireAuth = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -37,6 +38,7 @@ const App = () => {
         >
           <Routes>
             <Route exact path="/login" element={<Login />} />
+            <Route exact path="/register" element={<Register />} />
             <Route
               path="/*"
               element={

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   CAlert,
   CButton,
@@ -78,7 +78,14 @@ const Login = () => {
                       />
                     </CInputGroup>
                     <CRow>
-                      <CCol xs={12} className="text-end">
+                      <CCol xs={6}>
+                        <Link to="/register">
+                          <CButton color="link" className="px-0">
+                            ¿No tienes cuenta? Regístrate
+                          </CButton>
+                        </Link>
+                      </CCol>
+                      <CCol xs={6} className="text-end">
                         <CButton color="primary" className="px-4" type="submit" disabled={loading}>
                           {loading ? 'Entrando...' : 'Entrar'}
                         </CButton>
