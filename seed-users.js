@@ -7,32 +7,38 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function seed() {
   console.log('Logging in as admin...')
-  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-    email: 'admin@cosmomusic.com',
-    password: 'admin123',
+  const { data: authData, error: loginErr } = await supabase.auth.signInWithPassword({
+    email: 'admin@cosmomusic.com', password: 'admin123',
   })
+  if (loginErr) { console.error('Login failed:', loginErr.message); return }
+  console.log('Logged in as admin, ID:', authData.user.id)
 
-  if (authError) {
-    console.error('Login failed:', authError.message)
-    return
+  // Check if admin profile exists, create if not
+  const { data: existing } = await supabase.from('profiles').select('id').eq('id', authData.user.id).single()
+  if (!existing) {
+    console.log('Creating admin profile...')
+    const { error: e } = await supabase.from('profiles').insert({
+      id: authData.user.id,
+      full_name: 'Aurora Rivera',
+      username: 'admin',
+      email: 'admin@cosmomusic.com',
+      role: 'admin',
+    })
+    console.log(e ? `Error creating admin profile: ${e.message}` : 'Created admin profile')
+  } else {
+    console.log('Admin profile exists')
   }
 
-  console.log(`Logged in as ${authData.user.email}`)
+  // Fetch all profiles
+  const { data: profiles, error: pErr } = await supabase.from('profiles').select('id, email, role')
+  if (pErr) { console.error('Error fetching profiles:', pErr.message); return }
+  console.log(`Found ${profiles.length} profiles:`, profiles.map(p => `${p.email}(${p.role})`))
 
-  console.log('Fetching profiles...')
-  const { data: profiles, error } = await supabase.from('profiles').select('id, email, role')
+  const adminId = profiles.find(p => p.email === 'admin@cosmomusic.com')?.id
+  const mariaId = profiles.find(p => p.email === 'maria.lopez@cosmomusic.com')?.id
+  const javierId = profiles.find(p => p.email === 'javier.torres@cosmomusic.com')?.id
 
-  if (error) {
-    console.error('Error fetching profiles:', error.message)
-    return
-  }
-
-  console.log(`Found ${profiles.length} profiles`)
-
-  const adminId = profiles.find((p) => p.role === 'admin')?.id
-  const mariaId = profiles.find((p) => p.email === 'maria.lopez@cosmomusic.com')?.id
-  const javierId = profiles.find((p) => p.email === 'javier.torres@cosmomusic.com')?.id
-
+  // Update student profiles with extra data
   if (mariaId) {
     const { error: e } = await supabase.from('profiles').update({
       instrument: 'Piano', level: 'Intermedio', teacher: 'Clara Estévez',
@@ -51,6 +57,14 @@ async function seed() {
     console.log(e ? `Error updating Javier: ${e.message}` : 'Updated Javier profile')
   }
 
+  // Clear old seed data
+  await supabase.from('payment_reminders').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  await supabase.from('payments').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  await supabase.from('lessons').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  console.log('Cleared old seed data')
+
+  // Seed lessons
   if (mariaId && javierId) {
     const { error: e } = await supabase.from('lessons').insert([
       { student_id: mariaId, instrument: 'Piano', lesson_date: '2026-06-03', lesson_time: '17:00', duration: '45 min', teacher: 'Clara Estévez' },
@@ -59,6 +73,7 @@ async function seed() {
     console.log(e ? `Error seeding lessons: ${e.message}` : 'Seeded lessons')
   }
 
+  // Seed tasks
   if (mariaId && javierId && adminId) {
     const { error: e } = await supabase.from('tasks').insert([
       { title: 'Practicar escalas mayores y menores', description: 'Realiza 20 minutos de práctica de escalas con el metrónomo.', student_id: mariaId, assigned_by: adminId, due_date: '2026-06-03', status: 'En progreso', progress: 65 },
@@ -67,6 +82,7 @@ async function seed() {
     console.log(e ? `Error seeding tasks: ${e.message}` : 'Seeded tasks')
   }
 
+  // Seed payments
   if (mariaId && javierId && adminId) {
     const { error: e } = await supabase.from('payments').insert([
       { student_id: mariaId, amount: 50, payment_date: '2026-05-05', method: 'Pago móvil', frequency: 'Mensual', notes: 'Pago mensual de mayo', recorded_by: adminId },
@@ -75,12 +91,37 @@ async function seed() {
     console.log(e ? `Error seeding payments: ${e.message}` : 'Seeded payments')
   }
 
+  // Seed reminders
   if (mariaId && adminId) {
     const { error: e } = await supabase.from('payment_reminders').insert([
       { student_id: mariaId, message: 'Recordatorio de pago pendiente para este mes.', notify_whatsapp: false, schedule_at: '2026-06-01T09:00:00Z', interval_value: 7, interval_unit: 'Días', target_group: 'Morosos', active: true, created_by: adminId },
     ])
     console.log(e ? `Error seeding reminders: ${e.message}` : 'Seeded reminders')
   }
+
+  // Delete test user profiles
+  console.log('\nCleaning up test users...')
+  const testUsers = profiles.filter(p => !p.email.endsWith('@cosmomusic.com'))
+  if (testUsers.length) {
+    await supabase.from('profiles').delete().in('id', testUsers.map(p => p.id))
+    console.log(`Deleted ${testUsers.length} test profile(s)`)
+  }
+
+  // Verify login
+  console.log('\n--- Verification ---')
+  await supabase.auth.signOut()
+
+  const { error: adminLogin } = await supabase.auth.signInWithPassword({ email: 'admin@cosmomusic.com', password: 'admin123' })
+  console.log(adminLogin ? `Admin login FAILED: ${adminLogin.message}` : 'Admin login OK')
+
+  const { data: adminProfile } = await supabase.from('profiles').select('*').eq('email', 'admin@cosmomusic.com').single()
+  console.log(`Admin: ${adminProfile?.full_name} (${adminProfile?.role})`)
+
+  const { error: mariaLogin } = await supabase.auth.signInWithPassword({ email: 'maria.lopez@cosmomusic.com', password: 'student123' })
+  console.log(mariaLogin ? `Maria login FAILED: ${mariaLogin.message}` : 'Maria login OK')
+
+  const { data: mariaProfile } = await supabase.from('profiles').select('*').eq('email', 'maria.lopez@cosmomusic.com').single()
+  console.log(`Maria: ${mariaProfile?.full_name} (${mariaProfile?.role}) instrument: ${mariaProfile?.instrument}`)
 
   console.log('\nAll done!')
   process.exit(0)

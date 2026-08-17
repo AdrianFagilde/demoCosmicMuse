@@ -6,7 +6,6 @@
 -- 1. TABLAS
 -- =============================================
 
--- Perfiles (extiende auth.users)
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT NOT NULL,
@@ -25,7 +24,6 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Lecciones
 CREATE TABLE IF NOT EXISTS lessons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -37,7 +35,6 @@ CREATE TABLE IF NOT EXISTS lessons (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Tareas
 CREATE TABLE IF NOT EXISTS tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -51,7 +48,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Pagos
 CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -66,7 +62,6 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Recordatorios
 CREATE TABLE IF NOT EXISTS payment_reminders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
@@ -82,7 +77,6 @@ CREATE TABLE IF NOT EXISTS payment_reminders (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Log de notificaciones
 CREATE TABLE IF NOT EXISTS notification_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
@@ -95,7 +89,6 @@ CREATE TABLE IF NOT EXISTS notification_log (
   sent_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Instrumentos
 CREATE TABLE IF NOT EXISTS instruments (
   id SERIAL PRIMARY KEY,
   name TEXT UNIQUE NOT NULL
@@ -103,6 +96,8 @@ CREATE TABLE IF NOT EXISTS instruments (
 
 -- 2. ROW LEVEL SECURITY
 -- =============================================
+-- NOTE: Supabase JWT 'role' is always 'authenticated'.
+-- Custom role is in auth.jwt() -> 'user_metadata' ->> 'role'
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lessons ENABLE ROW LEVEL SECURITY;
@@ -115,18 +110,18 @@ ALTER TABLE instruments ENABLE ROW LEVEL SECURITY;
 -- Profiles
 DROP POLICY IF EXISTS "Admin full access profiles" ON profiles;
 CREATE POLICY "Admin full access profiles" ON profiles
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+  FOR ALL USING ((auth.jwt() -> 'user_metadata' ->> 'role') = 'admin');
 
 DROP POLICY IF EXISTS "Student own profile select" ON profiles;
 CREATE POLICY "Student own profile select" ON profiles
   FOR SELECT USING (
-    auth.jwt() ->> 'role' = 'student' AND id = auth.uid()
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'student' AND id = auth.uid()
   );
 
 DROP POLICY IF EXISTS "Student own profile update" ON profiles;
 CREATE POLICY "Student own profile update" ON profiles
   FOR UPDATE USING (
-    auth.jwt() ->> 'role' = 'student' AND id = auth.uid()
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'student' AND id = auth.uid()
   );
 
 DROP POLICY IF EXISTS "Authenticated can read all profiles" ON profiles;
@@ -136,45 +131,45 @@ CREATE POLICY "Authenticated can read all profiles" ON profiles
 -- Lessons
 DROP POLICY IF EXISTS "Admin full access lessons" ON lessons;
 CREATE POLICY "Admin full access lessons" ON lessons
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+  FOR ALL USING ((auth.jwt() -> 'user_metadata' ->> 'role') = 'admin');
 
 DROP POLICY IF EXISTS "Student own lessons" ON lessons;
 CREATE POLICY "Student own lessons" ON lessons
   FOR SELECT USING (
-    auth.jwt() ->> 'role' = 'student' AND student_id = auth.uid()
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'student' AND student_id = auth.uid()
   );
 
 -- Tasks
 DROP POLICY IF EXISTS "Admin full access tasks" ON tasks;
 CREATE POLICY "Admin full access tasks" ON tasks
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+  FOR ALL USING ((auth.jwt() -> 'user_metadata' ->> 'role') = 'admin');
 
 DROP POLICY IF EXISTS "Student own tasks select" ON tasks;
 CREATE POLICY "Student own tasks select" ON tasks
   FOR SELECT USING (
-    auth.jwt() ->> 'role' = 'student' AND student_id = auth.uid()
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'student' AND student_id = auth.uid()
   );
 
 DROP POLICY IF EXISTS "Student own tasks update" ON tasks;
 CREATE POLICY "Student own tasks update" ON tasks
   FOR UPDATE USING (
-    auth.jwt() ->> 'role' = 'student' AND student_id = auth.uid()
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'student' AND student_id = auth.uid()
   );
 
 -- Payments (solo admin)
 DROP POLICY IF EXISTS "Admin full access payments" ON payments;
 CREATE POLICY "Admin full access payments" ON payments
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+  FOR ALL USING ((auth.jwt() -> 'user_metadata' ->> 'role') = 'admin');
 
 -- Payment reminders (solo admin)
 DROP POLICY IF EXISTS "Admin full access reminders" ON payment_reminders;
 CREATE POLICY "Admin full access reminders" ON payment_reminders
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+  FOR ALL USING ((auth.jwt() -> 'user_metadata' ->> 'role') = 'admin');
 
 -- Notification log (solo admin)
 DROP POLICY IF EXISTS "Admin full access notifications" ON notification_log;
 CREATE POLICY "Admin full access notifications" ON notification_log
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+  FOR ALL USING ((auth.jwt() -> 'user_metadata' ->> 'role') = 'admin');
 
 -- Instruments (todos autenticados leen)
 DROP POLICY IF EXISTS "Authenticated read instruments" ON instruments;
@@ -193,7 +188,7 @@ CREATE POLICY "Admin upload proof" ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
     bucket_id = 'payment-proofs'
-    AND (auth.jwt() ->> 'role' = 'admin')
+    AND (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
   );
 
 DROP POLICY IF EXISTS "Admin read proofs" ON storage.objects;
@@ -201,16 +196,13 @@ CREATE POLICY "Admin read proofs" ON storage.objects
   FOR SELECT TO authenticated
   USING (
     bucket_id = 'payment-proofs'
-    AND (auth.jwt() ->> 'role' = 'admin')
+    AND (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
   );
 
 DROP POLICY IF EXISTS "Student read own proofs" ON storage.objects;
 CREATE POLICY "Student read own proofs" ON storage.objects
   FOR SELECT TO authenticated
-  USING (
-    bucket_id = 'payment-proofs'
-    AND (auth.jwt() ->> 'role' = 'student')
-  );
+  USING (bucket_id = 'payment-proofs');
 
 -- 4. TRIGGER: Auto-crear perfil al registrar usuario
 -- =============================================
@@ -235,10 +227,9 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
--- 5. DATOS SEED
+-- 5. INSTRUMENTOS
 -- =============================================
 
--- Instrumentos
 INSERT INTO instruments (name)
 SELECT 'Piano' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Piano');
 INSERT INTO instruments (name)
@@ -249,102 +240,3 @@ INSERT INTO instruments (name)
 SELECT 'Saxofón' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Saxofón');
 INSERT INTO instruments (name)
 SELECT 'Batería' WHERE NOT EXISTS (SELECT 1 FROM instruments WHERE name = 'Batería');
-
--- Usuarios demo: se crean via Supabase Dashboard → Authentication → Users
--- O ejecutar el script seed-users.js despues del schema
-
--- Completar perfiles de estudiantes con datos extra
-UPDATE profiles SET
-  instrument = 'Piano',
-  level = 'Intermedio',
-  teacher = 'Clara Estévez',
-  phone = '+584121234567',
-  progress = 82,
-  attendance = 92,
-  next_lesson = '2026-06-03 17:00',
-  status = 'Activo'
-WHERE email = 'maria.lopez@cosmomusic.com';
-
-UPDATE profiles SET
-  instrument = 'Guitarra',
-  level = 'Principiante',
-  teacher = 'Luis Martínez',
-  phone = '+584123456789',
-  progress = 68,
-  attendance = 88,
-  next_lesson = '2026-06-02 18:30',
-  status = 'Activo'
-WHERE email = 'javier.torres@cosmomusic.com';
-
--- Lecciones seed
-INSERT INTO lessons (student_id, instrument, lesson_date, lesson_time, duration, teacher)
-SELECT
-  (SELECT id FROM profiles WHERE email = 'maria.lopez@cosmomusic.com'),
-  'Piano', '2026-06-03', '17:00', '45 min', 'Clara Estévez'
-WHERE NOT EXISTS (SELECT 1 FROM lessons LIMIT 1);
-
-INSERT INTO lessons (student_id, instrument, lesson_date, lesson_time, duration, teacher)
-SELECT
-  (SELECT id FROM profiles WHERE email = 'javier.torres@cosmomusic.com'),
-  'Guitarra', '2026-06-02', '18:30', '60 min', 'Luis Martínez'
-WHERE NOT EXISTS (SELECT 1 FROM lessons WHERE instrument = 'Guitarra');
-
--- Tareas seed
-INSERT INTO tasks (title, description, student_id, assigned_by, due_date, status, progress)
-SELECT
-  'Practicar escalas mayores y menores',
-  'Realiza 20 minutos de práctica de escalas con el metrónomo.',
-  (SELECT id FROM profiles WHERE email = 'maria.lopez@cosmomusic.com'),
-  (SELECT id FROM profiles WHERE email = 'admin@cosmomusic.com'),
-  '2026-06-03',
-  'En progreso',
-  65
-WHERE NOT EXISTS (SELECT 1 FROM tasks LIMIT 1);
-
-INSERT INTO tasks (title, description, student_id, assigned_by, due_date, status, progress)
-SELECT
-  'Ejercicio de arpegios en Mi mayor',
-  'Completa el ejercicio de arpegios en la guitarra con tempo constante.',
-  (SELECT id FROM profiles WHERE email = 'javier.torres@cosmomusic.com'),
-  (SELECT id FROM profiles WHERE email = 'admin@cosmomusic.com'),
-  '2026-06-05',
-  'Pendiente',
-  25
-WHERE NOT EXISTS (SELECT 1 FROM tasks WHERE title = 'Ejercicio de arpegios en Mi mayor');
-
--- Pagos seed
-INSERT INTO payments (student_id, amount, payment_date, method, frequency, notes, recorded_by)
-SELECT
-  (SELECT id FROM profiles WHERE email = 'maria.lopez@cosmomusic.com'),
-  50,
-  '2026-05-05',
-  'Pago móvil',
-  'Mensual',
-  'Pago mensual de mayo',
-  (SELECT id FROM profiles WHERE email = 'admin@cosmomusic.com')
-WHERE NOT EXISTS (SELECT 1 FROM payments LIMIT 1);
-
-INSERT INTO payments (student_id, amount, payment_date, method, frequency, notes, recorded_by)
-SELECT
-  (SELECT id FROM profiles WHERE email = 'javier.torres@cosmomusic.com'),
-  45,
-  '2026-05-10',
-  'Efectivo',
-  'Mensual',
-  'Pago de suscripción de mayo',
-  (SELECT id FROM profiles WHERE email = 'admin@cosmomusic.com')
-WHERE NOT EXISTS (SELECT 1 FROM payments WHERE amount = 45);
-
--- Recordatorios seed
-INSERT INTO payment_reminders (student_id, message, notify_whatsapp, schedule_at, interval_value, interval_unit, target_group, active, created_by)
-SELECT
-  (SELECT id FROM profiles WHERE email = 'maria.lopez@cosmomusic.com'),
-  'Recordatorio de pago pendiente para este mes.',
-  false,
-  '2026-06-01T09:00:00Z',
-  7,
-  'Días',
-  'Morosos',
-  true,
-  (SELECT id FROM profiles WHERE email = 'admin@cosmomusic.com')
-WHERE NOT EXISTS (SELECT 1 FROM payment_reminders LIMIT 1);
