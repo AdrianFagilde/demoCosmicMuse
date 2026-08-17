@@ -1,18 +1,34 @@
-import React from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
+import React, { useEffect, useState } from 'react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CSpinner } from '@coreui/react'
 import { cilSchool, cilPeople, cilCalendar, cilChart } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 
-import { summary, students, tasks } from '../../data/academy'
 import { useAuth } from '../../context/AuthContext'
+import useSupabaseStudents from '../../hooks/useSupabaseStudents'
+import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 
 const Dashboard = () => {
-  const { user } = useAuth()
-  const isStudent = user?.role === 'student'
+  const { user, profile } = useAuth()
+  const isStudent = profile?.role === 'student'
+  const { students, getSummary } = useSupabaseStudents()
+  const { tasks } = useSupabaseTasks(user?.id)
+  const [summary, setSummary] = useState({
+    activeStudents: 0,
+    lessonsThisWeek: 0,
+    teachers: 0,
+    availableInstruments: [],
+  })
+
+  useEffect(() => {
+    getSummary().then(setSummary)
+  }, [getSummary])
+
   const recentTasks = tasks
-    .filter((task) => (isStudent ? task.student === user?.name : true))
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    .filter((task) => (isStudent ? task.student_id === user?.id : true))
+    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
     .slice(0, 3)
+
+  const currentStudent = students.find((s) => s.email === user?.email)
 
   return (
     <>
@@ -64,7 +80,7 @@ const Dashboard = () => {
       </CRow>
 
       <CCard className="mb-4">
-        <CCardHeader>Bienvenido a Cosmic Muse Academy</CCardHeader>
+        <CCardHeader>Bienvenido a Cosmo Music Academy</CCardHeader>
         <CCardBody>
           <p className="text-body-secondary">
             {isStudent
@@ -79,7 +95,7 @@ const Dashboard = () => {
           {students.slice(0, 3).map((student) => (
             <CCol xs={12} md={4} key={student.id} className="mb-3">
               <CCard>
-                <CCardHeader>{student.name}</CCardHeader>
+                <CCardHeader>{student.full_name}</CCardHeader>
                 <CCardBody>
                   <div className="text-medium-emphasis small">Instrumento</div>
                   <div className="fw-semibold mb-2">{student.instrument}</div>
@@ -103,7 +119,12 @@ const Dashboard = () => {
               <CCardHeader>Tu próxima clase</CCardHeader>
               <CCardBody>
                 <div className="fw-semibold">
-                  {students.find((item) => item.email === user?.email)?.nextLesson}
+                  {currentStudent?.next_lesson
+                    ? new Date(currentStudent.next_lesson).toLocaleString('es-ES', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })
+                    : 'Sin programar'}
                 </div>
                 <div className="text-body-secondary">Horario asignado por tu profesor</div>
               </CCardBody>
@@ -113,9 +134,7 @@ const Dashboard = () => {
             <CCard>
               <CCardHeader>Progreso actual</CCardHeader>
               <CCardBody>
-                <div className="fw-semibold">
-                  {students.find((item) => item.email === user?.email)?.progress}%
-                </div>
+                <div className="fw-semibold">{currentStudent?.progress || 0}%</div>
                 <div className="text-body-secondary">Avance en tu plan de estudio</div>
               </CCardBody>
             </CCard>
@@ -146,8 +165,8 @@ const Dashboard = () => {
                   {recentTasks.map((task) => (
                     <tr key={task.id}>
                       <td>{task.title}</td>
-                      <td>{task.student}</td>
-                      <td>{task.dueDate}</td>
+                      <td>{task.profiles?.full_name || '—'}</td>
+                      <td>{task.due_date}</td>
                       <td>{task.status}</td>
                     </tr>
                   ))}

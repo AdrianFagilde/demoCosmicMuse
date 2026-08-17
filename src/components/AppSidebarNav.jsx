@@ -6,9 +6,11 @@ import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'
 
 import { CBadge, CNavLink, CSidebarNav } from '@coreui/react'
-import { getCurrentUser } from '../auth'
+import { useAuth } from '../context/AuthContext'
 
 export const AppSidebarNav = ({ items }) => {
+  const { profile } = useAuth()
+
   const navLink = (name, icon, badge, indent = false) => {
     return (
       <>
@@ -61,13 +63,11 @@ export const AppSidebarNav = ({ items }) => {
     )
   }
 
-  const currentUser = getCurrentUser()
-
   const isAllowed = (item) => {
     if (!item.roles || item.roles.length === 0) {
       return true
     }
-    return item.roles.includes(currentUser?.role)
+    return item.roles.includes(profile?.role)
   }
 
   const filterItems = (navItems) => {

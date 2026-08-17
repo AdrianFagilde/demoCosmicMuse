@@ -1,46 +1,64 @@
-import React, { useState } from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CNav, CNavItem, CNavLink, CRow } from '@coreui/react'
+import React, { useEffect, useState } from 'react'
+import { CCard, CCardBody, CCardHeader, CCol, CNav, CNavItem, CNavLink, CRow, CSpinner } from '@coreui/react'
 
 import { useAuth } from '../../context/AuthContext'
-import usePayments from '../../hooks/usePayments'
-import useReminders from '../../hooks/useReminders'
-import useNotificationLog from '../../hooks/useNotificationLog'
+import useSupabaseStudents from '../../hooks/useSupabaseStudents'
+import useSupabasePayments from '../../hooks/useSupabasePayments'
+import useSupabaseReminders from '../../hooks/useSupabaseReminders'
+import useSupabaseNotifications from '../../hooks/useSupabaseNotifications'
 
 import PaymentForm from './payments/PaymentForm'
 import PaymentHistory from './payments/PaymentHistory'
 import ReminderPanel from './payments/ReminderPanel'
 import StudentBalances from './payments/StudentBalances'
 import NotificationLog from './payments/NotificationLog'
-import { students } from '../../data/academy'
 
 const Payments = () => {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [activeTab, setActiveTab] = useState('payments')
   const [filterText, setFilterText] = useState('')
   const [filterStatus, setFilterStatus] = useState('Todos')
 
-  const { payments, addPayment, studentBalances } = usePayments(user)
-  const { notificationLog, addEntries, notifyBrowser } = useNotificationLog()
-  const { upcomingReminders, addReminder, sendReminder } = useReminders(studentBalances, addEntries)
+  const { students } = useSupabaseStudents()
+  const { payments, addPayment, getStudentBalances } = useSupabasePayments(user?.id)
+  const { upcomingReminders, addReminder, sendReminder } = useSupabaseReminders(user?.id)
+  const { entries: notificationLog, addEntries, notifyBrowser } = useSupabaseNotifications()
+  const [studentBalances, setStudentBalances] = useState([])
 
-  const studentOptions = students.map((s) => ({ value: s.id, label: s.name }))
+  useEffect(() => {
+    if (students.length > 0) {
+      getStudentBalances(students).then(setStudentBalances)
+    }
+  }, [students, getStudentBalances, payments])
 
-  const handleSendReminder = (reminder, trigger) => {
-    sendReminder(reminder, trigger)
-    const recipients = studentBalances.filter((s) => {
-      if (reminder.targetGroup === 'Todos') return true
-      if (reminder.targetGroup === 'Morosos') return s.paymentStatus === 'Moroso'
-      if (reminder.targetGroup === 'Pagados') return s.paymentStatus === 'Pagado'
-      return String(s.id) === String(reminder.studentId)
-    })
-    const methodLabel = reminder.notifyWhatsApp ? 'App + WhatsApp' : 'App'
-    if (recipients.length > 0) {
-      notifyBrowser(
-        `Recordatorio ${methodLabel}`,
-        `${recipients.length} notificaciones enviadas a ${reminder.targetGroup}`,
-      )
+  const studentOptions = students.map((s) => ({ value: s.id, label: s.full_name }))
+
+  const handleSendReminder = async (reminder, trigger) => {
+    const entries = await sendReminder(reminder, trigger, studentBalances)
+    if (entries && entries.length > 0) {
+      await addEntries(entries)
+      const recipients = studentBalances.filter((s) => {
+        if (reminder.target_group === 'Todos') return true
+        if (reminder.target_group === 'Morosos') return s.paymentStatus === 'Moroso'
+        if (reminder.target_group === 'Pagados') return s.paymentStatus === 'Pagado'
+        return String(s.id) === String(reminder.student_id)
+      })
+      const methodLabel = reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'
+      if (recipients.length > 0) {
+        notifyBrowser(
+          `Recordatorio ${methodLabel}`,
+          `${recipients.length} notificaciones enviadas a ${reminder.target_group}`,
+        )
+      }
     }
   }
+
+  const mappedPayments = payments.map((p) => ({
+    ...p,
+    studentName: p.profiles?.full_name || '—',
+    recordedBy: p.recorder?.full_name || 'Administrador',
+    date: p.payment_date,
+  }))
 
   return (
     <>
@@ -130,7 +148,7 @@ const Payments = () => {
           upcomingReminders={upcomingReminders}
           onAddReminder={addReminder}
           onSendReminder={handleSendReminder}
-          userName={user?.name}
+          userName={profile?.full_name}
         />
       )}
 
@@ -146,7 +164,7 @@ const Payments = () => {
 
       {activeTab === 'history' && (
         <>
-          <PaymentHistory payments={payments} />
+          <PaymentHistory payments={mappedPayments} />
           <NotificationLog entries={notificationLog} />
         </>
       )}

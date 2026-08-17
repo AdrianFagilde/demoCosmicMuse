@@ -30,11 +30,11 @@ const NotificationLog = ({ entries }) => {
                 <tbody>
                   {entries.map((entry) => (
                     <tr key={entry.id}>
-                      <td>{entry.studentName}</td>
+                      <td>{entry.student_name}</td>
                       <td>{entry.message}</td>
                       <td>{entry.method}</td>
-                      <td>{formatDateTime(entry.sentAt)}</td>
-                      <td>{entry.trigger}</td>
+                      <td>{formatDateTime(entry.sent_at)}</td>
+                      <td>{entry.trigger_type}</td>
                     </tr>
                   ))}
                   {entries.length === 0 && (

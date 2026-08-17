@@ -23,7 +23,6 @@ const PaymentHistory = ({ payments }) => {
             <CTable hover responsive>
               <CTableHead>
                 <CTableRow>
-                  <CTableHeaderCell>ID</CTableHeaderCell>
                   <CTableHeaderCell>Estudiante</CTableHeaderCell>
                   <CTableHeaderCell>Monto</CTableHeaderCell>
                   <CTableHeaderCell>Fecha</CTableHeaderCell>
@@ -37,13 +36,14 @@ const PaymentHistory = ({ payments }) => {
               <CTableBody>
                 {payments.map((payment) => (
                   <CTableRow key={payment.id}>
-                    <CTableDataCell>{payment.id}</CTableDataCell>
                     <CTableDataCell>{payment.studentName}</CTableDataCell>
-                    <CTableDataCell>${payment.amount.toFixed(2)}</CTableDataCell>
+                    <CTableDataCell>${Number(payment.amount).toFixed(2)}</CTableDataCell>
                     <CTableDataCell>{payment.date}</CTableDataCell>
                     <CTableDataCell>{payment.method}</CTableDataCell>
                     <CTableDataCell>{payment.frequency}</CTableDataCell>
-                    <CTableDataCell>{payment.proof || 'No cargado'}</CTableDataCell>
+                    <CTableDataCell>
+                      {payment.proof_name || 'No cargado'}
+                    </CTableDataCell>
                     <CTableDataCell>{payment.notes}</CTableDataCell>
                     <CTableDataCell>{payment.recordedBy}</CTableDataCell>
                   </CTableRow>

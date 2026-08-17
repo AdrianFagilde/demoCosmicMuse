@@ -1,10 +1,6 @@
 import React, { useState } from 'react'
 import {
   CButton,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
   CForm,
   CFormInput,
   CFormLabel,
@@ -13,6 +9,7 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
+  CCol,
 } from '@coreui/react'
 import { cilCloudUpload, cilPlus } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
@@ -27,28 +24,28 @@ const PaymentForm = ({ studentOptions, onSubmit }) => {
     date: '',
     method: paymentMethods[0],
     frequency: paymentsFrequency[0],
-    proof: '',
     notes: '',
   })
+  const [proofFile, setProofFile] = useState(null)
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    onSubmit(form)
+    await onSubmit(form, proofFile)
     setForm({
       studentId: studentOptions[0]?.value || '',
       amount: '',
       date: '',
       method: paymentMethods[0],
       frequency: paymentsFrequency[0],
-      proof: '',
       notes: '',
     })
+    setProofFile(null)
   }
 
   const handleProofChange = (event) => {
     const file = event.target.files?.[0]
     if (!file) return
-    setForm((current) => ({ ...current, proof: file.name }))
+    setProofFile(file)
   }
 
   return (
@@ -123,7 +120,7 @@ const PaymentForm = ({ studentOptions, onSubmit }) => {
               accept="image/*"
             />
           </CInputGroup>
-          {form.proof && <div className="form-text">Archivo seleccionado: {form.proof}</div>}
+          {proofFile && <div className="form-text">Archivo seleccionado: {proofFile.name}</div>}
         </CCol>
         <CCol md={12}>
           <CFormTextarea

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import {
   CBadge,
   CButton,
@@ -13,6 +13,7 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
+  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -23,7 +24,8 @@ import {
 import { cilCheckCircle, cilPencil, cilTrash } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
-import { students, tasks as initialTasks } from '../../data/academy'
+import useSupabaseStudents from '../../hooks/useSupabaseStudents'
+import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 
 const statusColors = {
   Pendiente: 'warning',
@@ -32,74 +34,57 @@ const statusColors = {
 }
 
 const Tasks = () => {
-  const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
-  const [tasks, setTasks] = useState(() => initialTasks.map((t) => ({ ...t })))
+  const { user, profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
+  const { students } = useSupabaseStudents()
+  const { tasks, loading, addTask, deleteTask, changeTaskStatus, changeTaskProgress } =
+    useSupabaseTasks(user?.id)
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    student: students[0]?.name || '',
+    studentId: students[0]?.id || '',
     dueDate: '',
     status: 'Pendiente',
     progress: 0,
   })
 
-  const studentTasks = useMemo(
-    () => tasks.filter((task) => task.student === user?.name),
-    [tasks, user],
-  )
-
+  const studentTasks = tasks.filter((task) => task.student_id === user?.id)
   const visibleTasks = isAdmin ? tasks : studentTasks
 
-  const handleAddTask = (event) => {
+  const handleAddTask = async (event) => {
     event.preventDefault()
-    if (!newTask.title || !newTask.description || !newTask.dueDate || !newTask.student) {
+    if (!newTask.title || !newTask.description || !newTask.dueDate || !newTask.studentId) {
       return
     }
-    setTasks((current) => [
-      ...current,
-      {
-        id: current.length + 1,
-        ...newTask,
-        assignedBy: user?.name || 'Administrador',
-      },
-    ])
+    await addTask({
+      title: newTask.title,
+      description: newTask.description,
+      studentId: newTask.studentId,
+      assignedBy: profile.id,
+      dueDate: newTask.dueDate,
+      status: newTask.status,
+      progress: newTask.progress,
+    })
     setNewTask({
       title: '',
       description: '',
-      student: students[0]?.name || '',
+      studentId: students[0]?.id || '',
       dueDate: '',
       status: 'Pendiente',
       progress: 0,
     })
   }
 
-  const handleDelete = (taskId) => {
-    setTasks((current) => current.filter((task) => task.id !== taskId))
+  const handleDelete = async (taskId) => {
+    await deleteTask(taskId)
   }
 
-  const handleStatusChange = (taskId, status) => {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? { ...task, status, progress: status === 'Completado' ? 100 : task.progress }
-          : task,
-      ),
-    )
+  const handleStatusChange = async (taskId, status) => {
+    await changeTaskStatus(taskId, status)
   }
 
-  const handleProgressChange = (taskId, value) => {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              progress: Number(value),
-              status: Number(value) === 100 ? 'Completado' : task.status,
-            }
-          : task,
-      ),
-    )
+  const handleProgressChange = async (taskId, value) => {
+    await changeTaskProgress(taskId, value)
   }
 
   return (
@@ -138,14 +123,14 @@ const Tasks = () => {
                     <CCol md={6}>
                       <CFormSelect
                         label="Asignar a"
-                        value={newTask.student}
+                        value={newTask.studentId}
                         onChange={(event) =>
-                          setNewTask({ ...newTask, student: event.target.value })
+                          setNewTask({ ...newTask, studentId: event.target.value })
                         }
                       >
                         {students.map((student) => (
-                          <option key={student.id} value={student.name}>
-                            {student.name}
+                          <option key={student.id} value={student.id}>
+                            {student.full_name}
                           </option>
                         ))}
                       </CFormSelect>
@@ -198,102 +183,104 @@ const Tasks = () => {
       <CCard>
         <CCardHeader>{isAdmin ? 'Tareas asignadas' : 'Tus tareas'}</CCardHeader>
         <CCardBody>
-          <CTable hover responsive>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>ID</CTableHeaderCell>
-                <CTableHeaderCell>Título</CTableHeaderCell>
-                <CTableHeaderCell>Estudiante</CTableHeaderCell>
-                <CTableHeaderCell>Fecha de entrega</CTableHeaderCell>
-                <CTableHeaderCell>Estado</CTableHeaderCell>
-                <CTableHeaderCell>Progreso</CTableHeaderCell>
-                {isAdmin && <CTableHeaderCell>Acciones</CTableHeaderCell>}
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {visibleTasks.length > 0 ? (
-                visibleTasks.map((task) => (
-                  <CTableRow key={task.id}>
-                    <CTableDataCell>{task.id}</CTableDataCell>
-                    <CTableDataCell>
-                      <div className="fw-semibold">{task.title}</div>
-                      <div className="text-medium-emphasis small">{task.description}</div>
-                    </CTableDataCell>
-                    <CTableDataCell>{task.student}</CTableDataCell>
-                    <CTableDataCell>{task.dueDate}</CTableDataCell>
-                    <CTableDataCell>
-                      <CBadge color={statusColors[task.status] || 'secondary'}>
-                        {task.status}
-                      </CBadge>
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      <div className="d-flex align-items-center gap-2">
-                        <span>{task.progress}%</span>
-                        <div className="progress flex-grow-1" style={{ minWidth: 120 }}>
-                          <div
-                            className="progress-bar"
-                            role="progressbar"
-                            style={{ width: `${task.progress}%` }}
-                            aria-valuenow={task.progress}
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                          />
-                        </div>
-                      </div>
-                    </CTableDataCell>
-                    {isAdmin && (
+          {loading ? (
+            <CSpinner color="primary" />
+          ) : (
+            <CTable hover responsive>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell>Título</CTableHeaderCell>
+                  <CTableHeaderCell>Estudiante</CTableHeaderCell>
+                  <CTableHeaderCell>Fecha de entrega</CTableHeaderCell>
+                  <CTableHeaderCell>Estado</CTableHeaderCell>
+                  <CTableHeaderCell>Progreso</CTableHeaderCell>
+                  {isAdmin && <CTableHeaderCell>Acciones</CTableHeaderCell>}
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                {visibleTasks.length > 0 ? (
+                  visibleTasks.map((task) => (
+                    <CTableRow key={task.id}>
                       <CTableDataCell>
-                        <div className="d-flex gap-2">
-                          <CButton
-                            color="info"
-                            size="sm"
-                            onClick={() => handleStatusChange(task.id, 'En progreso')}
-                          >
-                            <CIcon icon={cilPencil} className="me-1" />
-                            En progreso
-                          </CButton>
-                          <CButton
-                            color="success"
-                            size="sm"
-                            onClick={() => handleStatusChange(task.id, 'Completado')}
-                          >
-                            <CIcon icon={cilCheckCircle} className="me-1" />
-                            Completar
-                          </CButton>
-                          <CButton color="danger" size="sm" onClick={() => handleDelete(task.id)}>
-                            <CIcon icon={cilTrash} className="me-1" />
-                            Eliminar
-                          </CButton>
-                        </div>
-                        <div className="mt-2">
-                          <CInputGroup size="sm">
-                            <CInputGroupText>Progreso</CInputGroupText>
-                            <CFormInput
-                              type="number"
-                              min={0}
-                              max={100}
-                              value={task.progress}
-                              onChange={(event) =>
-                                handleProgressChange(task.id, event.target.value)
-                              }
+                        <div className="fw-semibold">{task.title}</div>
+                        <div className="text-medium-emphasis small">{task.description}</div>
+                      </CTableDataCell>
+                      <CTableDataCell>{task.profiles?.full_name || '—'}</CTableDataCell>
+                      <CTableDataCell>{task.due_date}</CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color={statusColors[task.status] || 'secondary'}>
+                          {task.status}
+                        </CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <div className="d-flex align-items-center gap-2">
+                          <span>{task.progress}%</span>
+                          <div className="progress flex-grow-1" style={{ minWidth: 120 }}>
+                            <div
+                              className="progress-bar"
+                              role="progressbar"
+                              style={{ width: `${task.progress}%` }}
+                              aria-valuenow={task.progress}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
                             />
-                          </CInputGroup>
+                          </div>
                         </div>
                       </CTableDataCell>
-                    )}
+                      {isAdmin && (
+                        <CTableDataCell>
+                          <div className="d-flex gap-2">
+                            <CButton
+                              color="info"
+                              size="sm"
+                              onClick={() => handleStatusChange(task.id, 'En progreso')}
+                            >
+                              <CIcon icon={cilPencil} className="me-1" />
+                              En progreso
+                            </CButton>
+                            <CButton
+                              color="success"
+                              size="sm"
+                              onClick={() => handleStatusChange(task.id, 'Completado')}
+                            >
+                              <CIcon icon={cilCheckCircle} className="me-1" />
+                              Completar
+                            </CButton>
+                            <CButton color="danger" size="sm" onClick={() => handleDelete(task.id)}>
+                              <CIcon icon={cilTrash} className="me-1" />
+                              Eliminar
+                            </CButton>
+                          </div>
+                          <div className="mt-2">
+                            <CInputGroup size="sm">
+                              <CInputGroupText>Progreso</CInputGroupText>
+                              <CFormInput
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={task.progress}
+                                onChange={(event) =>
+                                  handleProgressChange(task.id, event.target.value)
+                                }
+                              />
+                            </CInputGroup>
+                          </div>
+                        </CTableDataCell>
+                      )}
+                    </CTableRow>
+                  ))
+                ) : (
+                  <CTableRow>
+                    <CTableDataCell colSpan={isAdmin ? 6 : 5} className="text-center">
+                      {isAdmin
+                        ? 'No hay tareas registradas todavía.'
+                        : 'No tienes tareas asignadas por el momento.'}
+                    </CTableDataCell>
                   </CTableRow>
-                ))
-              ) : (
-                <CTableRow>
-                  <CTableDataCell colSpan={isAdmin ? 7 : 6} className="text-center">
-                    {isAdmin
-                      ? 'No hay tareas registradas todavía.'
-                      : 'No tienes tareas asignadas por el momento.'}
-                  </CTableDataCell>
-                </CTableRow>
-              )}
-            </CTableBody>
-          </CTable>
+                )}
+              </CTableBody>
+            </CTable>
+          )}
         </CCardBody>
       </CCard>
     </>

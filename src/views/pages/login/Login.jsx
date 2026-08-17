@@ -20,21 +20,25 @@ import { cilLockLocked, cilUser } from '@coreui/icons'
 import { useAuth } from '../../../context/AuthContext'
 
 const Login = () => {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    const user = login(username, password)
-    if (user) {
-      setError('')
+    setLoading(true)
+    setError('')
+    try {
+      await login(email, password)
       navigate('/dashboard')
-      return
+    } catch (err) {
+      setError(err.message || 'Correo o contraseña incorrectos')
+    } finally {
+      setLoading(false)
     }
-    setError('Nombre de usuario o contraseña incorrectos')
   }
 
   return (
@@ -54,10 +58,11 @@ const Login = () => {
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
                       <CFormInput
-                        placeholder="Usuario"
-                        autoComplete="username"
-                        value={username}
-                        onChange={(event) => setUsername(event.target.value)}
+                        type="email"
+                        placeholder="Correo electrónico"
+                        autoComplete="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
                       />
                     </CInputGroup>
                     <CInputGroup className="mb-4">
@@ -74,8 +79,8 @@ const Login = () => {
                     </CInputGroup>
                     <CRow>
                       <CCol xs={12} className="text-end">
-                        <CButton color="primary" className="px-4" type="submit">
-                          Entrar
+                        <CButton color="primary" className="px-4" type="submit" disabled={loading}>
+                          {loading ? 'Entrando...' : 'Entrar'}
                         </CButton>
                       </CCol>
                     </CRow>
@@ -87,9 +92,16 @@ const Login = () => {
                   <div>
                     <h2>Cuentas de demostración</h2>
                     <p className="text-start">
-                      <strong>Administrador:</strong> admin / admin123
+                      <strong>Administrador:</strong>
                       <br />
-                      <strong>Estudiante:</strong> maria / student123
+                      admin@cosmomusic.com / admin123
+                      <br />
+                      <br />
+                      <strong>Estudiante:</strong>
+                      <br />
+                      maria.lopez@cosmomusic.com / student123
+                      <br />
+                      javier.torres@cosmomusic.com / student123
                     </p>
                   </div>
                 </CCardBody>

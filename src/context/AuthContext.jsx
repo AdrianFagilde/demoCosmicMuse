@@ -1,31 +1,72 @@
-import React, { createContext, useCallback, useContext, useState } from 'react'
-import {
-  getCurrentUser as fetchCurrentUser,
-  login as authLogin,
-  logout as authLogout,
-} from '../auth'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import supabase from '../lib/supabase'
+import { getCurrentSession, getProfile } from '../auth'
 
 const AuthContext = createContext(null)
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => fetchCurrentUser())
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const login = useCallback((username, password) => {
-    const logged = authLogin(username, password)
-    if (logged) {
-      setUser(logged)
-    }
-    return logged
+  useEffect(() => {
+    getCurrentSession().then((session) => {
+      if (session?.user) {
+        setUser(session.user)
+        getProfile(session.user.id).then((p) => {
+          setProfile(p)
+          setLoading(false)
+        })
+      } else {
+        setLoading(false)
+      }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        const p = await getProfile(session.user.id)
+        setProfile(p)
+      } else {
+        setUser(null)
+        setProfile(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const logout = useCallback(() => {
-    authLogout()
+  const login = useCallback(async (email, password) => {
+    const { user: authUser } = await loginWithSupabase(email, password)
+    return authUser
+  }, [])
+
+  const logout = useCallback(async () => {
+    await logoutSupabase()
     setUser(null)
+    setProfile(null)
   }, [])
 
-  const value = { user, login, logout, isAuthenticated: Boolean(user) }
+  const value = {
+    user,
+    profile,
+    login,
+    logout,
+    loading,
+    isAuthenticated: Boolean(user),
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+async function loginWithSupabase(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) throw error
+  return data
+}
+
+async function logoutSupabase() {
+  await supabase.auth.signOut()
 }
 
 export const useAuth = () => {

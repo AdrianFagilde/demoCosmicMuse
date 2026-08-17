@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   CBadge,
   CCard,
@@ -6,6 +6,7 @@ import {
   CCardHeader,
   CCol,
   CRow,
+  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -15,14 +16,21 @@ import {
 } from '@coreui/react'
 import { cilSchool, cilPeople, cilCalendar, cilCheckCircle } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
-import { getCurrentUser } from '../../auth'
 import { Link } from 'react-router-dom'
-import { students, summary } from '../../data/academy'
+import { useAuth } from '../../context/AuthContext'
+import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 
 const Students = () => {
-  const user = getCurrentUser()
+  const { profile } = useAuth()
+  const { students, loading } = useSupabaseStudents()
+  const [summary, setSummary] = useState({
+    activeStudents: 0,
+    lessonsThisWeek: 0,
+    teachers: 0,
+    availableInstruments: [],
+  })
 
-  if (!user || user.role !== 'admin') {
+  if (!profile || profile.role !== 'admin') {
     return (
       <CCard className="mb-4">
         <CCardBody>
@@ -35,6 +43,14 @@ const Students = () => {
     )
   }
 
+  if (loading) {
+    return (
+      <div className="text-center pt-4">
+        <CSpinner color="primary" />
+      </div>
+    )
+  }
+
   return (
     <>
       <CRow className="mb-4">
@@ -42,42 +58,9 @@ const Students = () => {
           <CCard className="h-100">
             <CCardBody>
               <div className="text-medium-emphasis small">Estudiantes activos</div>
-              <div className="fs-3 fw-semibold">{summary.activeStudents}</div>
+              <div className="fs-3 fw-semibold">{students.length}</div>
               <div className="text-body-secondary mt-2 d-flex align-items-center">
                 <CIcon icon={cilPeople} className="me-2" /> Total registrado
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol md={3} sm={6} className="mb-3">
-          <CCard className="h-100">
-            <CCardBody>
-              <div className="text-medium-emphasis small">Clases esta semana</div>
-              <div className="fs-3 fw-semibold">{summary.lessonsThisWeek}</div>
-              <div className="text-body-secondary mt-2 d-flex align-items-center">
-                <CIcon icon={cilCalendar} className="me-2" /> Horarios próximos
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol md={3} sm={6} className="mb-3">
-          <CCard className="h-100">
-            <CCardBody>
-              <div className="text-medium-emphasis small">Profesores</div>
-              <div className="fs-3 fw-semibold">{summary.teachers}</div>
-              <div className="text-body-secondary mt-2 d-flex align-items-center">
-                <CIcon icon={cilSchool} className="me-2" /> Mentores disponibles
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol md={3} sm={6} className="mb-3">
-          <CCard className="h-100">
-            <CCardBody>
-              <div className="text-medium-emphasis small">Instrumentos</div>
-              <div className="fs-3 fw-semibold">{summary.availableInstruments.length}</div>
-              <div className="text-body-secondary mt-2 d-flex align-items-center">
-                <CIcon icon={cilCheckCircle} className="me-2" /> Secciones abiertas
               </div>
             </CCardBody>
           </CCard>
@@ -89,7 +72,6 @@ const Students = () => {
           <CTable align="middle" className="mb-0 border" hover responsive>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell>ID</CTableHeaderCell>
                 <CTableHeaderCell>Nombre</CTableHeaderCell>
                 <CTableHeaderCell>Instrumento</CTableHeaderCell>
                 <CTableHeaderCell>Profesor</CTableHeaderCell>
@@ -102,9 +84,8 @@ const Students = () => {
             <CTableBody>
               {students.map((student) => (
                 <CTableRow key={student.id}>
-                  <CTableDataCell>{student.id}</CTableDataCell>
                   <CTableDataCell>
-                    <Link to={`/students/${student.id}`}>{student.name}</Link>
+                    <Link to={`/students/${student.id}`}>{student.full_name}</Link>
                   </CTableDataCell>
                   <CTableDataCell>{student.instrument}</CTableDataCell>
                   <CTableDataCell>{student.teacher}</CTableDataCell>
@@ -114,7 +95,14 @@ const Students = () => {
                     </div>
                   </CTableDataCell>
                   <CTableDataCell>{student.attendance}%</CTableDataCell>
-                  <CTableDataCell>{student.nextLesson}</CTableDataCell>
+                  <CTableDataCell>
+                    {student.next_lesson
+                      ? new Date(student.next_lesson).toLocaleString('es-ES', {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                        })
+                      : '—'}
+                  </CTableDataCell>
                   <CTableDataCell>
                     <CBadge color={student.status === 'Activo' ? 'success' : 'secondary'}>
                       {student.status}

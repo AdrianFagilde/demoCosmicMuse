@@ -1,0 +1,141 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import supabase from '../lib/supabase'
+
+const useSupabaseReminders = (userId) => {
+  const [reminders, setReminders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const remindersRef = useRef(reminders)
+
+  useEffect(() => {
+    remindersRef.current = reminders
+  }, [reminders])
+
+  const fetchReminders = useCallback(async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('payment_reminders')
+      .select('*, profiles!payment_reminders_student_id_fkey(full_name), creator:profiles!payment_reminders_created_by_fkey(full_name)')
+      .order('schedule_at', { ascending: true })
+    if (!error && data) {
+      setReminders(data)
+    }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    fetchReminders()
+  }, [fetchReminders])
+
+  const addReminder = useCallback(
+    async (reminderData) => {
+      const { error } = await supabase.from('payment_reminders').insert({
+        student_id: reminderData.targetGroup === 'Individual' ? reminderData.studentId : null,
+        message: reminderData.message,
+        notify_whatsapp: reminderData.notifyWhatsApp || false,
+        schedule_at: reminderData.scheduleAt,
+        interval_value: Number(reminderData.intervalValue) || 0,
+        interval_unit: reminderData.intervalUnit || 'Días',
+        target_group: reminderData.targetGroup,
+        active: reminderData.active !== false,
+        created_by: userId,
+      })
+      if (!error) {
+        await fetchReminders()
+      }
+      return !error
+    },
+    [fetchReminders, userId],
+  )
+
+  const updateReminder = useCallback(
+    async (reminderId, updates) => {
+      const { error } = await supabase
+        .from('payment_reminders')
+        .update(updates)
+        .eq('id', reminderId)
+      if (!error) {
+        setReminders((prev) =>
+          prev.map((r) => (r.id === reminderId ? { ...r, ...updates } : r)),
+        )
+      }
+      return !error
+    },
+    [],
+  )
+
+  const sendReminder = useCallback(
+    async (reminder, trigger, studentBalances) => {
+      const sentAt = new Date().toISOString()
+      const recipients = getReminderRecipients(reminder, studentBalances)
+      const methodLabel = reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'
+
+      const entries = recipients.map((student) => ({
+        student_id: student.id,
+        student_name: student.name || student.full_name,
+        target_group: reminder.target_group || 'Individual',
+        message: reminder.message,
+        method: methodLabel,
+        contact: student.email,
+        trigger_type: trigger,
+      }))
+
+      if (entries.length > 0) {
+        await supabase.from('notification_log').insert(entries)
+      }
+
+      const nextSchedule =
+        reminder.interval_value > 0
+          ? new Date(
+              new Date(reminder.schedule_at).getTime() +
+                (reminder.interval_unit === 'Horas'
+                  ? reminder.interval_value * 60 * 60 * 1000
+                  : reminder.interval_value * 24 * 60 * 60 * 1000),
+            ).toISOString()
+          : reminder.schedule_at
+
+      await updateReminder(reminder.id, {
+        last_sent: sentAt,
+        schedule_at: nextSchedule,
+      })
+
+      return entries
+    },
+    [updateReminder],
+  )
+
+  const getReminderRecipients = useCallback((reminder, studentBalances) => {
+    switch (reminder.target_group) {
+      case 'Todos':
+        return studentBalances
+      case 'Morosos':
+        return studentBalances.filter((s) => s.paymentStatus === 'Moroso')
+      case 'Pagados':
+        return studentBalances.filter((s) => s.paymentStatus === 'Pagado')
+      case 'Individual':
+      default:
+        return studentBalances.filter((s) => String(s.id) === String(reminder.student_id))
+    }
+  }, [])
+
+  const upcomingReminders = reminders
+    .filter((r) => r.active)
+    .sort((a, b) => new Date(a.schedule_at) - new Date(b.schedule_at))
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date()
+      remindersRef.current.forEach((reminder) => {
+        if (!reminder.active || !reminder.schedule_at) return
+        const scheduled = new Date(reminder.schedule_at)
+        if (scheduled <= now) {
+          sendReminder(reminder, 'Automático', [])
+        }
+      })
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [sendReminder])
+
+  return { reminders, upcomingReminders, loading, addReminder, updateReminder, sendReminder, refetch: fetchReminders }
+}
+
+export default useSupabaseReminders

@@ -7,6 +7,7 @@ import {
   CCardHeader,
   CCol,
   CRow,
+  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -15,14 +16,13 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { useAuth } from '../../context/AuthContext'
-import { lessons, students } from '../../data/academy'
+import useSupabaseLessons from '../../hooks/useSupabaseLessons'
 
 const MyProfile = () => {
-  const { user } = useAuth()
-  const student = students.find((item) => item.email === user?.email)
-  const nextLessons = lessons.filter((lesson) => lesson.student === student?.name)
+  const { user, profile } = useAuth()
+  const { lessons, loading } = useSupabaseLessons(user?.id)
 
-  if (!user || user.role !== 'student') {
+  if (!profile || profile.role !== 'student') {
     return (
       <CCard className="mb-4">
         <CCardBody>
@@ -41,33 +41,34 @@ const MyProfile = () => {
             <CCardBody>
               <div className="d-flex align-items-center gap-3 mb-3">
                 <CAvatar color="primary" size="xl">
-                  {student?.name
+                  {profile.full_name
                     .split(' ')
                     .map((word) => word[0])
                     .join('')}
                 </CAvatar>
                 <div>
-                  <h4 className="mb-1">{student?.name}</h4>
+                  <h4 className="mb-1">{profile.full_name}</h4>
                   <div className="text-medium-emphasis">Estudiante</div>
                 </div>
               </div>
               <div className="mb-3">
-                <strong>Instrumento:</strong> {student?.instrument}
+                <strong>Instrumento:</strong> {profile.instrument}
               </div>
               <div className="mb-3">
-                <strong>Nivel:</strong> {student?.level}
+                <strong>Nivel:</strong> {profile.level}
               </div>
               <div className="mb-3">
-                <strong>Profesor:</strong> {student?.teacher}
+                <strong>Profesor:</strong> {profile.teacher}
               </div>
               <div className="mb-3">
-                <strong>Email:</strong> {student?.email}
+                <strong>Email:</strong> {profile.email}
               </div>
               <div>
-                <strong>Progreso:</strong> <CBadge color="success">{student?.progress}%</CBadge>
+                <strong>Progreso:</strong>{' '}
+                <CBadge color="success">{profile.progress}%</CBadge>
               </div>
               <div className="mt-2">
-                <strong>Asistencia:</strong> {student?.attendance}%
+                <strong>Asistencia:</strong> {profile.attendance}%
               </div>
             </CCardBody>
           </CCard>
@@ -76,34 +77,38 @@ const MyProfile = () => {
           <CCard>
             <CCardHeader>Próximas clases</CCardHeader>
             <CCardBody>
-              <CTable hover responsive>
-                <CTableHead>
-                  <CTableRow>
-                    <CTableHeaderCell>Fecha</CTableHeaderCell>
-                    <CTableHeaderCell>Hora</CTableHeaderCell>
-                    <CTableHeaderCell>Instrumento</CTableHeaderCell>
-                    <CTableHeaderCell>Profesor</CTableHeaderCell>
-                    <CTableHeaderCell>Duración</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {nextLessons.length > 0 ? (
-                    nextLessons.map((lesson, index) => (
-                      <CTableRow key={index}>
-                        <CTableDataCell>{lesson.date}</CTableDataCell>
-                        <CTableDataCell>{lesson.time}</CTableDataCell>
-                        <CTableDataCell>{lesson.instrument}</CTableDataCell>
-                        <CTableDataCell>{lesson.teacher}</CTableDataCell>
-                        <CTableDataCell>{lesson.duration}</CTableDataCell>
-                      </CTableRow>
-                    ))
-                  ) : (
+              {loading ? (
+                <CSpinner color="primary" />
+              ) : (
+                <CTable hover responsive>
+                  <CTableHead>
                     <CTableRow>
-                      <CTableDataCell colSpan={5}>No hay clases programadas.</CTableDataCell>
+                      <CTableHeaderCell>Fecha</CTableHeaderCell>
+                      <CTableHeaderCell>Hora</CTableHeaderCell>
+                      <CTableHeaderCell>Instrumento</CTableHeaderCell>
+                      <CTableHeaderCell>Profesor</CTableHeaderCell>
+                      <CTableHeaderCell>Duración</CTableHeaderCell>
                     </CTableRow>
-                  )}
-                </CTableBody>
-              </CTable>
+                  </CTableHead>
+                  <CTableBody>
+                    {lessons.length > 0 ? (
+                      lessons.map((lesson) => (
+                        <CTableRow key={lesson.id}>
+                          <CTableDataCell>{lesson.lesson_date}</CTableDataCell>
+                          <CTableDataCell>{lesson.lesson_time}</CTableDataCell>
+                          <CTableDataCell>{lesson.instrument}</CTableDataCell>
+                          <CTableDataCell>{lesson.teacher}</CTableDataCell>
+                          <CTableDataCell>{lesson.duration}</CTableDataCell>
+                        </CTableRow>
+                      ))
+                    ) : (
+                      <CTableRow>
+                        <CTableDataCell colSpan={5}>No hay clases programadas.</CTableDataCell>
+                      </CTableRow>
+                    )}
+                  </CTableBody>
+                </CTable>
+              )}
             </CCardBody>
           </CCard>
         </CCol>

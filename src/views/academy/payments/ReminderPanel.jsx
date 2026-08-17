@@ -46,7 +46,7 @@ const ReminderPanel = ({
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    onAddReminder(form, userName)
+    onAddReminder(form)
     setForm({
       studentId: studentOptions[0]?.value || '',
       message: 'Recordatorio de pago próximo.',
@@ -180,16 +180,22 @@ const ReminderPanel = ({
                     <tbody>
                       {upcomingReminders.map((reminder) => (
                         <tr key={reminder.id}>
-                          <td>{reminder.studentName}</td>
-                          <td>{formatDateTime(reminder.scheduleAt)}</td>
-                          <td>{reminder.targetGroup || 'Individual'}</td>
-                          <td>{reminder.notifyWhatsApp ? 'App + WhatsApp' : 'App'}</td>
                           <td>
-                            {reminder.intervalValue > 0
-                              ? `${reminder.intervalValue} ${reminder.intervalUnit}`
+                            {reminder.target_group === 'Individual'
+                              ? reminder.profiles?.full_name || reminder.target_group
+                              : reminder.target_group}
+                          </td>
+                          <td>{formatDateTime(reminder.schedule_at)}</td>
+                          <td>{reminder.target_group || 'Individual'}</td>
+                          <td>{reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'}</td>
+                          <td>
+                            {reminder.interval_value > 0
+                              ? `${reminder.interval_value} ${reminder.interval_unit}`
                               : 'Sólo una vez'}
                           </td>
-                          <td>{reminder.lastSent ? formatDateTime(reminder.lastSent) : 'Nunca'}</td>
+                          <td>
+                            {reminder.last_sent ? formatDateTime(reminder.last_sent) : 'Nunca'}
+                          </td>
                           <td>
                             <CButton
                               size="sm"
