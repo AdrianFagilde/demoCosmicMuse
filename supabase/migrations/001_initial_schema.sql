@@ -1,5 +1,6 @@
 -- =============================================
 -- Cosmo Music Academy - Supabase Migration
+-- Idempotent: safe to run multiple times
 -- =============================================
 
 -- 1. TABLAS
@@ -112,58 +113,71 @@ ALTER TABLE notification_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE instruments ENABLE ROW LEVEL SECURITY;
 
 -- Profiles
+DROP POLICY IF EXISTS "Admin full access profiles" ON profiles;
 CREATE POLICY "Admin full access profiles" ON profiles
   FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
+DROP POLICY IF EXISTS "Student own profile select" ON profiles;
 CREATE POLICY "Student own profile select" ON profiles
   FOR SELECT USING (
     auth.jwt() ->> 'role' = 'student' AND id = auth.uid()
   );
 
+DROP POLICY IF EXISTS "Student own profile update" ON profiles;
 CREATE POLICY "Student own profile update" ON profiles
   FOR UPDATE USING (
     auth.jwt() ->> 'role' = 'student' AND id = auth.uid()
   );
 
+DROP POLICY IF EXISTS "Authenticated can read all profiles" ON profiles;
 CREATE POLICY "Authenticated can read all profiles" ON profiles
   FOR SELECT USING (auth.role() = 'authenticated');
 
 -- Lessons
+DROP POLICY IF EXISTS "Admin full access lessons" ON lessons;
 CREATE POLICY "Admin full access lessons" ON lessons
   FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
+DROP POLICY IF EXISTS "Student own lessons" ON lessons;
 CREATE POLICY "Student own lessons" ON lessons
   FOR SELECT USING (
     auth.jwt() ->> 'role' = 'student' AND student_id = auth.uid()
   );
 
 -- Tasks
+DROP POLICY IF EXISTS "Admin full access tasks" ON tasks;
 CREATE POLICY "Admin full access tasks" ON tasks
   FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
+DROP POLICY IF EXISTS "Student own tasks select" ON tasks;
 CREATE POLICY "Student own tasks select" ON tasks
   FOR SELECT USING (
     auth.jwt() ->> 'role' = 'student' AND student_id = auth.uid()
   );
 
+DROP POLICY IF EXISTS "Student own tasks update" ON tasks;
 CREATE POLICY "Student own tasks update" ON tasks
   FOR UPDATE USING (
     auth.jwt() ->> 'role' = 'student' AND student_id = auth.uid()
   );
 
 -- Payments (solo admin)
+DROP POLICY IF EXISTS "Admin full access payments" ON payments;
 CREATE POLICY "Admin full access payments" ON payments
   FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
 -- Payment reminders (solo admin)
+DROP POLICY IF EXISTS "Admin full access reminders" ON payment_reminders;
 CREATE POLICY "Admin full access reminders" ON payment_reminders
   FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
 -- Notification log (solo admin)
+DROP POLICY IF EXISTS "Admin full access notifications" ON notification_log;
 CREATE POLICY "Admin full access notifications" ON notification_log
   FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
 -- Instruments (todos autenticados leen)
+DROP POLICY IF EXISTS "Authenticated read instruments" ON instruments;
 CREATE POLICY "Authenticated read instruments" ON instruments
   FOR SELECT USING (auth.role() = 'authenticated');
 
@@ -174,6 +188,7 @@ INSERT INTO storage.buckets (id, name, public)
 SELECT 'payment-proofs', 'payment-proofs', false
 WHERE NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'payment-proofs');
 
+DROP POLICY IF EXISTS "Admin upload proof" ON storage.objects;
 CREATE POLICY "Admin upload proof" ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -181,6 +196,7 @@ CREATE POLICY "Admin upload proof" ON storage.objects
     AND (auth.jwt() ->> 'role' = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admin read proofs" ON storage.objects;
 CREATE POLICY "Admin read proofs" ON storage.objects
   FOR SELECT TO authenticated
   USING (
@@ -188,6 +204,7 @@ CREATE POLICY "Admin read proofs" ON storage.objects
     AND (auth.jwt() ->> 'role' = 'admin')
   );
 
+DROP POLICY IF EXISTS "Student read own proofs" ON storage.objects;
 CREATE POLICY "Student read own proofs" ON storage.objects
   FOR SELECT TO authenticated
   USING (
