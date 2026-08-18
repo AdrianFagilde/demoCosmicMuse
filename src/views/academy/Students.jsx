@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   CBadge,
   CCard,
   CCardBody,
   CCardHeader,
   CCol,
+  CFormInput,
+  CFormSelect,
   CRow,
   CSpinner,
   CTable,
@@ -14,7 +16,7 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import { cilSchool, cilPeople, cilCalendar, cilCheckCircle } from '@coreui/icons'
+import { cilPeople, cilSearch } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -23,12 +25,22 @@ import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 const Students = () => {
   const { profile } = useAuth()
   const { students, loading } = useSupabaseStudents()
-  const [summary, setSummary] = useState({
-    activeStudents: 0,
-    lessonsThisWeek: 0,
-    teachers: 0,
-    availableInstruments: [],
-  })
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('Todos')
+
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase()
+    return students.filter((s) => {
+      const matchesSearch =
+        !term ||
+        s.full_name?.toLowerCase().includes(term) ||
+        s.instrument?.toLowerCase().includes(term) ||
+        s.teacher?.toLowerCase().includes(term)
+      const matchesStatus =
+        statusFilter === 'Todos' || s.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [students, search, statusFilter])
 
   if (!profile || profile.role !== 'admin') {
     return (
@@ -67,8 +79,32 @@ const Students = () => {
         </CCol>
       </CRow>
       <CCard>
-        <CCardHeader>Perfiles</CCardHeader>
+        <CCardHeader className="d-flex justify-content-between align-items-center">
+          <span>Perfiles</span>
+          <span className="text-medium-emphasis small">{filtered.length} resultado(s)</span>
+        </CCardHeader>
         <CCardBody>
+          <CRow className="mb-3">
+            <CCol md={8} sm={12} className="mb-2 mb-md-0">
+              <CFormInput
+                type="text"
+                placeholder="Buscar por nombre, instrumento o profesor..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                prepend={<CIcon icon={cilSearch} />}
+              />
+            </CCol>
+            <CCol md={4} sm={12}>
+              <CFormSelect
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="Todos">Todos los estados</option>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </CFormSelect>
+            </CCol>
+          </CRow>
           <CTable align="middle" className="mb-0 border" hover responsive>
             <CTableHead>
               <CTableRow>
@@ -82,7 +118,7 @@ const Students = () => {
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              {students.map((student) => (
+              {filtered.map((student) => (
                 <CTableRow key={student.id}>
                   <CTableDataCell>
                     <Link to={`/students/${student.id}`}>{student.full_name}</Link>
@@ -110,6 +146,13 @@ const Students = () => {
                   </CTableDataCell>
                 </CTableRow>
               ))}
+              {filtered.length === 0 && (
+                <CTableRow>
+                  <CTableDataCell colSpan={7} className="text-center text-medium-emphasis">
+                    No se encontraron estudiantes con esos filtros.
+                  </CTableDataCell>
+                </CTableRow>
+              )}
             </CTableBody>
           </CTable>
         </CCardBody>
