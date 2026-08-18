@@ -9,7 +9,7 @@ const useSupabaseLessons = (studentId) => {
     setLoading(true)
     let query = supabase
       .from('lessons')
-      .select('*')
+      .select('*, profiles!lessons_student_id_fkey(full_name)')
       .order('lesson_date', { ascending: true })
 
     if (studentId) {
@@ -27,7 +27,50 @@ const useSupabaseLessons = (studentId) => {
     fetchLessons()
   }, [fetchLessons])
 
-  return { lessons, loading, refetch: fetchLessons }
+  const addLesson = useCallback(
+    async (lessonData) => {
+      const { error } = await supabase.from('lessons').insert({
+        student_id: lessonData.studentId,
+        instrument: lessonData.instrument,
+        lesson_date: lessonData.lessonDate,
+        lesson_time: lessonData.lessonTime,
+        duration: lessonData.duration,
+        teacher: lessonData.teacher,
+      })
+      if (!error) {
+        await fetchLessons()
+      }
+      return !error
+    },
+    [fetchLessons],
+  )
+
+  const updateLesson = useCallback(
+    async (lessonId, updates) => {
+      const { error } = await supabase
+        .from('lessons')
+        .update(updates)
+        .eq('id', lessonId)
+      if (!error) {
+        await fetchLessons()
+      }
+      return !error
+    },
+    [fetchLessons],
+  )
+
+  const deleteLesson = useCallback(
+    async (lessonId) => {
+      const { error } = await supabase.from('lessons').delete().eq('id', lessonId)
+      if (!error) {
+        setLessons((prev) => prev.filter((l) => l.id !== lessonId))
+      }
+      return !error
+    },
+    [],
+  )
+
+  return { lessons, loading, addLesson, updateLesson, deleteLesson, refetch: fetchLessons }
 }
 
 export default useSupabaseLessons

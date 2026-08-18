@@ -21,6 +21,7 @@ const StudentDetail = React.lazy(() => import('./views/academy/StudentDetail'))
 const Tasks = React.lazy(() => import('./views/academy/Tasks'))
 const MyProfile = React.lazy(() => import('./views/academy/MyProfile'))
 const Payments = React.lazy(() => import('./views/academy/Payments'))
+const Lessons = React.lazy(() => import('./views/academy/Lessons'))
 
 /**
  * Application Routes Configuration
@@ -32,6 +33,7 @@ export const routes = [
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/students', name: 'Perfiles', element: Students },
   { path: '/students/:id', name: 'Perfil de estudiante', element: StudentDetail },
+  { path: '/lessons', name: 'Clases', element: Lessons, roles: ['admin'] },
   { path: '/tasks', name: 'Tareas', element: Tasks },
   { path: '/payments', name: 'Pagos', element: Payments, roles: ['admin'] },
   { path: '/my-profile', name: 'Mi perfil', element: MyProfile },

@@ -1,6 +1,6 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
-import { cilSpeedometer, cilSchool, cilUser } from '@coreui/icons'
+import { cilSpeedometer, cilSchool, cilUser, cilMediaPlay } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
 export const getNavigation = (profile) => {
@@ -30,6 +30,12 @@ export const getNavigation = (profile) => {
             name: 'Perfiles',
             to: '/students',
             icon: <CIcon icon={cilSchool} customClassName="nav-icon" />,
+          },
+          {
+            component: CNavItem,
+            name: 'Clases',
+            to: '/lessons',
+            icon: <CIcon icon={cilMediaPlay} customClassName="nav-icon" />,
           },
           {
             component: CNavItem,
