@@ -97,18 +97,12 @@ const Login = () => {
               <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
                 <CCardBody className="text-center">
                   <div>
-                    <h2>Cuentas de demostración</h2>
+                    <h2>Cosmo Music Academy</h2>
                     <p className="text-start">
-                      <strong>Administrador:</strong>
-                      <br />
-                      admin@cosmomusic.com / admin123
+                      Plataforma de gestión para estudiantes de música.
                       <br />
                       <br />
-                      <strong>Estudiante:</strong>
-                      <br />
-                      maria.lopez@cosmomusic.com / student123
-                      <br />
-                      javier.torres@cosmomusic.com / student123
+                      Accede a tus tareas, lecciones y perfil.
                     </p>
                   </div>
                 </CCardBody>
