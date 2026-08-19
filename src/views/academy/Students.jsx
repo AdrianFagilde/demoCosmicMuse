@@ -129,6 +129,21 @@ const Students = () => {
       return
     }
 
+    if (data.user) {
+      await supabase.from('profiles').upsert(
+        {
+          id: data.user.id,
+          full_name: form.fullName,
+          username,
+          email: form.email,
+          role: 'student',
+          instrument: form.instrument || null,
+          level: form.level || null,
+        },
+        { onConflict: 'id' },
+      )
+    }
+
     await refetch()
     setSaving(false)
     setModalVisible(false)

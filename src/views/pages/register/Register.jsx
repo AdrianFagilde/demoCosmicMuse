@@ -97,6 +97,21 @@ const Register = () => {
       return
     }
 
+    if (data.user) {
+      const profileData = {
+        id: data.user.id,
+        full_name: fullName,
+        username,
+        email,
+        role: 'student',
+        instrument: instrument || null,
+        birth_date: birthDate || null,
+        guardian_name: isMinor ? `${guardianFirstName} ${guardianLastName}` : null,
+        guardian_phone: isMinor ? guardianPhone : null,
+      }
+      await supabase.from('profiles').upsert(profileData, { onConflict: 'id' })
+    }
+
     if (data.session) {
       navigate('/dashboard')
     } else {

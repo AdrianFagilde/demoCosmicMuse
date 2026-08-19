@@ -10,22 +10,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getCurrentSession().then((session) => {
+    getCurrentSession().then(async (session) => {
       if (session?.user) {
         setUser(session.user)
-        getProfile(session.user.id).then((p) => {
-          setProfile(p)
-          setLoading(false)
-        })
-      } else {
-        setLoading(false)
+        const p = await getProfile(session.user.id)
+        if (p?.role === 'admin' && session.user.user_metadata?.role !== 'admin') {
+          await supabase.auth.updateUser({ data: { role: 'admin' } })
+        }
+        setProfile(p)
       }
+      setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setUser(session.user)
         const p = await getProfile(session.user.id)
+        if (p?.role === 'admin' && session.user.user_metadata?.role !== 'admin') {
+          await supabase.auth.updateUser({ data: { role: 'admin' } })
+        }
         setProfile(p)
       } else {
         setUser(null)
