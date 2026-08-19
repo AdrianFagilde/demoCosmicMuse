@@ -16,7 +16,7 @@ import {
   Legend,
   LineChart,
   Line,
-} from 'rechart'
+} from 'recharts'
 
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
