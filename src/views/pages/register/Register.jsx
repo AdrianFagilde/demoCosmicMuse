@@ -116,7 +116,7 @@ const Register = () => {
                 <CCardBody>
                   <CForm onSubmit={handleSubmit}>
                     <h1>Registrarse</h1>
-                    <p className="text-body-secondary">Crea tu cuenta en Cosmo Music Academy</p>
+                    <p className="text-body-secondary">Crea tu cuenta en Cosmic Muse</p>
                     {error && <CAlert color="danger">{error}</CAlert>}
                     {success && <CAlert color="success">{success}</CAlert>}
                     <CInputGroup className="mb-3">

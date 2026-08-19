@@ -51,7 +51,7 @@ const Login = () => {
                 <CCardBody>
                   <CForm onSubmit={handleSubmit}>
                     <h1>Login</h1>
-                    <p className="text-body-secondary">Bienvenido a Cosmo Music Academy</p>
+                    <p className="text-body-secondary">Bienvenido a Cosmic Muse</p>
                     {error && <CAlert color="danger">{error}</CAlert>}
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
@@ -97,7 +97,7 @@ const Login = () => {
               <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
                 <CCardBody className="text-center">
                   <div>
-                    <h2>Cosmo Music Academy</h2>
+                    <h2>Cosmic Muse</h2>
                     <p className="text-start">
                       Plataforma de gestión para estudiantes de música.
                       <br />

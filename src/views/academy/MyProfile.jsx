@@ -49,7 +49,7 @@ const MyProfile = () => {
       <CCard className="mb-4">
         <CCardBody>
           <h4>Acceso restringido</h4>
-          <p>Esta seccion solo esta disponible para los estudiantes de Cosmo Music.</p>
+          <p>Esta seccion solo esta disponible para los estudiantes de Cosmic Muse.</p>
         </CCardBody>
       </CCard>
     )

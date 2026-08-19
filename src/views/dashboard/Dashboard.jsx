@@ -158,7 +158,7 @@ const Dashboard = () => {
       </CRow>
 
       <CCard className="mb-4">
-        <CCardHeader>Bienvenido a Cosmo Music Academy</CCardHeader>
+        <CCardHeader>Bienvenido a Cosmic Muse</CCardHeader>
         <CCardBody>
           <p className="text-body-secondary">
             {isStudent
