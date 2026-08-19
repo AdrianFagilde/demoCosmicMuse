@@ -44,12 +44,12 @@ const MyProfile = () => {
     }
   }, [profile])
 
-  if (!profile || profile.role !== 'student') {
+  if (!profile || (profile.role !== 'student' && profile.role !== 'admin')) {
     return (
       <CCard className="mb-4">
         <CCardBody>
           <h4>Acceso restringido</h4>
-          <p>Esta seccion solo esta disponible para los estudiantes de Cosmic Muse.</p>
+          <p>Debes iniciar sesion para ver tu perfil.</p>
         </CCardBody>
       </CCard>
     )
@@ -161,7 +161,7 @@ const MyProfile = () => {
                   )}
                 </div>
                 <h4 className="mb-1">{profile.full_name}</h4>
-                <div className="text-medium-emphasis">Estudiante</div>
+                <div className="text-medium-emphasis">{profile.role === 'admin' ? 'Administrador' : 'Estudiante'}</div>
               </div>
               <div className="mb-3">
                 <strong>Email:</strong> {profile.email}
