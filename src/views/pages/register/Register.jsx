@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   CAlert,
@@ -16,7 +16,7 @@ import {
   CRow,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilEnvelopeClosed, cilEducation, cilPhone } from '@coreui/icons'
+import { cilLockLocked, cilUser, cilEnvelopeClosed, cilEducation, cilPhone, cilCamera } from '@coreui/icons'
 import supabase from '../../../lib/supabase'
 
 const Register = () => {
@@ -28,6 +28,8 @@ const Register = () => {
   const [guardianFirstName, setGuardianFirstName] = useState('')
   const [guardianLastName, setGuardianLastName] = useState('')
   const [guardianPhone, setGuardianPhone] = useState('')
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
@@ -44,6 +46,21 @@ const Register = () => {
     }
     return age < 18
   }, [birthDate])
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Solo se permiten archivos de imagen')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('La imagen no debe superar 2 MB')
+      return
+    }
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -98,6 +115,22 @@ const Register = () => {
     }
 
     if (data.session) {
+      if (avatarFile && data.user?.id) {
+        const fileExt = avatarFile.name.split('.').pop()
+        const filePath = `${data.user.id}/avatar.${fileExt}`
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile)
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath)
+          await supabase
+            .from('profiles')
+            .update({ avatar_url: urlData.publicUrl })
+            .eq('id', data.user.id)
+        }
+      }
       navigate('/dashboard')
     } else {
       setSuccess('Cuenta creada. Ya puedes iniciar sesion.')
@@ -188,6 +221,50 @@ const Register = () => {
                         <option value="Otro">Otro</option>
                       </CFormSelect>
                     </CInputGroup>
+
+                    <div className="mb-4">
+                      <label className="form-label fw-semibold small text-body-secondary">
+                        Foto de perfil (opcional)
+                      </label>
+                      <div className="d-flex align-items-center gap-3">
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center bg-body-secondary overflow-hidden"
+                          style={{ width: '72px', height: '72px', flexShrink: 0 }}
+                        >
+                          {avatarPreview ? (
+                            <img
+                              src={avatarPreview}
+                              alt="Vista previa"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <CIcon icon={cilUser} size="xl" className="text-body-secondary" />
+                          )}
+                        </div>
+                        <div>
+                          <CFormInput
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            id="avatarUpload"
+                            className="d-none"
+                          />
+                          <CButton
+                            color="secondary"
+                            variant="outline"
+                            as="label"
+                            htmlFor="avatarUpload"
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <CIcon icon={cilCamera} className="me-1" />
+                            Seleccionar foto
+                          </CButton>
+                          <div className="text-body-secondary small mt-1">
+                            JPG, PNG o WebP. Max 2 MB.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                     {isMinor && (
                       <>
