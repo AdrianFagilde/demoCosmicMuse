@@ -109,7 +109,10 @@ const Register = () => {
         guardian_name: isMinor ? `${guardianFirstName} ${guardianLastName}` : null,
         guardian_phone: isMinor ? guardianPhone : null,
       }
-      await supabase.from('profiles').upsert(profileData, { onConflict: 'id' })
+      const { error: upsertError } = await supabase.from('profiles').upsert(profileData, { onConflict: 'id' })
+      if (upsertError) {
+        console.error('[Register] Upsert error:', upsertError.message)
+      }
     }
 
     if (data.session) {

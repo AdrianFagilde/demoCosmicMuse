@@ -103,6 +103,8 @@ const Students = () => {
       .replace(/\s+/g, '.')
       .replace(/[^a-z0-9.]/g, '')
 
+    const { data: { session: adminSession } } = await supabase.auth.getSession()
+
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -117,6 +119,13 @@ const Students = () => {
       },
     })
 
+    if (adminSession) {
+      await supabase.auth.setSession({
+        access_token: adminSession.access_token,
+        refresh_token: adminSession.refresh_token,
+      })
+    }
+
     if (signUpError) {
       setError(signUpError.message || 'Error al crear estudiante')
       setSaving(false)
@@ -130,7 +139,7 @@ const Students = () => {
     }
 
     if (data.user) {
-      await supabase.from('profiles').upsert(
+      const { error: upsertError } = await supabase.from('profiles').upsert(
         {
           id: data.user.id,
           full_name: form.fullName,
@@ -142,6 +151,9 @@ const Students = () => {
         },
         { onConflict: 'id' },
       )
+      if (upsertError) {
+        console.error('[Students] Upsert error:', upsertError.message)
+      }
     }
 
     await refetch()

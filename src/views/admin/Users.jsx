@@ -33,13 +33,15 @@ const Users = () => {
 
   const fetchUsers = async () => {
     setLoading(true)
+    console.log('[Users] Fetching profiles...')
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: false })
     if (error) {
-      console.error('Error fetching users:', error.message)
+      console.error('[Users] Error fetching users:', error.message, error)
     }
+    console.log('[Users] Profiles returned:', data?.length ?? 0, data)
     if (!error && data) {
       setUsers(data)
     }

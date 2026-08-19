@@ -13,8 +13,11 @@ export const AuthProvider = ({ children }) => {
     getCurrentSession().then(async (session) => {
       if (session?.user) {
         setUser(session.user)
+        console.log('[Auth] JWT user_metadata:', session.user.user_metadata)
         const p = await getProfile(session.user.id)
+        console.log('[Auth] Profile:', p)
         if (p?.role === 'admin' && session.user.user_metadata?.role !== 'admin') {
+          console.log('[Auth] Syncing admin role into JWT...')
           await supabase.auth.updateUser({ data: { role: 'admin' } })
         }
         setProfile(p)

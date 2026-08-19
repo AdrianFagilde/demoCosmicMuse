@@ -7,11 +7,16 @@ const useSupabaseStudents = () => {
 
   const fetchStudents = useCallback(async () => {
     setLoading(true)
+    console.log('[Students] Fetching students...')
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('role', 'student')
       .order('full_name')
+    if (error) {
+      console.error('[Students] Error:', error.message, error)
+    }
+    console.log('[Students] Profiles returned:', data?.length ?? 0, data)
     if (!error && data) {
       setStudents(data)
     }
