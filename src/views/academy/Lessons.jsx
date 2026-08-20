@@ -99,7 +99,13 @@ const Lessons = () => {
   }
 
   const handleSave = async () => {
-    if (!form.studentId || !form.instrument || !form.lessonDate || !form.lessonTime || !form.teacher) {
+    if (
+      !form.studentId ||
+      !form.instrument ||
+      !form.lessonDate ||
+      !form.lessonTime ||
+      !form.teacher
+    ) {
       return
     }
     setSaving(true)
@@ -113,7 +119,7 @@ const Lessons = () => {
         teacher: form.teacher,
       })
     } else {
-      await addLesson(form)
+      await addLesson({ ...form, createdBy: profile.id })
     }
     setSaving(false)
     setModalVisible(false)

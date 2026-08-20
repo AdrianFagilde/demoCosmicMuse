@@ -38,6 +38,12 @@ const useSupabaseLessons = (studentId) => {
         teacher: lessonData.teacher,
       })
       if (!error) {
+        await supabase.from('notifications').insert({
+          sender_id: lessonData.createdBy || null,
+          recipient_id: lessonData.studentId,
+          title: 'Nueva clase programada',
+          message: `Clase de ${lessonData.instrument} el ${lessonData.lessonDate} a las ${lessonData.lessonTime?.slice(0, 5)}`,
+        })
         await fetchLessons()
       }
       return !error
@@ -47,10 +53,7 @@ const useSupabaseLessons = (studentId) => {
 
   const updateLesson = useCallback(
     async (lessonId, updates) => {
-      const { error } = await supabase
-        .from('lessons')
-        .update(updates)
-        .eq('id', lessonId)
+      const { error } = await supabase.from('lessons').update(updates).eq('id', lessonId)
       if (!error) {
         await fetchLessons()
       }
@@ -59,16 +62,13 @@ const useSupabaseLessons = (studentId) => {
     [fetchLessons],
   )
 
-  const deleteLesson = useCallback(
-    async (lessonId) => {
-      const { error } = await supabase.from('lessons').delete().eq('id', lessonId)
-      if (!error) {
-        setLessons((prev) => prev.filter((l) => l.id !== lessonId))
-      }
-      return !error
-    },
-    [],
-  )
+  const deleteLesson = useCallback(async (lessonId) => {
+    const { error } = await supabase.from('lessons').delete().eq('id', lessonId)
+    if (!error) {
+      setLessons((prev) => prev.filter((l) => l.id !== lessonId))
+    }
+    return !error
+  }, [])
 
   return { lessons, loading, addLesson, updateLesson, deleteLesson, refetch: fetchLessons }
 }

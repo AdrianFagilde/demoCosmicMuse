@@ -24,6 +24,30 @@ const useSupabaseUserNotifications = (userId) => {
     fetchNotifications()
   }, [fetchNotifications])
 
+  useEffect(() => {
+    if (!userId) return
+
+    const channel = supabase
+      .channel('notifications-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${userId}`,
+        },
+        () => {
+          fetchNotifications()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, fetchNotifications])
+
   const markAsRead = useCallback(async (notificationId) => {
     const { error } = await supabase
       .from('notifications')

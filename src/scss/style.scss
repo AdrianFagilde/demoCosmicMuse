@@ -1,7 +1,45 @@
+// =============================================
+// Cosmic Muse Music Academy - Brand Colors
+// =============================================
+
+$cosmic-navy: #161a3c;
+$cosmic-purple: #712771;
+$cosmic-cyan: #16c1d6;
+$cosmic-magenta: #b42d75;
+
 @use "@coreui/coreui/scss/coreui" as * with (
   $enable-deprecation-messages: false,
+
+  // Brand primary
+  $primary: $cosmic-purple,
+  $info: $cosmic-cyan,
+  $danger: $cosmic-magenta,
+
+  // Dark mode
+  $body-bg-dark: $cosmic-navy,
+  $body-color-dark: #ffffff,
+  $primary-dark: $cosmic-purple,
+
+  // Sidebar
+  $sidebar-bg: $cosmic-navy,
+  $sidebar-color: #ffffff,
+  $sidebar-brand-bg: rgba($cosmic-purple, 0.15),
+
+  // Header
+  $header-bg: #ffffff,
+  $header-border-color: #e0e0e0,
 );
+
 @use "vendors/simplebar";
+
+:root {
+  --color-primary-dark: #{$cosmic-navy};
+  --color-primary-purple: #{$cosmic-purple};
+  --color-accent-cyan: #{$cosmic-cyan};
+  --color-accent-magenta: #{$cosmic-magenta};
+  --gradient-primary: linear-gradient(135deg, #{$cosmic-purple}, #{$cosmic-magenta});
+  --gradient-accent: linear-gradient(135deg, #{$cosmic-cyan}, #{$cosmic-navy});
+}
 
 body {
   background-color: var(--cui-tertiary-bg);
@@ -11,7 +49,7 @@ body {
   width: 100%;
   padding-inline: var(--cui-sidebar-occupy-start, 0) var(--cui-sidebar-occupy-end, 0);
   will-change: auto;
-  @include transition(padding .15s);
+  @include transition(padding 0.15s);
 }
 
 .header > .container-fluid,
@@ -55,12 +93,26 @@ body {
   min-height: calc(3rem + 1px); // stylelint-disable-line function-disallowed-list
 }
 
+// =============================================
+// Dark Mode - Brand Overrides
+// =============================================
+
 @include color-mode(dark) {
   body {
-    background-color: var(--cui-dark-bg-subtle);
+    background-color: $cosmic-navy;
+  }
+
+  .header {
+    --cui-header-bg: #{$cosmic-navy};
+    --cui-header-border-color: rgba(255, 255, 255, 0.1);
   }
 
   .footer {
-    --cui-footer-bg: var(--cui-body-bg);
+    --cui-footer-bg: #{$cosmic-navy};
+  }
+
+  .sidebar {
+    --cui-sidebar-bg: #{$cosmic-navy};
+    --cui-sidebar-brand-bg: rgba(#{$cosmic-purple}, 0.15);
   }
 }

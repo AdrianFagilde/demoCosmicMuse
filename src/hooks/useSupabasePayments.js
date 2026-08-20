@@ -9,7 +9,9 @@ const useSupabasePayments = (userId) => {
     setLoading(true)
     const { data, error } = await supabase
       .from('payments')
-      .select('*, profiles!payments_student_id_fkey(full_name), recorder:profiles!payments_recorded_by_fkey(full_name)')
+      .select(
+        '*, profiles!payments_student_id_fkey(full_name), recorder:profiles!payments_recorded_by_fkey(full_name)',
+      )
       .order('created_at', { ascending: false })
     if (!error && data) {
       setPayments(data)
@@ -50,6 +52,12 @@ const useSupabasePayments = (userId) => {
         recorded_by: userId,
       })
       if (!error) {
+        await supabase.from('notifications').insert({
+          sender_id: userId,
+          recipient_id: paymentData.studentId,
+          title: 'Pago registrado',
+          message: `Se registró un pago de $${Number(paymentData.amount).toFixed(2)} (${paymentData.method})`,
+        })
         await fetchPayments()
       }
       return !error
@@ -57,34 +65,30 @@ const useSupabasePayments = (userId) => {
     [fetchPayments, userId],
   )
 
-  const getStudentBalances = useCallback(
-    async (students) => {
-      const { data: allPayments } = await supabase.from('payments').select('student_id, amount, payment_date')
+  const getStudentBalances = useCallback(async (students) => {
+    const { data: allPayments } = await supabase
+      .from('payments')
+      .select('student_id, amount, payment_date')
 
-      return students.map((student) => {
-        const studentPayments = (allPayments || []).filter(
-          (p) => p.student_id === student.id,
-        )
-        const totalPaid = studentPayments.reduce((sum, p) => sum + Number(p.amount), 0)
-        const sorted = studentPayments
-          .slice()
-          .sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date))
-        const lastPaidDate = sorted[0] ? new Date(sorted[0].payment_date) : null
-        const isDelinquent =
-          !lastPaidDate || (new Date() - lastPaidDate) / (1000 * 60 * 60 * 24) > 30
+    return students.map((student) => {
+      const studentPayments = (allPayments || []).filter((p) => p.student_id === student.id)
+      const totalPaid = studentPayments.reduce((sum, p) => sum + Number(p.amount), 0)
+      const sorted = studentPayments
+        .slice()
+        .sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date))
+      const lastPaidDate = sorted[0] ? new Date(sorted[0].payment_date) : null
+      const isDelinquent = !lastPaidDate || (new Date() - lastPaidDate) / (1000 * 60 * 60 * 24) > 30
 
-        return {
-          ...student,
-          name: student.full_name,
-          totalPaid,
-          paymentsCount: studentPayments.length,
-          lastPaidDate,
-          paymentStatus: isDelinquent ? 'Moroso' : 'Pagado',
-        }
-      })
-    },
-    [],
-  )
+      return {
+        ...student,
+        name: student.full_name,
+        totalPaid,
+        paymentsCount: studentPayments.length,
+        lastPaidDate,
+        paymentStatus: isDelinquent ? 'Moroso' : 'Pagado',
+      }
+    })
+  }, [])
 
   return { payments, loading, addPayment, getStudentBalances, refetch: fetchPayments }
 }

@@ -9,7 +9,9 @@ const useSupabaseTasks = (userId) => {
     setLoading(true)
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, profiles!tasks_student_id_fkey(full_name), assigned_by_profile:profiles!tasks_assigned_by_fkey(full_name)')
+      .select(
+        '*, profiles!tasks_student_id_fkey(full_name), assigned_by_profile:profiles!tasks_assigned_by_fkey(full_name)',
+      )
       .order('created_at', { ascending: false })
     if (!error && data) {
       setTasks(data)
@@ -33,6 +35,12 @@ const useSupabaseTasks = (userId) => {
         progress: taskData.progress || 0,
       })
       if (!error) {
+        await supabase.from('notifications').insert({
+          sender_id: taskData.assignedBy || null,
+          recipient_id: taskData.studentId,
+          title: 'Nueva tarea asignada',
+          message: `Se te asignó la tarea: ${taskData.title}`,
+        })
         await fetchTasks()
       }
       return !error
@@ -40,32 +48,24 @@ const useSupabaseTasks = (userId) => {
     [fetchTasks],
   )
 
-  const updateTask = useCallback(
-    async (taskId, updates) => {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', taskId)
-      if (!error) {
-        setTasks((prev) =>
-          prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
-        )
-      }
-      return !error
-    },
-    [],
-  )
+  const updateTask = useCallback(async (taskId, updates) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', taskId)
+    if (!error) {
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t)))
+    }
+    return !error
+  }, [])
 
-  const deleteTask = useCallback(
-    async (taskId) => {
-      const { error } = await supabase.from('tasks').delete().eq('id', taskId)
-      if (!error) {
-        setTasks((prev) => prev.filter((t) => t.id !== taskId))
-      }
-      return !error
-    },
-    [],
-  )
+  const deleteTask = useCallback(async (taskId) => {
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId)
+    if (!error) {
+      setTasks((prev) => prev.filter((t) => t.id !== taskId))
+    }
+    return !error
+  }, [])
 
   const changeTaskStatus = useCallback(
     async (taskId, status) => {
@@ -88,7 +88,16 @@ const useSupabaseTasks = (userId) => {
     [updateTask],
   )
 
-  return { tasks, loading, addTask, updateTask, deleteTask, changeTaskStatus, changeTaskProgress, refetch: fetchTasks }
+  return {
+    tasks,
+    loading,
+    addTask,
+    updateTask,
+    deleteTask,
+    changeTaskStatus,
+    changeTaskProgress,
+    refetch: fetchTasks,
+  }
 }
 
 export default useSupabaseTasks

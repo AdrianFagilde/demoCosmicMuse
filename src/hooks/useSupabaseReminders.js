@@ -14,7 +14,9 @@ const useSupabaseReminders = (userId) => {
     setLoading(true)
     const { data, error } = await supabase
       .from('payment_reminders')
-      .select('*, profiles!payment_reminders_student_id_fkey(full_name), creator:profiles!payment_reminders_created_by_fkey(full_name)')
+      .select(
+        '*, profiles!payment_reminders_student_id_fkey(full_name), creator:profiles!payment_reminders_created_by_fkey(full_name)',
+      )
       .order('schedule_at', { ascending: true })
     if (!error && data) {
       setReminders(data)
@@ -47,26 +49,66 @@ const useSupabaseReminders = (userId) => {
     [fetchReminders, userId],
   )
 
-  const updateReminder = useCallback(
-    async (reminderId, updates) => {
-      const { error } = await supabase
-        .from('payment_reminders')
-        .update(updates)
-        .eq('id', reminderId)
-      if (!error) {
-        setReminders((prev) =>
-          prev.map((r) => (r.id === reminderId ? { ...r, ...updates } : r)),
-        )
+  const updateReminder = useCallback(async (reminderId, updates) => {
+    const { error } = await supabase.from('payment_reminders').update(updates).eq('id', reminderId)
+    if (!error) {
+      setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, ...updates } : r)))
+    }
+    return !error
+  }, [])
+
+  const fetchRecipientsFromDB = useCallback(async (reminder) => {
+    const { data: students } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .eq('role', 'student')
+
+    if (!students || students.length === 0) return []
+
+    if (reminder.target_group === 'Individual') {
+      return students
+        .filter((s) => String(s.id) === String(reminder.student_id))
+        .map((s) => ({ id: s.id, name: s.full_name, email: s.email }))
+    }
+
+    if (reminder.target_group === 'Todos') {
+      return students.map((s) => ({ id: s.id, name: s.full_name, email: s.email }))
+    }
+
+    const { data: allPayments } = await supabase.from('payments').select('student_id, payment_date')
+
+    const studentsWithStatus = students.map((s) => {
+      const payments = (allPayments || []).filter((p) => p.student_id === s.id)
+      const sorted = payments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date))
+      const last = sorted[0] ? new Date(sorted[0].payment_date) : null
+      const isDelinquent = !last || (new Date() - last) / 86400000 > 30
+      return {
+        id: s.id,
+        name: s.full_name,
+        email: s.email,
+        paymentStatus: isDelinquent ? 'Moroso' : 'Pagado',
       }
-      return !error
-    },
-    [],
-  )
+    })
+
+    if (reminder.target_group === 'Morosos') {
+      return studentsWithStatus.filter((s) => s.paymentStatus === 'Moroso')
+    }
+    if (reminder.target_group === 'Pagados') {
+      return studentsWithStatus.filter((s) => s.paymentStatus === 'Pagado')
+    }
+
+    return []
+  }, [])
 
   const sendReminder = useCallback(
     async (reminder, trigger, studentBalances) => {
       const sentAt = new Date().toISOString()
-      const recipients = getReminderRecipients(reminder, studentBalances)
+
+      let recipients = studentBalances || []
+      if (recipients.length === 0) {
+        recipients = await fetchRecipientsFromDB(reminder)
+      }
+
       const methodLabel = reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'
 
       const logEntries = recipients.map((student) => ({
@@ -111,22 +153,8 @@ const useSupabaseReminders = (userId) => {
 
       return logEntries
     },
-    [updateReminder],
+    [updateReminder, fetchRecipientsFromDB],
   )
-
-  const getReminderRecipients = useCallback((reminder, studentBalances) => {
-    switch (reminder.target_group) {
-      case 'Todos':
-        return studentBalances
-      case 'Morosos':
-        return studentBalances.filter((s) => s.paymentStatus === 'Moroso')
-      case 'Pagados':
-        return studentBalances.filter((s) => s.paymentStatus === 'Pagado')
-      case 'Individual':
-      default:
-        return studentBalances.filter((s) => String(s.id) === String(reminder.student_id))
-    }
-  }, [])
 
   const upcomingReminders = reminders
     .filter((r) => r.active)
@@ -146,7 +174,15 @@ const useSupabaseReminders = (userId) => {
     return () => clearInterval(timer)
   }, [sendReminder])
 
-  return { reminders, upcomingReminders, loading, addReminder, updateReminder, sendReminder, refetch: fetchReminders }
+  return {
+    reminders,
+    upcomingReminders,
+    loading,
+    addReminder,
+    updateReminder,
+    sendReminder,
+    refetch: fetchReminders,
+  }
 }
 
 export default useSupabaseReminders
