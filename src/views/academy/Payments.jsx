@@ -22,7 +22,7 @@ const Payments = () => {
   const { students } = useSupabaseStudents()
   const { payments, addPayment, getStudentBalances } = useSupabasePayments(user?.id)
   const { upcomingReminders, addReminder, sendReminder } = useSupabaseReminders(user?.id)
-  const { entries: notificationLog, addEntries, notifyBrowser } = useSupabaseNotifications()
+  const { entries: notificationLog, notifyBrowser } = useSupabaseNotifications()
   const [studentBalances, setStudentBalances] = useState([])
 
   useEffect(() => {
@@ -36,7 +36,6 @@ const Payments = () => {
   const handleSendReminder = async (reminder, trigger) => {
     const entries = await sendReminder(reminder, trigger, studentBalances)
     if (entries && entries.length > 0) {
-      await addEntries(entries)
       const recipients = studentBalances.filter((s) => {
         if (reminder.target_group === 'Todos') return true
         if (reminder.target_group === 'Morosos') return s.paymentStatus === 'Moroso'

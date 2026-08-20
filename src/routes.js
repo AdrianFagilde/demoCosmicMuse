@@ -23,6 +23,7 @@ const MyProfile = React.lazy(() => import('./views/academy/MyProfile'))
 const Payments = React.lazy(() => import('./views/academy/Payments'))
 const Lessons = React.lazy(() => import('./views/academy/Lessons'))
 const Users = React.lazy(() => import('./views/admin/Users'))
+const Notifications = React.lazy(() => import('./views/academy/Notifications'))
 
 /**
  * Application Routes Configuration
@@ -38,6 +39,7 @@ export const routes = [
   { path: '/tasks', name: 'Tareas', element: Tasks },
   { path: '/payments', name: 'Pagos', element: Payments, roles: ['admin'] },
   { path: '/users', name: 'Usuarios', element: Users, roles: ['admin'] },
+  { path: '/notifications', name: 'Notificaciones', element: Notifications },
   { path: '/my-profile', name: 'Mi perfil', element: MyProfile },
 ]
 

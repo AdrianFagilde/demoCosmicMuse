@@ -69,7 +69,7 @@ const useSupabaseReminders = (userId) => {
       const recipients = getReminderRecipients(reminder, studentBalances)
       const methodLabel = reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'
 
-      const entries = recipients.map((student) => ({
+      const logEntries = recipients.map((student) => ({
         student_id: student.id,
         student_name: student.name || student.full_name,
         target_group: reminder.target_group || 'Individual',
@@ -79,8 +79,19 @@ const useSupabaseReminders = (userId) => {
         trigger_type: trigger,
       }))
 
-      if (entries.length > 0) {
-        await supabase.from('notification_log').insert(entries)
+      if (logEntries.length > 0) {
+        await supabase.from('notification_log').insert(logEntries)
+      }
+
+      const inAppEntries = recipients.map((student) => ({
+        sender_id: reminder.created_by,
+        recipient_id: student.id,
+        title: `Recordatorio de pago - ${reminder.target_group}`,
+        message: reminder.message,
+      }))
+
+      if (inAppEntries.length > 0) {
+        await supabase.from('notifications').insert(inAppEntries)
       }
 
       const nextSchedule =
@@ -98,7 +109,7 @@ const useSupabaseReminders = (userId) => {
         schedule_at: nextSchedule,
       })
 
-      return entries
+      return logEntries
     },
     [updateReminder],
   )
