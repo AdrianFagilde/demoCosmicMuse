@@ -6,8 +6,6 @@ const useSupabaseStudents = () => {
   const [loading, setLoading] = useState(true)
 
   const fetchStudents = useCallback(async () => {
-    setLoading(true)
-    console.log('[Students] Fetching students...')
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -16,7 +14,6 @@ const useSupabaseStudents = () => {
     if (error) {
       console.error('[Students] Error:', error.message, error)
     }
-    console.log('[Students] Profiles returned:', data?.length ?? 0, data)
     if (!error && data) {
       setStudents(data)
     }
@@ -24,7 +21,9 @@ const useSupabaseStudents = () => {
   }, [])
 
   useEffect(() => {
-    fetchStudents()
+    ;(async () => {
+      await fetchStudents()
+    })()
   }, [fetchStudents])
 
   const getStudent = useCallback(
@@ -32,25 +31,26 @@ const useSupabaseStudents = () => {
     [students],
   )
 
-  const updateStudentMetrics = useCallback(
-    async (id, progress, attendance) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ progress: Number(progress), attendance: Number(attendance), updated_at: new Date().toISOString() })
-        .eq('id', id)
-      if (!error) {
-        setStudents((prev) =>
-          prev.map((s) =>
-            String(s.id) === String(id)
-              ? { ...s, progress: Number(progress), attendance: Number(attendance) }
-              : s,
-          ),
-        )
-      }
-      return !error
-    },
-    [],
-  )
+  const updateStudentMetrics = useCallback(async (id, progress, attendance) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        progress: Number(progress),
+        attendance: Number(attendance),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+    if (!error) {
+      setStudents((prev) =>
+        prev.map((s) =>
+          String(s.id) === String(id)
+            ? { ...s, progress: Number(progress), attendance: Number(attendance) }
+            : s,
+        ),
+      )
+    }
+    return !error
+  }, [])
 
   const getSummary = useCallback(async () => {
     const { count: activeStudents } = await supabase

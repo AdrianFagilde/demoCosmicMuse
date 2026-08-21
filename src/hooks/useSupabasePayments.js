@@ -6,7 +6,6 @@ const useSupabasePayments = (userId) => {
   const [loading, setLoading] = useState(true)
 
   const fetchPayments = useCallback(async () => {
-    setLoading(true)
     const { data, error } = await supabase
       .from('payments')
       .select(
@@ -20,7 +19,9 @@ const useSupabasePayments = (userId) => {
   }, [])
 
   useEffect(() => {
-    fetchPayments()
+    ;(async () => {
+      await fetchPayments()
+    })()
   }, [fetchPayments])
 
   const addPayment = useCallback(

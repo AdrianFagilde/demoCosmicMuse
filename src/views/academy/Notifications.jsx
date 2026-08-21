@@ -49,9 +49,12 @@ const AdminNotifications = ({ userId }) => {
   })
 
   const fetchData = useCallback(async () => {
-    setLoading(true)
     const [studentsRes, notifRes] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email').eq('role', 'student').order('full_name'),
+      supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('role', 'student')
+        .order('full_name'),
       supabase
         .from('notifications')
         .select('*, sender:profiles!notifications_sender_id_fkey(full_name)')
@@ -63,7 +66,11 @@ const AdminNotifications = ({ userId }) => {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    ;(async () => {
+      await fetchData()
+    })()
+  }, [fetchData])
 
   const toggleStudent = (id) => {
     setForm((f) => {
@@ -80,7 +87,8 @@ const AdminNotifications = ({ userId }) => {
   const selectAll = () => {
     setForm((f) => ({
       ...f,
-      selectedStudents: f.selectedStudents.length === students.length ? [] : students.map((s) => s.id),
+      selectedStudents:
+        f.selectedStudents.length === students.length ? [] : students.map((s) => s.id),
     }))
   }
 
@@ -124,7 +132,10 @@ const AdminNotifications = ({ userId }) => {
     if (error) {
       setMessage({ type: 'danger', text: `Error al enviar: ${error.message}` })
     } else {
-      setMessage({ type: 'success', text: `Notificacion enviada a ${recipients.length} estudiante(s).` })
+      setMessage({
+        type: 'success',
+        text: `Notificacion enviada a ${recipients.length} estudiante(s).`,
+      })
       setForm({ title: '', body: '', target: 'all', selectedStudents: [] })
       await fetchData()
     }
@@ -132,7 +143,11 @@ const AdminNotifications = ({ userId }) => {
   }
 
   if (loading) {
-    return <div className="text-center pt-4"><CSpinner color="primary" /></div>
+    return (
+      <div className="text-center pt-4">
+        <CSpinner color="primary" />
+      </div>
+    )
   }
 
   return (
@@ -181,7 +196,9 @@ const AdminNotifications = ({ userId }) => {
                     <CFormCheck
                       id="selectAll"
                       label={`Seleccionar todos (${students.length})`}
-                      checked={form.selectedStudents.length === students.length && students.length > 0}
+                      checked={
+                        form.selectedStudents.length === students.length && students.length > 0
+                      }
                       onChange={selectAll}
                     />
                   </div>
@@ -195,7 +212,9 @@ const AdminNotifications = ({ userId }) => {
                     />
                   ))}
                   {students.length === 0 && (
-                    <div className="text-medium-emphasis small">No hay estudiantes registrados.</div>
+                    <div className="text-medium-emphasis small">
+                      No hay estudiantes registrados.
+                    </div>
                   )}
                 </div>
               )}
@@ -226,14 +245,24 @@ const AdminNotifications = ({ userId }) => {
                   <tbody>
                     {notifications.map((n) => (
                       <tr key={n.id}>
-                        <td>{n.recipient_id ? students.find((s) => s.id === n.recipient_id)?.full_name || '...' : 'N/A'}</td>
+                        <td>
+                          {n.recipient_id
+                            ? students.find((s) => s.id === n.recipient_id)?.full_name || '...'
+                            : 'N/A'}
+                        </td>
                         <td className="fw-semibold">{n.title}</td>
-                        <td className="text-truncate" style={{ maxWidth: '200px' }}>{n.message}</td>
+                        <td className="text-truncate" style={{ maxWidth: '200px' }}>
+                          {n.message}
+                        </td>
                         <td>{formatDateTime(n.created_at)}</td>
                       </tr>
                     ))}
                     {notifications.length === 0 && (
-                      <tr><td colSpan={4} className="text-center text-medium-emphasis">No hay notificaciones enviadas aun.</td></tr>
+                      <tr>
+                        <td colSpan={4} className="text-center text-medium-emphasis">
+                          No hay notificaciones enviadas aun.
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
@@ -251,7 +280,11 @@ const StudentNotifications = ({ userId }) => {
     useSupabaseUserNotifications(userId)
 
   if (loading) {
-    return <div className="text-center pt-4"><CSpinner color="primary" /></div>
+    return (
+      <div className="text-center pt-4">
+        <CSpinner color="primary" />
+      </div>
+    )
   }
 
   return (
@@ -259,9 +292,7 @@ const StudentNotifications = ({ userId }) => {
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <span>Mis notificaciones</span>
         <div className="d-flex align-items-center gap-3">
-          {unreadCount > 0 && (
-            <CBadge color="primary">{unreadCount} sin leer</CBadge>
-          )}
+          {unreadCount > 0 && <CBadge color="primary">{unreadCount} sin leer</CBadge>}
           {unreadCount > 0 && (
             <CButton color="link" size="sm" onClick={markAllAsRead}>
               <CIcon icon={cilCheckAlt} className="me-1" /> Marcar todo leido
@@ -271,9 +302,7 @@ const StudentNotifications = ({ userId }) => {
       </CCardHeader>
       <CCardBody>
         {notifications.length === 0 ? (
-          <div className="text-center text-medium-emphasis py-4">
-            No tienes notificaciones.
-          </div>
+          <div className="text-center text-medium-emphasis py-4">No tienes notificaciones.</div>
         ) : (
           <div className="list-group">
             {notifications.map((n) => (
@@ -288,11 +317,14 @@ const StudentNotifications = ({ userId }) => {
                     <div className="fw-semibold">{n.title}</div>
                     <div className="small text-body-secondary">{n.message}</div>
                     <div className="text-medium-emphasis mt-1" style={{ fontSize: '0.75rem' }}>
-                      {n.sender?.full_name ? `De: ${n.sender.full_name}` : ''} - {formatDateTime(n.created_at)}
+                      {n.sender?.full_name ? `De: ${n.sender.full_name}` : ''} -{' '}
+                      {formatDateTime(n.created_at)}
                     </div>
                   </div>
                   {!n.read && (
-                    <CBadge color="primary" shape="pill" className="ms-2">Nuevo</CBadge>
+                    <CBadge color="primary" shape="pill" className="ms-2">
+                      Nuevo
+                    </CBadge>
                   )}
                 </div>
               </div>

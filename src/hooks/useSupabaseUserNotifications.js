@@ -7,7 +7,6 @@ const useSupabaseUserNotifications = (userId) => {
 
   const fetchNotifications = useCallback(async () => {
     if (!userId) return
-    setLoading(true)
     const { data, error } = await supabase
       .from('notifications')
       .select('*, sender:profiles!notifications_sender_id_fkey(full_name)')
@@ -21,7 +20,9 @@ const useSupabaseUserNotifications = (userId) => {
   }, [userId])
 
   useEffect(() => {
-    fetchNotifications()
+    ;(async () => {
+      await fetchNotifications()
+    })()
   }, [fetchNotifications])
 
   useEffect(() => {

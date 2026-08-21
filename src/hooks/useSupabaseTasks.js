@@ -6,7 +6,6 @@ const useSupabaseTasks = (userId) => {
   const [loading, setLoading] = useState(true)
 
   const fetchTasks = useCallback(async () => {
-    setLoading(true)
     const { data, error } = await supabase
       .from('tasks')
       .select(
@@ -20,7 +19,9 @@ const useSupabaseTasks = (userId) => {
   }, [])
 
   useEffect(() => {
-    fetchTasks()
+    ;(async () => {
+      await fetchTasks()
+    })()
   }, [fetchTasks])
 
   const addTask = useCallback(

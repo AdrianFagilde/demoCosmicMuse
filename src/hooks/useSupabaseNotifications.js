@@ -6,7 +6,6 @@ const useSupabaseNotifications = () => {
   const [loading, setLoading] = useState(true)
 
   const fetchEntries = useCallback(async () => {
-    setLoading(true)
     const { data, error } = await supabase
       .from('notification_log')
       .select('*')
@@ -18,7 +17,9 @@ const useSupabaseNotifications = () => {
   }, [])
 
   useEffect(() => {
-    fetchEntries()
+    ;(async () => {
+      await fetchEntries()
+    })()
   }, [fetchEntries])
 
   const addEntries = useCallback(

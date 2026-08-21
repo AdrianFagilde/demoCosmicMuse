@@ -25,7 +25,9 @@ const useSupabaseReminders = (userId) => {
   }, [])
 
   useEffect(() => {
-    fetchReminders()
+    ;(async () => {
+      await fetchReminders()
+    })()
   }, [fetchReminders])
 
   const addReminder = useCallback(

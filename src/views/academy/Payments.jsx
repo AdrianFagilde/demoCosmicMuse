@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CNav, CNavItem, CNavLink, CRow, CSpinner } from '@coreui/react'
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CRow,
+  CSpinner,
+} from '@coreui/react'
 
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'

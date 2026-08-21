@@ -1,22 +1,40 @@
-# Academia Cosmo Music
+# Cosmic Muse Academy
 
-Plantilla de administración y gestión para la academia musical de Cosmo Music.
-Este proyecto es una aplicación React + Vite que utiliza componentes CoreUI para ofrecer una experiencia de administración sencilla, con roles de administrador y estudiante, gestión de estudiantes, tareas, pagos y recordatorios.
+Panel de administración y gestión para la academia musical Cosmic Muse.
+Aplicación React + Vite con componentes CoreUI, backend Supabase (PostgreSQL + Auth + Storage) y roles de administrador y estudiante: gestión de estudiantes, clases, tareas, pagos y notificaciones.
 
 ## Características principales
 
 - React 19 con Vite para desarrollo rápido y compilación optimizada
 - UI basada en CoreUI React y Bootstrap 5
+- Autenticación con Supabase Auth (email/contraseña) y perfiles en PostgreSQL
 - Rutas protegidas y navegación basada en roles (admin / student)
-- Página de `Pagos` exclusiva para administradores
-- Registro de pagos, recordatorios y historial de notificaciones
-- Perfiles de estudiantes y tareas académicas
-- Almacenamiento de sesión en `localStorage` para usuarios de demostración
+- Seguridad a nivel de fila (RLS) en Supabase: los estudiantes solo acceden a sus propios datos
+- Gestión de estudiantes, clases y tareas académicas
+- Registro de pagos con comprobantes en Storage, recordatorios e historial de notificaciones
+- Notificaciones in-app en tiempo real (Supabase Realtime)
+- Gráficos del dashboard con Recharts
 
 ## Quick Start
 
+1. Instala dependencias:
+
 ```bash
 npm install
+```
+
+2. Configura las variables de entorno (ver `.env.example`):
+
+```bash
+VITE_SUPABASE_URL=https://<tu-proyecto>.supabase.co
+VITE_SUPABASE_ANON_KEY=<tu-anon-key>
+```
+
+3. Aplica las migraciones de base de datos (carpeta `supabase/migrations/`) en tu proyecto de Supabase, en orden numérico.
+
+4. Inicia la app:
+
+```bash
 npm start
 ```
 
@@ -35,69 +53,73 @@ Abre `http://localhost:3000` en tu navegador.
 
 ```
 src/
-├── assets/          # Imágenes y logos
-├── components/      # Componentes reutilizables de UI
-├── data/            # Datos locales simulados para la demo
-├── layout/          # Layout de la aplicación
-├── scss/            # Estilos globales y temas
-├── views/           # Vistas por ruta
-├── App.jsx          # Componente raíz con router
-├── auth.js          # Autenticación local con users de prueba
-├── routes.js        # Definición de rutas protegidas
-├── _nav.jsx         # Menú lateral configurado por roles
-└── store.js         # Estado global Redux básico
+├── assets/            # Imágenes y logos
+├── components/        # Componentes reutilizables de UI (layout, header, breadcrumb)
+├── context/           # AuthContext: sesión y perfil de usuario con Supabase
+├── hooks/             # Hooks useSupabase* para acceso a datos
+├── layout/            # Layout principal de la aplicación
+├── lib/               # Cliente de Supabase
+├── scss/              # Estilos globales y temas
+├── views/
+│   ├── academy/       # Estudiantes, clases, tareas, pagos, notificaciones, perfil
+│   ├── admin/         # Gestión de usuarios (solo admin)
+│   ├── dashboard/     # Panel principal con gráficos
+│   └── pages/         # Login y registro
+├── App.jsx            # Componente raíz con router y guardas de autenticación
+├── auth.js            # Wrapper sobre Supabase Auth
+├── navigation.jsx     # Menú lateral configurado por roles
+└── routes.js          # Definición de rutas protegidas
+supabase/
+└── migrations/        # Esquema SQL, políticas RLS y triggers (idempotentes)
 ```
 
 ## Autenticación y roles
 
-La autenticación es local y está definida en `src/auth.js`.
-Se almacenan usuarios de ejemplo en `localStorage`:
+La autenticación se realiza contra **Supabase Auth** (`src/context/AuthContext.jsx`):
 
-- `admin` / `admin123` → rol `admin`
-- `maria` / `student123` → rol `student`
-- `javier` / `student123` → rol `student`
+- Los usuarios se registran desde `/register`; un trigger SQL (`handle_new_user`) crea automáticamente su fila en `profiles`.
+- El rol (`admin` / `student`) vive en `profiles` y se sincroniza con el JWT (`user_metadata.role`).
+- El rol determina qué elementos aparecen en la navegación y qué rutas son accesibles.
+- La autorización real se aplica en PostgreSQL mediante políticas RLS (ver `supabase/migrations/`).
 
-El rol determina qué elementos aparecen en la navegación y si el usuario puede acceder a `/payments`.
+El primer administrador debe crearse manualmente en Supabase (Dashboard → Authentication) y asignarle `role = 'admin'` en la tabla `profiles`.
 
 ## Rutas principales
 
+- `/login` - Inicio de sesión
+- `/register` - Registro de estudiantes
 - `/dashboard` - Panel principal
 - `/students` - Listado de estudiantes (admin)
-- `/students/:id` - Perfil del estudiante
+- `/students/:id` - Perfil del estudiante (admin)
+- `/lessons` - Clases (admin)
 - `/tasks` - Tareas
 - `/payments` - Pagos y recordatorios (admin)
+- `/users` - Gestión de usuarios (admin)
+- `/notifications` - Notificaciones in-app
 - `/my-profile` - Perfil personal
 
 ## Documentación adicional
 
 - `ARCHITECTURE.md` - Arquitectura del proyecto y stack técnico
 - `DEVELOPMENT.md` - Guía de desarrollo y mejores prácticas
+- `supabase/migrations/` - Esquema de base de datos y políticas de seguridad
 
 ## Dependencias clave
 
 - React 19
-- CoreUI React
+- CoreUI React 5
+- Supabase JS v2
 - React Router DOM 7
-- Redux 5
+- Recharts
 - Vite
 
 ## Notas de despliegue
 
-El proyecto usa `HashRouter`, por lo que puede desplegarse en hosts estáticos sin configuración de servidor adicional.
+El proyecto está configurado para desplegarse en **Vercel** (`vercel.json` incluye rewrites para SPA y cacheo de assets).
 
 ```bash
 npm run build
-npm run serve
+npm run serve   # verificación local del build
 ```
 
-### Deploy en GitHub Pages
-
-Esta aplicación está configurada para desplegarse con `gh-pages`.
-
-```bash
-npm run deploy
-```
-
-El comando ejecuta `npm run build` y publica el contenido de `build/` en la rama `gh-pages`.
-
-> Asegúrate de que el remoto de Git apunte a `https://github.com/adrianfagilde/demoCosmicMuse.git` antes de ejecutar el deploy.
+Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` como variables de entorno en Vercel antes del deploy.

@@ -6,7 +6,6 @@ const useSupabaseLessons = (studentId) => {
   const [loading, setLoading] = useState(true)
 
   const fetchLessons = useCallback(async () => {
-    setLoading(true)
     let query = supabase
       .from('lessons')
       .select('*, profiles!lessons_student_id_fkey(full_name)')
@@ -24,7 +23,9 @@ const useSupabaseLessons = (studentId) => {
   }, [studentId])
 
   useEffect(() => {
-    fetchLessons()
+    ;(async () => {
+      await fetchLessons()
+    })()
   }, [fetchLessons])
 
   const addLesson = useCallback(

@@ -55,8 +55,7 @@ const Students = () => {
         s.full_name?.toLowerCase().includes(term) ||
         s.instrument?.toLowerCase().includes(term) ||
         s.teacher?.toLowerCase().includes(term)
-      const matchesStatus =
-        statusFilter === 'Todos' || s.status === statusFilter
+      const matchesStatus = statusFilter === 'Todos' || s.status === statusFilter
       return matchesSearch && matchesStatus
     })
   }, [students, search, statusFilter])
@@ -103,7 +102,9 @@ const Students = () => {
       .replace(/\s+/g, '.')
       .replace(/[^a-z0-9.]/g, '')
 
-    const { data: { session: adminSession } } = await supabase.auth.getSession()
+    const {
+      data: { session: adminSession },
+    } = await supabase.auth.getSession()
 
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
@@ -198,10 +199,7 @@ const Students = () => {
               />
             </CCol>
             <CCol md={4} sm={12}>
-              <CFormSelect
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
+              <CFormSelect value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                 <option value="Todos">Todos los estados</option>
                 <option value="Activo">Activo</option>
                 <option value="Inactivo">Inactivo</option>

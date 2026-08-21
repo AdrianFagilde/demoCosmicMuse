@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   CBadge,
   CButton,
@@ -26,14 +26,7 @@ const Users = () => {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (profile?.role !== 'admin') return
-    fetchUsers()
-  }, [profile])
-
-  const fetchUsers = async () => {
-    setLoading(true)
-    console.log('[Users] Fetching profiles...')
+  const fetchUsers = useCallback(async () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -41,12 +34,18 @@ const Users = () => {
     if (error) {
       console.error('[Users] Error fetching users:', error.message, error)
     }
-    console.log('[Users] Profiles returned:', data?.length ?? 0, data)
     if (!error && data) {
       setUsers(data)
     }
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    if (profile?.role !== 'admin') return
+    ;(async () => {
+      await fetchUsers()
+    })()
+  }, [profile?.role, fetchUsers])
 
   if (!profile || profile.role !== 'admin') {
     return (
@@ -73,9 +72,7 @@ const Users = () => {
       .update({ role: newRole, updated_at: new Date().toISOString() })
       .eq('id', userId)
     if (!error) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
-      )
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)))
     }
   }
 
@@ -85,9 +82,7 @@ const Users = () => {
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', userId)
     if (!error) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u)),
-      )
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u)))
     }
   }
 
@@ -193,9 +188,7 @@ const Users = () => {
                   </CTableDataCell>
                   <CTableDataCell>{user.instrument || '—'}</CTableDataCell>
                   <CTableDataCell>
-                    {user.created_at
-                      ? new Date(user.created_at).toLocaleDateString('es-ES')
-                      : '—'}
+                    {user.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : '—'}
                   </CTableDataCell>
                   <CTableDataCell className="text-center">
                     <CButton

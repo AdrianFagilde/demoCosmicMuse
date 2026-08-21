@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   CAvatar,
@@ -35,13 +35,12 @@ const StudentDetail = () => {
 
   const [localProgress, setLocalProgress] = useState(student?.progress || 0)
   const [localAttendance, setLocalAttendance] = useState(student?.attendance || 0)
-
-  useEffect(() => {
-    if (student) {
-      setLocalProgress(student.progress || 0)
-      setLocalAttendance(student.attendance || 0)
-    }
-  }, [student])
+  const [syncedStudent, setSyncedStudent] = useState(null)
+  if (student && syncedStudent !== student) {
+    setSyncedStudent(student)
+    setLocalProgress(student.progress || 0)
+    setLocalAttendance(student.attendance || 0)
+  }
 
   if (!isAdmin) {
     return (
@@ -106,8 +105,7 @@ const StudentDetail = () => {
                 </div>
               </div>
               <div className="mb-2">
-                <strong>Progreso:</strong>{' '}
-                <CBadge color="success">{student.progress}%</CBadge>
+                <strong>Progreso:</strong> <CBadge color="success">{student.progress}%</CBadge>
               </div>
               <div className="mb-2">
                 <strong>Asistencia:</strong> {student.attendance}%

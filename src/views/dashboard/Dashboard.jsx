@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { CCard, CCardBody, CCardHeader, CCol, CRow, CSpinner } from '@coreui/react'
 import { cilSchool, cilPeople, cilCalendar, cilChart } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
@@ -23,7 +23,14 @@ import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import supabase from '../../lib/supabase'
 
-const COLORS = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#0dcaf0']
+const BRAND = {
+  purple: '#712771',
+  cyan: '#16c1d6',
+  magenta: '#b42d75',
+  navy: '#161a3c',
+}
+
+const COLORS = [BRAND.purple, BRAND.cyan, BRAND.magenta, BRAND.navy, '#9a3f9e', '#5fd6e8']
 
 const Dashboard = () => {
   const { user, profile } = useAuth()
@@ -37,27 +44,30 @@ const Dashboard = () => {
     availableInstruments: [],
   })
   const [paymentsByMonth, setPaymentsByMonth] = useState([])
-  const [instrumentData, setInstrumentData] = useState([])
-  const [progressData, setProgressData] = useState([])
 
-  useEffect(() => {
-    getSummary().then(setSummary)
-  }, [getSummary])
-
-  useEffect(() => {
-    if (!isStudent) {
-      fetchPaymentsByMonth()
-    }
-  }, [isStudent])
-
-  useEffect(() => {
-    if (students.length > 0) {
-      buildInstrumentChart()
-      buildProgressChart()
-    }
+  const instrumentData = useMemo(() => {
+    const counts = {}
+    students.forEach((s) => {
+      const inst = s.instrument || 'Otro'
+      counts[inst] = (counts[inst] || 0) + 1
+    })
+    return Object.entries(counts).map(([name, value]) => ({ name, value }))
   }, [students])
 
-  const fetchPaymentsByMonth = async () => {
+  const progressData = useMemo(() => {
+    const active = students.filter((s) => s.status === 'Activo')
+    const total = active.length || 1
+    const avg = Math.round(active.reduce((sum, s) => sum + (s.progress || 0), 0) / total)
+    return [
+      { name: 'General', progreso: avg },
+      ...active.slice(0, 6).map((s) => ({
+        name: s.full_name?.split(' ')[0] || '?',
+        progreso: s.progress || 0,
+      })),
+    ]
+  }, [students])
+
+  const fetchPaymentsByMonth = useCallback(async () => {
     const { data } = await supabase
       .from('payments')
       .select('amount, payment_date')
@@ -75,31 +85,18 @@ const Dashboard = () => {
     })
 
     setPaymentsByMonth(Object.values(monthMap).slice(-6))
-  }
+  }, [])
 
-  const buildInstrumentChart = () => {
-    const counts = {}
-    students.forEach((s) => {
-      const inst = s.instrument || 'Otro'
-      counts[inst] = (counts[inst] || 0) + 1
-    })
-    setInstrumentData(
-      Object.entries(counts).map(([name, value]) => ({ name, value })),
-    )
-  }
+  useEffect(() => {
+    getSummary().then(setSummary)
+  }, [getSummary])
 
-  const buildProgressChart = () => {
-    const active = students.filter((s) => s.status === 'Activo')
-    const total = active.length || 1
-    const avg = Math.round(active.reduce((sum, s) => sum + (s.progress || 0), 0) / total)
-    setProgressData([
-      { name: 'General', progreso: avg },
-      ...active.slice(0, 6).map((s) => ({
-        name: s.full_name?.split(' ')[0] || '?',
-        progreso: s.progress || 0,
-      })),
-    ])
-  }
+  useEffect(() => {
+    if (!isStudent) return
+    ;(async () => {
+      await fetchPaymentsByMonth()
+    })()
+  }, [isStudent, fetchPaymentsByMonth])
 
   const recentTasks = tasks
     .filter((task) => (isStudent ? task.student_id === user?.id : true))
@@ -112,55 +109,59 @@ const Dashboard = () => {
     <>
       <CRow className="mb-4">
         <CCol md={3} sm={6} className="mb-3">
-          <CCard>
-            <CCardBody>
-              <div className="text-medium-emphasis small">Estudiantes activos</div>
-              <div className="fs-3 fw-semibold">{summary.activeStudents}</div>
-              <div className="text-body-secondary mt-2 d-flex align-items-center gap-2">
-                <CIcon icon={cilPeople} /> Total en la academia
+          <CCard className="kpi-card kpi-card--purple h-100">
+            <CCardBody className="d-flex align-items-center justify-content-between gap-3">
+              <div>
+                <div className="kpi-label">Estudiantes activos</div>
+                <div className="fs-3 fw-semibold">{summary.activeStudents}</div>
+                <div className="kpi-subtext mt-2">Total en la academia</div>
               </div>
+              <CIcon icon={cilPeople} customClassName="kpi-icon" />
             </CCardBody>
           </CCard>
         </CCol>
         <CCol md={3} sm={6} className="mb-3">
-          <CCard>
-            <CCardBody>
-              <div className="text-medium-emphasis small">Clases esta semana</div>
-              <div className="fs-3 fw-semibold">{summary.lessonsThisWeek}</div>
-              <div className="text-body-secondary mt-2 d-flex align-items-center gap-2">
-                <CIcon icon={cilCalendar} /> Horarios programados
+          <CCard className="kpi-card kpi-card--cyan h-100">
+            <CCardBody className="d-flex align-items-center justify-content-between gap-3">
+              <div>
+                <div className="kpi-label">Clases esta semana</div>
+                <div className="fs-3 fw-semibold">{summary.lessonsThisWeek}</div>
+                <div className="kpi-subtext mt-2">Horarios programados</div>
               </div>
+              <CIcon icon={cilCalendar} customClassName="kpi-icon" />
             </CCardBody>
           </CCard>
         </CCol>
         <CCol md={3} sm={6} className="mb-3">
-          <CCard>
-            <CCardBody>
-              <div className="text-medium-emphasis small">Profesores</div>
-              <div className="fs-3 fw-semibold">{summary.teachers}</div>
-              <div className="text-body-secondary mt-2 d-flex align-items-center gap-2">
-                <CIcon icon={cilSchool} /> Mentores disponibles
+          <CCard className="kpi-card kpi-card--magenta h-100">
+            <CCardBody className="d-flex align-items-center justify-content-between gap-3">
+              <div>
+                <div className="kpi-label">Profesores</div>
+                <div className="fs-3 fw-semibold">{summary.teachers}</div>
+                <div className="kpi-subtext mt-2">Mentores disponibles</div>
               </div>
+              <CIcon icon={cilSchool} customClassName="kpi-icon" />
             </CCardBody>
           </CCard>
         </CCol>
         <CCol md={3} sm={6} className="mb-3">
-          <CCard>
-            <CCardBody>
-              <div className="text-medium-emphasis small">Instrumentos</div>
-              <div className="fs-3 fw-semibold">{summary.availableInstruments.length}</div>
-              <div className="text-body-secondary mt-2 d-flex align-items-center gap-2">
-                <CIcon icon={cilChart} /> Categorías activas
+          <CCard className="kpi-card kpi-card--navy h-100">
+            <CCardBody className="d-flex align-items-center justify-content-between gap-3">
+              <div>
+                <div className="kpi-label">Instrumentos</div>
+                <div className="fs-3 fw-semibold">{summary.availableInstruments.length}</div>
+                <div className="kpi-subtext mt-2">Categorías activas</div>
               </div>
+              <CIcon icon={cilChart} customClassName="kpi-icon" />
             </CCardBody>
           </CCard>
         </CCol>
       </CRow>
 
-      <CCard className="mb-4">
-        <CCardHeader>Bienvenido a Cosmic Muse</CCardHeader>
+      <CCard className="welcome-banner mb-4">
         <CCardBody>
-          <p className="text-body-secondary">
+          <h5 className="welcome-title">Bienvenido a Cosmic Muse</h5>
+          <p className="welcome-text">
             {isStudent
               ? 'Revisa tu progreso, próximas clases y comunicación con tu profesor.'
               : 'Administra estudiantes, horarios y performance de la academia desde un solo lugar.'}
@@ -171,7 +172,7 @@ const Dashboard = () => {
       {!isStudent && (
         <CRow className="mb-4">
           <CCol md={6} className="mb-3">
-            <CCard className="h-100">
+            <CCard className="chart-card h-100">
               <CCardHeader>Ingresos mensuales</CCardHeader>
               <CCardBody>
                 {paymentsByMonth.length > 0 ? (
@@ -181,7 +182,7 @@ const Dashboard = () => {
                       <XAxis dataKey="label" />
                       <YAxis />
                       <Tooltip formatter={(v) => `$${v.toLocaleString()}`} />
-                      <Bar dataKey="total" fill="#0d6efd" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="total" fill={BRAND.purple} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -191,7 +192,7 @@ const Dashboard = () => {
             </CCard>
           </CCol>
           <CCol md={6} className="mb-3">
-            <CCard className="h-100">
+            <CCard className="chart-card h-100">
               <CCardHeader>Estudiantes por instrumento</CCardHeader>
               <CCardBody>
                 {instrumentData.length > 0 ? (
@@ -224,7 +225,7 @@ const Dashboard = () => {
       {!isStudent && (
         <CRow className="mb-4">
           <CCol>
-            <CCard>
+            <CCard className="chart-card">
               <CCardHeader>Progreso de estudiantes activos</CCardHeader>
               <CCardBody>
                 {progressData.length > 0 ? (
@@ -237,7 +238,7 @@ const Dashboard = () => {
                       <Line
                         type="monotone"
                         dataKey="progreso"
-                        stroke="#198754"
+                        stroke={BRAND.cyan}
                         strokeWidth={2}
                         dot={{ r: 4 }}
                       />
@@ -254,9 +255,13 @@ const Dashboard = () => {
 
       {!isStudent && (
         <CRow className="mb-4">
-          {students.slice(0, 3).map((student) => (
+          {students.slice(0, 3).map((student, idx) => (
             <CCol xs={12} md={4} key={student.id} className="mb-3">
-              <CCard>
+              <CCard
+                className={`h-100 student-card student-card--${
+                  ['purple', 'cyan', 'magenta'][idx % 3]
+                }`}
+              >
                 <CCardHeader>{student.full_name}</CCardHeader>
                 <CCardBody>
                   <div className="text-medium-emphasis small">Instrumento</div>
@@ -306,7 +311,7 @@ const Dashboard = () => {
 
       <CRow>
         <CCol>
-          <CCard>
+          <CCard className="chart-card">
             <CCardHeader>Tareas recientes</CCardHeader>
             <CCardBody>
               <div className="text-medium-emphasis mb-3">

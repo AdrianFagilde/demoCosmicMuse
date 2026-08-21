@@ -41,9 +41,7 @@ const PaymentHistory = ({ payments }) => {
                     <CTableDataCell>{payment.date}</CTableDataCell>
                     <CTableDataCell>{payment.method}</CTableDataCell>
                     <CTableDataCell>{payment.frequency}</CTableDataCell>
-                    <CTableDataCell>
-                      {payment.proof_name || 'No cargado'}
-                    </CTableDataCell>
+                    <CTableDataCell>{payment.proof_name || 'No cargado'}</CTableDataCell>
                     <CTableDataCell>{payment.notes}</CTableDataCell>
                     <CTableDataCell>{payment.recordedBy}</CTableDataCell>
                   </CTableRow>

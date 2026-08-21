@@ -30,8 +30,9 @@ const formatRelativeTime = (dateStr) => {
 const NotificationBell = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useSupabaseUserNotifications(user?.id)
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useSupabaseUserNotifications(
+    user?.id,
+  )
 
   const recent = notifications.slice(0, 8)
 
@@ -57,7 +58,10 @@ const NotificationBell = () => {
           </CBadge>
         )}
       </CDropdownToggle>
-      <CDropdownMenu className="p-0" style={{ width: '360px', maxHeight: '420px', overflow: 'auto' }}>
+      <CDropdownMenu
+        className="p-0"
+        style={{ width: '360px', maxHeight: '420px', overflow: 'auto' }}
+      >
         <CDropdownHeader className="bg-body-secondary d-flex justify-content-between align-items-center">
           <span>Notificaciones</span>
           {unreadCount > 0 && (

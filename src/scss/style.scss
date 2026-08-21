@@ -94,6 +94,102 @@ body {
 }
 
 // =============================================
+// Dashboard - Brand Contrast Cards (white as secondary color)
+// =============================================
+
+.kpi-card {
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 0.5rem 1rem rgba($cosmic-navy, 0.18);
+
+  .kpi-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+  }
+
+  .kpi-subtext {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.8125rem;
+  }
+
+  .kpi-icon {
+    font-size: 2.75rem;
+    opacity: 0.35;
+    flex-shrink: 0;
+  }
+}
+
+.kpi-card--purple {
+  background: linear-gradient(135deg, #{$cosmic-purple} 0%, #9a3f9e 100%);
+}
+
+.kpi-card--cyan {
+  background: linear-gradient(135deg, #0f97ab 0%, #{$cosmic-cyan} 100%);
+}
+
+.kpi-card--magenta {
+  background: linear-gradient(135deg, #{$cosmic-magenta} 0%, #d44a92 100%);
+}
+
+.kpi-card--navy {
+  background: linear-gradient(135deg, #{$cosmic-navy} 0%, #36407e 100%);
+}
+
+.welcome-banner {
+  border: none;
+  background: var(--gradient-primary);
+  box-shadow: 0 0.5rem 1rem rgba($cosmic-navy, 0.18);
+
+  .welcome-title {
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .welcome-text {
+    color: rgba(255, 255, 255, 0.82);
+    margin-bottom: 0;
+  }
+}
+
+.chart-card {
+  background-color: #ffffff;
+
+  > .card-header {
+    background-color: rgba($cosmic-purple, 0.06);
+    font-weight: 600;
+    color: $cosmic-navy;
+  }
+}
+
+.student-card {
+  border-top: 3px solid transparent;
+}
+
+.student-card--purple {
+  border-top-color: #{$cosmic-purple};
+}
+
+.student-card--cyan {
+  border-top-color: #{$cosmic-cyan};
+}
+
+.student-card--magenta {
+  border-top-color: #{$cosmic-magenta};
+}
+
+@include color-mode(dark) {
+  .chart-card {
+    background-color: rgba(#ffffff, 0.04);
+
+    > .card-header {
+      background-color: rgba($cosmic-purple, 0.25);
+      color: #ffffff;
+    }
+  }
+}
+
+// =============================================
 // Dark Mode - Brand Overrides
 // =============================================
 

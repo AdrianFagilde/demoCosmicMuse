@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   CAvatar,
   CBadge,
@@ -34,15 +34,15 @@ const MyProfile = () => {
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
-  useEffect(() => {
-    if (profile) {
-      setForm({
-        phone: profile.phone || '',
-        instrument: profile.instrument || '',
-        level: profile.level || 'Principiante',
-      })
-    }
-  }, [profile])
+  const [syncedProfile, setSyncedProfile] = useState(null)
+  if (profile && syncedProfile !== profile) {
+    setSyncedProfile(profile)
+    setForm({
+      phone: profile.phone || '',
+      instrument: profile.instrument || '',
+      level: profile.level || 'Principiante',
+    })
+  }
 
   if (!profile || (profile.role !== 'student' && profile.role !== 'admin')) {
     return (
@@ -161,7 +161,9 @@ const MyProfile = () => {
                   )}
                 </div>
                 <h4 className="mb-1">{profile.full_name}</h4>
-                <div className="text-medium-emphasis">{profile.role === 'admin' ? 'Administrador' : 'Estudiante'}</div>
+                <div className="text-medium-emphasis">
+                  {profile.role === 'admin' ? 'Administrador' : 'Estudiante'}
+                </div>
               </div>
               <div className="mb-3">
                 <strong>Email:</strong> {profile.email}
@@ -170,8 +172,7 @@ const MyProfile = () => {
                 <strong>Profesor:</strong> {profile.teacher || '—'}
               </div>
               <div className="mb-3">
-                <strong>Progreso:</strong>{' '}
-                <CBadge color="success">{profile.progress}%</CBadge>
+                <strong>Progreso:</strong> <CBadge color="success">{profile.progress}%</CBadge>
               </div>
               <div className="mb-3">
                 <strong>Asistencia:</strong> {profile.attendance}%
@@ -216,9 +217,7 @@ const MyProfile = () => {
                     <CIcon icon={cilCamera} className="me-1" />
                     Seleccionar foto
                   </CButton>
-                  <div className="text-body-secondary small mt-1">
-                    JPG, PNG o WebP. Max 2 MB.
-                  </div>
+                  <div className="text-body-secondary small mt-1">JPG, PNG o WebP. Max 2 MB.</div>
                 </div>
                 {avatarFile && (
                   <CButton
