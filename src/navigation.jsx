@@ -62,6 +62,12 @@ export const getNavigation = (profile) => {
             to: '/users',
             icon: <CIcon icon={cilGroup} customClassName="nav-icon" />,
           },
+          {
+            component: CNavItem,
+            name: 'Enviar notificacion',
+            to: '/send-notifications',
+            icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
+          },
         ]
       : []
 
