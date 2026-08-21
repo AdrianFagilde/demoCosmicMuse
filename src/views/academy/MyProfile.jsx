@@ -25,7 +25,7 @@ import useSupabaseLessons from '../../hooks/useSupabaseLessons'
 import supabase from '../../lib/supabase'
 
 const MyProfile = () => {
-  const { user, profile } = useAuth()
+  const { user, profile, refreshProfile } = useAuth()
   const { lessons, loading } = useSupabaseLessons(user?.id)
   const [form, setForm] = useState({ phone: '', instrument: '', level: '' })
   const [saving, setSaving] = useState(false)
@@ -100,6 +100,7 @@ const MyProfile = () => {
     } else {
       setMessage({ type: 'success', text: 'Foto de perfil actualizada.' })
       setAvatarFile(null)
+      await refreshProfile()
     }
     setUploadingAvatar(false)
   }

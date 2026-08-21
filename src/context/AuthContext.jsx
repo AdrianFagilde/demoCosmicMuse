@@ -52,11 +52,18 @@ export const AuthProvider = ({ children }) => {
     setProfile(null)
   }, [])
 
+  const refreshProfile = useCallback(async () => {
+    if (!user?.id) return
+    const p = await getProfile(user.id)
+    if (p) setProfile(p)
+  }, [user])
+
   const value = {
     user,
     profile,
     login,
     logout,
+    refreshProfile,
     loading,
     isAuthenticated: Boolean(user),
   }
