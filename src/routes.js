@@ -39,7 +39,7 @@ export const routes = [
   { path: '/tasks', name: 'Tareas', element: Tasks },
   { path: '/payments', name: 'Pagos', element: Payments, roles: ['admin'] },
   { path: '/users', name: 'Usuarios', element: Users, roles: ['admin'] },
-  { path: '/notifications', name: 'Notificaciones', element: Notifications },
+  { path: '/notifications', name: 'Notificaciones', element: Notifications, roles: ['student'] },
   { path: '/my-profile', name: 'Mi perfil', element: MyProfile },
 ]
 

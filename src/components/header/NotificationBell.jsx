@@ -29,7 +29,8 @@ const formatRelativeTime = (dateStr) => {
 
 const NotificationBell = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const isInboxAvailable = profile?.role === 'student'
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useSupabaseUserNotifications(
     user?.id,
   )
@@ -107,7 +108,7 @@ const NotificationBell = () => {
             </div>
           </CDropdownItem>
         ))}
-        {notifications.length > 0 && (
+        {notifications.length > 0 && isInboxAvailable && (
           <>
             <CDropdownDivider className="m-0" />
             <CDropdownItem
