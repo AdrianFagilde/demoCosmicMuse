@@ -26,8 +26,9 @@ $cosmic-magenta: #b42d75;
   $sidebar-brand-bg: rgba($cosmic-purple, 0.15),
 
   // Header
-  $header-bg: #ffffff,
-  $header-border-color: #e0e0e0,
+  $header-bg: $cosmic-purple,
+  $header-color: #ffffff,
+  $header-border-color: rgba(255, 255, 255, 0.12),
 );
 
 @use "vendors/simplebar";
@@ -39,10 +40,47 @@ $cosmic-magenta: #b42d75;
   --color-accent-magenta: #{$cosmic-magenta};
   --gradient-primary: linear-gradient(135deg, #{$cosmic-purple}, #{$cosmic-magenta});
   --gradient-accent: linear-gradient(135deg, #{$cosmic-cyan}, #{$cosmic-navy});
+
+  // Uniforme primario: sidebar + header
+  --uniform-primary-bg: linear-gradient(180deg, #{$cosmic-navy} 0%, #{$cosmic-purple} 100%);
+  --uniform-primary-header-bg: #{$cosmic-purple};
+  // Uniforme secundario: fondo del área de contenido
+  --uniform-secondary-bg: #ffffff;
 }
 
 body {
-  background-color: var(--cui-tertiary-bg);
+  background-color: var(--uniform-secondary-bg);
+}
+
+// =============================================
+// Uniforme Primario - Sidebar y Header
+// =============================================
+
+.sidebar {
+  --cui-sidebar-bg: var(--uniform-primary-bg);
+  --cui-sidebar-color: #ffffff;
+  --cui-sidebar-brand-bg: rgba(255, 255, 255, 0.06);
+  --cui-sidebar-nav-link-color: rgba(255, 255, 255, 0.78);
+  --cui-sidebar-nav-link-hover-color: #ffffff;
+  --cui-sidebar-nav-link-hover-bg: rgba(255, 255, 255, 0.07);
+  --cui-sidebar-nav-link-active-color: #ffffff;
+  --cui-sidebar-nav-link-active-bg: rgba(255, 255, 255, 0.14);
+  --cui-sidebar-nav-title-color: rgba(255, 255, 255, 0.55);
+  --cui-sidebar-toggler-bg: rgba(255, 255, 255, 0.1);
+}
+
+.header {
+  --cui-header-bg: var(--uniform-primary-header-bg);
+  --cui-header-color: #ffffff;
+  --cui-header-border-color: rgba(255, 255, 255, 0.12);
+}
+
+// =============================================
+// Uniforme Secundario - Contenido sobre blanco
+// =============================================
+
+.card {
+  box-shadow: 0 0.125rem 0.375rem rgba($cosmic-navy, 0.08);
 }
 
 .wrapper {
@@ -194,12 +232,12 @@ body {
 // =============================================
 
 @include color-mode(dark) {
+  // Uniforme secundario en oscuro: contenido sobre navy
   body {
     background-color: $cosmic-navy;
   }
 
   .header {
-    --cui-header-bg: #{$cosmic-navy};
     --cui-header-border-color: rgba(255, 255, 255, 0.1);
   }
 
@@ -207,8 +245,5 @@ body {
     --cui-footer-bg: #{$cosmic-navy};
   }
 
-  .sidebar {
-    --cui-sidebar-bg: #{$cosmic-navy};
-    --cui-sidebar-brand-bg: rgba(#{$cosmic-purple}, 0.15);
-  }
+  // Uniforme primario se mantiene (gradiente navy -> purple)
 }
