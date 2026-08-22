@@ -28,8 +28,9 @@ const useSupabaseUserNotifications = (userId) => {
   useEffect(() => {
     if (!userId) return
 
+    const instanceId = Math.random().toString(36).slice(2, 10)
     const channel = supabase
-      .channel('notifications-realtime')
+      .channel(`notifications-realtime-${userId}-${instanceId}`)
       .on(
         'postgres_changes',
         {
