@@ -21,6 +21,7 @@
 
 import React from 'react'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
+import NotificationToasts from '../components/NotificationToasts'
 
 /**
  * DefaultLayout functional component
@@ -46,6 +47,7 @@ const DefaultLayout = () => {
         </div>
         <AppFooter />
       </div>
+      <NotificationToasts />
     </div>
   )
 }
