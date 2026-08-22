@@ -76,6 +76,39 @@ body {
 }
 
 // =============================================
+// Sidebar - User Chip
+// =============================================
+
+.sidebar-user {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.sidebar-user-avatar {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.sidebar-user-role {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sidebar-narrow,
+.sidebar-narrow-unfoldable:not(:hover) {
+  .sidebar-user {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .sidebar-user-info {
+    display: none;
+  }
+}
+
+// =============================================
 // Uniforme Secundario - Contenido sobre blanco
 // =============================================
 

@@ -51,7 +51,7 @@ const AppSidebar = () => {
         {profile?.avatar_url ? (
           <CAvatar src={profile.avatar_url} size="md" />
         ) : (
-          <CAvatar customClassName="sidebar-user-avatar" size="md">
+          <CAvatar className="sidebar-user-avatar" size="md">
             {initials}
           </CAvatar>
         )}
