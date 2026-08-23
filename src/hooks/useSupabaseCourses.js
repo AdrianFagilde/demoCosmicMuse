@@ -12,7 +12,7 @@ const useSupabaseCourses = () => {
   const fetchCourses = useCallback(async () => {
     const { data, error: fetchError } = await supabase
       .from('courses')
-      .select('*, course_tasks(id), course_enrollments(student_id)')
+      .select('*, course_tasks(id, task_checklist_items(id)), course_enrollments(student_id)')
       .order('created_at', { ascending: false })
     if (fetchError) {
       setError(fetchError)
