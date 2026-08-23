@@ -1,13 +1,6 @@
 import React from 'react'
 import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
-
-const formatDateTime = (value) => {
-  if (!value) return '--'
-  return new Date(value).toLocaleString('es-ES', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
-}
+import { formatDateTime } from '../../../utils/format'
 
 const NotificationLog = ({ entries }) => {
   return (

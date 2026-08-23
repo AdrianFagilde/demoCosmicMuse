@@ -1,5 +1,17 @@
 export const DELINQUENCY_DAYS = 30
 
+export const INSTRUMENT_OPTIONS = ['Piano', 'Guitarra', 'Violín', 'Saxofón', 'Batería', 'Otro']
+
+export const LEVEL_OPTIONS = ['Principiante', 'Intermedio', 'Avanzado']
+
+export const normalizeUsername = (fullName) =>
+  fullName
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '.')
+    .replace(/[^a-z0-9.]/g, '')
+
 export const isDelinquentSince = (lastPaymentDate) => {
   if (!lastPaymentDate) return true
   const elapsedDays = (Date.now() - new Date(lastPaymentDate).getTime()) / (1000 * 60 * 60 * 24)

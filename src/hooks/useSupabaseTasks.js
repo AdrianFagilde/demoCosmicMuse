@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import supabase from '../lib/supabase'
+import { notifyInApp } from '../utils/notifications'
 
 const useSupabaseTasks = (userId) => {
   const [tasks, setTasks] = useState([])
@@ -41,9 +42,9 @@ const useSupabaseTasks = (userId) => {
         progress: taskData.progress || 0,
       })
       if (!error) {
-        await supabase.from('notifications').insert({
-          sender_id: taskData.assignedBy || null,
-          recipient_id: taskData.studentId,
+        await notifyInApp({
+          senderId: taskData.assignedBy || null,
+          recipients: [{ id: taskData.studentId }],
           title: 'Nueva tarea asignada',
           message: `Se te asignó la tarea: ${taskData.title}`,
         })

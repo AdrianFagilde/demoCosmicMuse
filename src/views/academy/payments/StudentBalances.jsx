@@ -9,6 +9,7 @@ import {
   CFormInput,
   CRow,
 } from '@coreui/react'
+import { formatDateTime } from '../../../utils/format'
 
 const StudentBalances = ({
   studentBalances,
@@ -28,14 +29,6 @@ const StudentBalances = ({
       return matchesText && matchesStatus
     })
   }, [studentBalances, filterText, filterStatus])
-
-  const formatDateTime = (value) => {
-    if (!value) return '--'
-    return new Date(value).toLocaleString('es-ES', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    })
-  }
 
   return (
     <CRow className="mb-4">

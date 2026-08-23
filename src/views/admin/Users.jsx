@@ -49,14 +49,7 @@ const Users = () => {
   }, [profile?.role, fetchUsers])
 
   if (!profile || profile.role !== 'admin') {
-    return (
-      <CCard className="mb-4">
-        <CCardBody>
-          <h4>Acceso restringido</h4>
-          <p>Solo los administradores pueden gestionar usuarios.</p>
-        </CCardBody>
-      </CCard>
-    )
+    return <RestrictedAccess message="Solo los administradores pueden gestionar usuarios." />
   }
 
   if (loading) {

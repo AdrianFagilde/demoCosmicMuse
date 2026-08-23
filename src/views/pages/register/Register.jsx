@@ -18,6 +18,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilEnvelopeClosed, cilEducation, cilPhone } from '@coreui/icons'
 import supabase from '../../../lib/supabase'
+import { INSTRUMENT_OPTIONS, normalizeUsername } from '../../../utils/students'
 
 const Register = () => {
   const [fullName, setFullName] = useState('')
@@ -57,12 +58,7 @@ const Register = () => {
       return
     }
 
-    const username = fullName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '.')
-      .replace(/[^a-z0-9.]/g, '')
+    const username = normalizeUsername(fullName)
 
     const metaData = {
       full_name: fullName,
@@ -200,12 +196,11 @@ const Register = () => {
                         onChange={(e) => setInstrument(e.target.value)}
                       >
                         <option value="">Selecciona un instrumento (opcional)</option>
-                        <option value="Piano">Piano</option>
-                        <option value="Guitarra">Guitarra</option>
-                        <option value="Violin">Violin</option>
-                        <option value="Saxofon">Saxofon</option>
-                        <option value="Bateria">Bateria</option>
-                        <option value="Otro">Otro</option>
+                        {INSTRUMENT_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
                       </CFormSelect>
                     </CInputGroup>
 

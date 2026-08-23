@@ -17,11 +17,7 @@ import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import supabase from '../../lib/supabase'
 import { computeStudentBalances } from '../../utils/students'
-
-const formatDateTime = (value) => {
-  if (!value) return '--'
-  return new Date(value).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
-}
+import { formatDateTime } from '../../utils/format'
 
 const SendNotifications = () => {
   const { user } = useAuth()

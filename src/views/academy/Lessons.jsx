@@ -26,6 +26,7 @@ import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseLessons from '../../hooks/useSupabaseLessons'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
+import RestrictedAccess from '../../components/RestrictedAccess'
 
 const emptyForm = {
   studentId: '',
@@ -62,14 +63,7 @@ const Lessons = () => {
   }, [lessons, search])
 
   if (!profile || profile.role !== 'admin') {
-    return (
-      <CCard className="mb-4">
-        <CCardBody>
-          <h4>Acceso restringido</h4>
-          <p>Solo los administradores pueden gestionar las clases.</p>
-        </CCardBody>
-      </CCard>
-    )
+    return <RestrictedAccess message="Solo los administradores pueden gestionar las clases." />
   }
 
   if (loading) {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import supabase from '../lib/supabase'
+import { notifyInApp } from '../utils/notifications'
 
 const useSupabaseLessons = (studentId) => {
   const [lessons, setLessons] = useState([])
@@ -44,9 +45,9 @@ const useSupabaseLessons = (studentId) => {
         teacher: lessonData.teacher,
       })
       if (!error) {
-        await supabase.from('notifications').insert({
-          sender_id: lessonData.createdBy || null,
-          recipient_id: lessonData.studentId,
+        await notifyInApp({
+          senderId: lessonData.createdBy || null,
+          recipients: [{ id: lessonData.studentId }],
           title: 'Nueva clase programada',
           message: `Clase de ${lessonData.instrument} el ${lessonData.lessonDate} a las ${lessonData.lessonTime?.slice(0, 5)}`,
         })

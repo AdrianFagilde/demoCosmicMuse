@@ -22,6 +22,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
+import RestrictedAccess from '../../components/RestrictedAccess'
 
 const StudentDetail = () => {
   const { id } = useParams()
@@ -35,21 +36,16 @@ const StudentDetail = () => {
 
   const [localProgress, setLocalProgress] = useState(student?.progress || 0)
   const [localAttendance, setLocalAttendance] = useState(student?.attendance || 0)
-  const [syncedStudent, setSyncedStudent] = useState(null)
-  if (student && syncedStudent !== student) {
-    setSyncedStudent(student)
+  const [syncedId, setSyncedId] = useState(null)
+  if (student && syncedId !== student.id) {
+    setSyncedId(student.id)
     setLocalProgress(student.progress || 0)
     setLocalAttendance(student.attendance || 0)
   }
 
   if (!isAdmin) {
     return (
-      <CCard className="mb-4">
-        <CCardBody>
-          <h4>Acceso restringido</h4>
-          <p>Sólo los administradores pueden ver y editar perfiles de estudiantes.</p>
-        </CCardBody>
-      </CCard>
+      <RestrictedAccess message="Sólo los administradores pueden ver y editar perfiles de estudiantes." />
     )
   }
 

@@ -23,6 +23,8 @@ import { cilCamera, cilUser } from '@coreui/icons'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseLessons from '../../hooks/useSupabaseLessons'
 import supabase from '../../lib/supabase'
+import RestrictedAccess from '../../components/RestrictedAccess'
+import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 
 const MyProfile = () => {
   const { user, profile, refreshProfile } = useAuth()
@@ -54,14 +56,7 @@ const MyProfile = () => {
   )
 
   if (!profile || (profile.role !== 'student' && profile.role !== 'admin')) {
-    return (
-      <CCard className="mb-4">
-        <CCardBody>
-          <h4>Acceso restringido</h4>
-          <p>Debes iniciar sesion para ver tu perfil.</p>
-        </CCardBody>
-      </CCard>
-    )
+    return <RestrictedAccess message="Debes iniciar sesion para ver tu perfil." />
   }
 
   const handleAvatarChange = (e) => {
@@ -261,12 +256,11 @@ const MyProfile = () => {
                 onChange={(e) => setForm((f) => ({ ...f, instrument: e.target.value }))}
               >
                 <option value="">Seleccionar...</option>
-                <option value="Piano">Piano</option>
-                <option value="Guitarra">Guitarra</option>
-                <option value="Violin">Violin</option>
-                <option value="Saxofon">Saxofon</option>
-                <option value="Bateria">Bateria</option>
-                <option value="Otro">Otro</option>
+                {INSTRUMENT_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </CFormSelect>
               <CFormSelect
                 label="Nivel"
@@ -274,9 +268,11 @@ const MyProfile = () => {
                 value={form.level}
                 onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))}
               >
-                <option value="Principiante">Principiante</option>
-                <option value="Intermedio">Intermedio</option>
-                <option value="Avanzado">Avanzado</option>
+                {LEVEL_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </CFormSelect>
               <CButton color="primary" onClick={handleSave} disabled={saving}>
                 {saving ? 'Guardando...' : 'Guardar cambios'}

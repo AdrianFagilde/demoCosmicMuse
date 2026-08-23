@@ -27,6 +27,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import supabase from '../../lib/supabase'
+import RestrictedAccess from '../../components/RestrictedAccess'
+import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 
 const emptyForm = {
   fullName: '',
@@ -62,14 +64,7 @@ const Students = () => {
 
   if (!profile || profile.role !== 'admin') {
     return (
-      <CCard className="mb-4">
-        <CCardBody>
-          <h4>Acceso restringido</h4>
-          <p>
-            Solo los administradores pueden ver la lista de estudiantes y el control de la academia.
-          </p>
-        </CCardBody>
-      </CCard>
+      <RestrictedAccess message="Solo los administradores pueden ver la lista de estudiantes y el control de la academia." />
     )
   }
 
@@ -244,12 +239,11 @@ const Students = () => {
             onChange={(e) => setForm((f) => ({ ...f, instrument: e.target.value }))}
           >
             <option value="">Seleccionar...</option>
-            <option value="Piano">Piano</option>
-            <option value="Guitarra">Guitarra</option>
-            <option value="Violín">Violín</option>
-            <option value="Saxofón">Saxofón</option>
-            <option value="Batería">Batería</option>
-            <option value="Otro">Otro</option>
+            {INSTRUMENT_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
           </CFormSelect>
           <CFormSelect
             label="Nivel"
@@ -257,9 +251,11 @@ const Students = () => {
             value={form.level}
             onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))}
           >
-            <option value="Principiante">Principiante</option>
-            <option value="Intermedio">Intermedio</option>
-            <option value="Avanzado">Avanzado</option>
+            {LEVEL_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
           </CFormSelect>
         </CModalBody>
         <CModalFooter>

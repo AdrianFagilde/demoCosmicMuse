@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { CContainer, CSpinner } from '@coreui/react'
 
 import { useAuth } from '../context/AuthContext'
@@ -7,6 +7,7 @@ import { routes } from '../routes'
 
 const AppContent = () => {
   const { profile, loading, isAuthenticated } = useAuth()
+  const location = useLocation()
 
   if (loading || (isAuthenticated && !profile)) {
     return (
@@ -31,7 +32,13 @@ const AppContent = () => {
                 path={route.path}
                 exact={route.exact}
                 name={route.name}
-                element={allowed ? <route.element /> : <Navigate to="/dashboard" replace />}
+                element={
+                  allowed ? (
+                    <route.element key={location.pathname} />
+                  ) : (
+                    <Navigate to="/dashboard" replace />
+                  )
+                }
               />
             )
           })}

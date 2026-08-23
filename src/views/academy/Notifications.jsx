@@ -4,11 +4,7 @@ import { cilCheckAlt } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseUserNotifications from '../../hooks/useSupabaseUserNotifications'
-
-const formatDateTime = (value) => {
-  if (!value) return '--'
-  return new Date(value).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
-}
+import { formatDateTime } from '../../utils/format'
 
 const Notifications = () => {
   const { user } = useAuth()

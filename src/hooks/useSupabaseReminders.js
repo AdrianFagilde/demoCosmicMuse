@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import supabase from '../lib/supabase'
+import { notifyInApp } from '../utils/notifications'
 import { isDelinquentSince } from '../utils/students'
 
 const useSupabaseReminders = (userId) => {
@@ -137,16 +138,12 @@ const useSupabaseReminders = (userId) => {
         await supabase.from('notification_log').insert(logEntries)
       }
 
-      const inAppEntries = recipients.map((student) => ({
-        sender_id: reminder.created_by,
-        recipient_id: student.id,
+      await notifyInApp({
+        senderId: reminder.created_by,
+        recipients,
         title: `Recordatorio de pago - ${reminder.target_group}`,
         message: reminder.message,
-      }))
-
-      if (inAppEntries.length > 0) {
-        await supabase.from('notifications').insert(inAppEntries)
-      }
+      })
 
       const intervalValue = Number(reminder.interval_value) || 0
       let nextSchedule = reminder.schedule_at

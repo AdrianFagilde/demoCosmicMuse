@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import supabase from '../lib/supabase'
+import { notifyInApp } from '../utils/notifications'
 
 const useSupabasePayments = (userId) => {
   const [payments, setPayments] = useState([])
@@ -60,9 +61,9 @@ const useSupabasePayments = (userId) => {
         recorded_by: userId,
       })
       if (!error) {
-        await supabase.from('notifications').insert({
-          sender_id: userId,
-          recipient_id: paymentData.studentId,
+        await notifyInApp({
+          senderId: userId,
+          recipients: [{ id: paymentData.studentId }],
           title: 'Pago registrado',
           message: `Se registró un pago de $${Number(paymentData.amount).toFixed(2)} (${paymentData.method})`,
         })

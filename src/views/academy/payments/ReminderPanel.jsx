@@ -14,17 +14,10 @@ import {
 } from '@coreui/react'
 import { cilBell, cilSend } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
+import { formatDateTime } from '../../../utils/format'
 
 const reminderUnits = ['Días', 'Horas']
 const reminderTargetGroups = ['Individual', 'Todos', 'Morosos', 'Pagados']
-
-const formatDateTime = (value) => {
-  if (!value) return '--'
-  return new Date(value).toLocaleString('es-ES', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
-}
 
 const ReminderPanel = ({
   studentOptions,
