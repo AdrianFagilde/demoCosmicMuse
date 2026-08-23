@@ -14,9 +14,6 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user)
         const p = await getProfile(session.user.id)
-        if (p?.role === 'admin' && session.user.user_metadata?.role !== 'admin') {
-          await supabase.auth.updateUser({ data: { role: 'admin' } })
-        }
         setProfile(p)
       }
       setLoading(false)
@@ -28,9 +25,6 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user)
         const p = await getProfile(session.user.id)
-        if (p?.role === 'admin' && session.user.user_metadata?.role !== 'admin') {
-          await supabase.auth.updateUser({ data: { role: 'admin' } })
-        }
         setProfile(p)
       } else {
         setUser(null)
