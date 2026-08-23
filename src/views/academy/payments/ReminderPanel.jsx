@@ -43,10 +43,17 @@ const ReminderPanel = ({
     notifyWhatsApp: false,
     active: true,
   })
+  const [submitError, setSubmitError] = useState('')
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    onAddReminder(form)
+    if (!form.scheduleAt) return
+    setSubmitError('')
+    const ok = await onAddReminder(form)
+    if (!ok) {
+      setSubmitError('No se pudo crear el recordatorio. Intenta de nuevo.')
+      return
+    }
     setForm({
       studentId: studentOptions[0]?.value || '',
       message: 'Recordatorio de pago próximo.',
@@ -68,6 +75,7 @@ const ReminderPanel = ({
             <CRow className="g-3">
               <CCol md={4}>
                 <CForm onSubmit={handleSubmit}>
+                  {submitError && <div className="alert alert-danger mb-3">{submitError}</div>}
                   <CRow className="g-3">
                     {form.targetGroup === 'Individual' && (
                       <CCol md={12}>

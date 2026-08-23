@@ -4,16 +4,21 @@ import supabase from '../lib/supabase'
 const useSupabaseTasks = (userId) => {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const fetchTasks = useCallback(async () => {
-    const { data, error } = await supabase
+    const { data, error: fetchError } = await supabase
       .from('tasks')
       .select(
         '*, profiles!tasks_student_id_fkey(full_name), assigned_by_profile:profiles!tasks_assigned_by_fkey(full_name)',
       )
       .order('created_at', { ascending: false })
-    if (!error && data) {
-      setTasks(data)
+    if (fetchError) {
+      setError(fetchError)
+      console.error('[Tasks] Error:', fetchError.message, fetchError)
+    } else {
+      setError(null)
+      setTasks(data || [])
     }
     setLoading(false)
   }, [])
@@ -92,6 +97,7 @@ const useSupabaseTasks = (userId) => {
   return {
     tasks,
     loading,
+    error,
     addTask,
     updateTask,
     deleteTask,

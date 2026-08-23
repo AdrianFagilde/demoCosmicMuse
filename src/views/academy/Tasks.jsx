@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   CBadge,
   CButton,
@@ -48,6 +48,14 @@ const Tasks = () => {
     progress: 0,
   })
   const [formError, setFormError] = useState('')
+  const progressTimersRef = useRef({})
+
+  useEffect(
+    () => () => {
+      Object.values(progressTimersRef.current).forEach(clearTimeout)
+    },
+    [],
+  )
 
   const studentTasks = tasks.filter((task) => task.student_id === user?.id)
   const visibleTasks = isAdmin ? tasks : studentTasks
@@ -95,8 +103,11 @@ const Tasks = () => {
     await changeTaskStatus(taskId, status)
   }
 
-  const handleProgressChange = async (taskId, value) => {
-    await changeTaskProgress(taskId, value)
+  const handleProgressChange = (taskId, value) => {
+    clearTimeout(progressTimersRef.current[taskId])
+    progressTimersRef.current[taskId] = setTimeout(() => {
+      changeTaskProgress(taskId, value)
+    }, 500)
   }
 
   return (

@@ -22,7 +22,8 @@ import { useAuth } from '../../context/AuthContext'
 import supabase from '../../lib/supabase'
 
 const Users = () => {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
+  const currentUserId = user?.id
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -66,13 +67,22 @@ const Users = () => {
     )
   }
 
-  const handleRoleChange = async (userId, newRole) => {
+  const handleRoleChange = async (targetUser, newRole) => {
+    if (targetUser.id === currentUserId) return
+    if (
+      targetUser.role === 'admin' &&
+      !window.confirm(
+        `¿Quitar permisos de administrador a ${targetUser.full_name}? Esta acción no se puede deshacer desde la app.`,
+      )
+    ) {
+      return
+    }
     const { error } = await supabase
       .from('profiles')
       .update({ role: newRole, updated_at: new Date().toISOString() })
-      .eq('id', userId)
+      .eq('id', targetUser.id)
     if (!error) {
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)))
+      setUsers((prev) => prev.map((u) => (u.id === targetUser.id ? { ...u, role: newRole } : u)))
     }
   }
 
@@ -165,15 +175,19 @@ const Users = () => {
                   </CTableDataCell>
                   <CTableDataCell>{user.email}</CTableDataCell>
                   <CTableDataCell>
-                    <CFormSelect
-                      size="sm"
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      style={{ width: '140px' }}
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="student">Student</option>
-                    </CFormSelect>
+                    {user.id === currentUserId ? (
+                      <CBadge color="info">Tu cuenta</CBadge>
+                    ) : (
+                      <CFormSelect
+                        size="sm"
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user, e.target.value)}
+                        style={{ width: '140px' }}
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="student">Student</option>
+                      </CFormSelect>
+                    )}
                   </CTableDataCell>
                   <CTableDataCell>
                     <CFormSelect
@@ -191,14 +205,18 @@ const Users = () => {
                     {user.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : '—'}
                   </CTableDataCell>
                   <CTableDataCell className="text-center">
-                    <CButton
-                      color="danger"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      <CIcon icon={cilTrash} />
-                    </CButton>
+                    {user.id === currentUserId ? (
+                      '—'
+                    ) : (
+                      <CButton
+                        color="danger"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(user.id)}
+                      >
+                        <CIcon icon={cilTrash} />
+                      </CButton>
+                    )}
                   </CTableDataCell>
                 </CTableRow>
               ))}

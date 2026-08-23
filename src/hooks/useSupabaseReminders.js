@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import supabase from '../lib/supabase'
+import { isDelinquentSince } from '../utils/students'
 
 const useSupabaseReminders = (userId) => {
   const [reminders, setReminders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const remindersRef = useRef(reminders)
   const sendingRef = useRef(new Set())
 
@@ -13,14 +15,18 @@ const useSupabaseReminders = (userId) => {
 
   const fetchReminders = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await supabase
+    const { data, error: fetchError } = await supabase
       .from('payment_reminders')
       .select(
         '*, profiles!payment_reminders_student_id_fkey(full_name), creator:profiles!payment_reminders_created_by_fkey(full_name)',
       )
       .order('schedule_at', { ascending: true })
-    if (!error && data) {
-      setReminders(data)
+    if (fetchError) {
+      setError(fetchError)
+      console.error('[Reminders] Error:', fetchError.message, fetchError)
+    } else {
+      setError(null)
+      setReminders(data || [])
     }
     setLoading(false)
   }, [])
@@ -81,15 +87,18 @@ const useSupabaseReminders = (userId) => {
     const { data: allPayments } = await supabase.from('payments').select('student_id, payment_date')
 
     const studentsWithStatus = students.map((s) => {
-      const payments = (allPayments || []).filter((p) => p.student_id === s.id)
-      const sorted = payments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date))
-      const last = sorted[0] ? new Date(sorted[0].payment_date) : null
-      const isDelinquent = !last || (new Date() - last) / 86400000 > 30
+      const lastPayment = (allPayments || [])
+        .filter((p) => p.student_id === s.id && p.payment_date)
+        .reduce(
+          (latest, p) =>
+            !latest || new Date(p.payment_date) > new Date(latest) ? p.payment_date : latest,
+          null,
+        )
       return {
         id: s.id,
         name: s.full_name,
         email: s.email,
-        paymentStatus: isDelinquent ? 'Moroso' : 'Pagado',
+        paymentStatus: isDelinquentSince(lastPayment) ? 'Moroso' : 'Pagado',
       }
     })
 
@@ -190,6 +199,7 @@ const useSupabaseReminders = (userId) => {
     reminders,
     upcomingReminders,
     loading,
+    error,
     addReminder,
     updateReminder,
     sendReminder,

@@ -4,6 +4,7 @@ import supabase from '../lib/supabase'
 const useSupabaseLessons = (studentId) => {
   const [lessons, setLessons] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const fetchLessons = useCallback(async () => {
     let query = supabase
@@ -15,9 +16,13 @@ const useSupabaseLessons = (studentId) => {
       query = query.eq('student_id', studentId)
     }
 
-    const { data, error } = await query
-    if (!error && data) {
-      setLessons(data)
+    const { data, error: fetchError } = await query
+    if (fetchError) {
+      setError(fetchError)
+      console.error('[Lessons] Error:', fetchError.message, fetchError)
+    } else {
+      setError(null)
+      setLessons(data || [])
     }
     setLoading(false)
   }, [studentId])
@@ -71,7 +76,7 @@ const useSupabaseLessons = (studentId) => {
     return !error
   }, [])
 
-  return { lessons, loading, addLesson, updateLesson, deleteLesson, refetch: fetchLessons }
+  return { lessons, loading, error, addLesson, updateLesson, deleteLesson, refetch: fetchLessons }
 }
 
 export default useSupabaseLessons

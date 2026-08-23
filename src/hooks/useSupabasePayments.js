@@ -4,16 +4,21 @@ import supabase from '../lib/supabase'
 const useSupabasePayments = (userId) => {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const fetchPayments = useCallback(async () => {
-    const { data, error } = await supabase
+    const { data, error: fetchError } = await supabase
       .from('payments')
       .select(
         '*, profiles!payments_student_id_fkey(full_name), recorder:profiles!payments_recorded_by_fkey(full_name)',
       )
       .order('created_at', { ascending: false })
-    if (!error && data) {
-      setPayments(data)
+    if (fetchError) {
+      setError(fetchError)
+      console.error('[Payments] Error:', fetchError.message, fetchError)
+    } else {
+      setError(null)
+      setPayments(data || [])
     }
     setLoading(false)
   }, [])
@@ -38,6 +43,8 @@ const useSupabasePayments = (userId) => {
         if (!uploadError && uploadData) {
           const { data: urlData } = supabase.storage.from('payment-proofs').getPublicUrl(filePath)
           proofUrl = urlData?.publicUrl || ''
+        } else if (uploadError) {
+          console.warn('[Payments] Upload comprobante falló:', uploadError.message)
         }
       }
 
@@ -91,7 +98,7 @@ const useSupabasePayments = (userId) => {
     })
   }, [])
 
-  return { payments, loading, addPayment, getStudentBalances, refetch: fetchPayments }
+  return { payments, loading, error, addPayment, getStudentBalances, refetch: fetchPayments }
 }
 
 export default useSupabasePayments

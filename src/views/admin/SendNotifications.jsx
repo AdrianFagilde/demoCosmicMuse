@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   CButton,
   CCard,
@@ -16,6 +16,7 @@ import { cilSend } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import supabase from '../../lib/supabase'
+import { computeStudentBalances } from '../../utils/students'
 
 const formatDateTime = (value) => {
   if (!value) return '--'
@@ -83,6 +84,11 @@ const SendNotifications = () => {
     }))
   }
 
+  const studentNamesById = useMemo(
+    () => new Map(students.map((s) => [s.id, s.full_name])),
+    [students],
+  )
+
   const handleSend = async () => {
     if (!form.title.trim() || !form.body.trim()) {
       setMessage({ type: 'danger', text: 'Titulo y mensaje son obligatorios.' })
@@ -94,13 +100,11 @@ const SendNotifications = () => {
       recipients = students
     } else if (form.target === 'selected') {
       recipients = students.filter((s) => form.selectedStudents.includes(s.id))
-    } else if (form.target === 'morosos') {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .eq('role', 'student')
-        .eq('status', 'Inactivo')
-      recipients = data || []
+    } else if (form.target === 'delinquent') {
+      const { data: payments } = await supabase.from('payments').select('student_id, payment_date')
+      recipients = computeStudentBalances(students, payments || []).filter(
+        (s) => s.paymentStatus === 'Moroso',
+      )
     }
 
     if (recipients.length === 0) {
@@ -178,7 +182,7 @@ const SendNotifications = () => {
               >
                 <option value="all">Todos los estudiantes</option>
                 <option value="selected">Seleccionados</option>
-                <option value="morosos">Inactivos / Morosos</option>
+                <option value="delinquent">Morosos (más de 30 días sin pagar)</option>
               </CFormSelect>
 
               {form.target === 'selected' && (
@@ -237,9 +241,7 @@ const SendNotifications = () => {
                     {notifications.map((n) => (
                       <tr key={n.id}>
                         <td>
-                          {n.recipient_id
-                            ? students.find((s) => s.id === n.recipient_id)?.full_name || '...'
-                            : 'N/A'}
+                          {n.recipient_id ? studentNamesById.get(n.recipient_id) || '—' : 'N/A'}
                         </td>
                         <td className="fw-semibold">{n.title}</td>
                         <td className="text-truncate" style={{ maxWidth: '200px' }}>

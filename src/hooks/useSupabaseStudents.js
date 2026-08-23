@@ -4,18 +4,20 @@ import supabase from '../lib/supabase'
 const useSupabaseStudents = () => {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const fetchStudents = useCallback(async () => {
-    const { data, error } = await supabase
+    const { data, error: fetchError } = await supabase
       .from('profiles')
       .select('*')
       .eq('role', 'student')
       .order('full_name')
-    if (error) {
-      console.error('[Students] Error:', error.message, error)
-    }
-    if (!error && data) {
-      setStudents(data)
+    if (fetchError) {
+      setError(fetchError)
+      console.error('[Students] Error:', fetchError.message, fetchError)
+    } else {
+      setError(null)
+      setStudents(data || [])
     }
     setLoading(false)
   }, [])
@@ -86,7 +88,15 @@ const useSupabaseStudents = () => {
     }
   }, [])
 
-  return { students, loading, getStudent, updateStudentMetrics, getSummary, refetch: fetchStudents }
+  return {
+    students,
+    loading,
+    error,
+    getStudent,
+    updateStudentMetrics,
+    getSummary,
+    refetch: fetchStudents,
+  }
 }
 
 export default useSupabaseStudents

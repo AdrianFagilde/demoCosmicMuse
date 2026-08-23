@@ -4,14 +4,20 @@ import supabase from '../lib/supabase'
 const useSupabaseNotifications = () => {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const fetchEntries = useCallback(async () => {
-    const { data, error } = await supabase
+    const { data, error: fetchError } = await supabase
       .from('notification_log')
       .select('*')
       .order('sent_at', { ascending: false })
-    if (!error && data) {
-      setEntries(data)
+      .limit(100)
+    if (fetchError) {
+      setError(fetchError)
+      console.error('[NotificationLog] Error:', fetchError.message, fetchError)
+    } else {
+      setError(null)
+      setEntries(data || [])
     }
     setLoading(false)
   }, [])
@@ -57,7 +63,7 @@ const useSupabaseNotifications = () => {
     }
   }, [])
 
-  return { entries, loading, addEntries, notifyBrowser, refetch: fetchEntries }
+  return { entries, loading, error, addEntries, notifyBrowser, refetch: fetchEntries }
 }
 
 export default useSupabaseNotifications

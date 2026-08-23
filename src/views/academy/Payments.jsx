@@ -1,21 +1,12 @@
-import React, { useEffect, useState } from 'react'
-import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CNav,
-  CNavItem,
-  CNavLink,
-  CRow,
-  CSpinner,
-} from '@coreui/react'
+import React, { useMemo, useState } from 'react'
+import { CCard, CCardBody, CCardHeader, CCol, CNav, CNavItem, CNavLink, CRow } from '@coreui/react'
 
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabasePayments from '../../hooks/useSupabasePayments'
 import useSupabaseReminders from '../../hooks/useSupabaseReminders'
 import useSupabaseNotifications from '../../hooks/useSupabaseNotifications'
+import { computeStudentBalances } from '../../utils/students'
 
 import PaymentForm from './payments/PaymentForm'
 import PaymentHistory from './payments/PaymentHistory'
@@ -30,16 +21,14 @@ const Payments = () => {
   const [filterStatus, setFilterStatus] = useState('Todos')
 
   const { students } = useSupabaseStudents()
-  const { payments, addPayment, getStudentBalances } = useSupabasePayments(user?.id)
+  const { payments, addPayment } = useSupabasePayments(user?.id)
   const { upcomingReminders, addReminder, sendReminder } = useSupabaseReminders(user?.id)
   const { entries: notificationLog, notifyBrowser } = useSupabaseNotifications()
-  const [studentBalances, setStudentBalances] = useState([])
 
-  useEffect(() => {
-    if (students.length > 0) {
-      getStudentBalances(students).then(setStudentBalances)
-    }
-  }, [students, getStudentBalances, payments])
+  const studentBalances = useMemo(
+    () => computeStudentBalances(students, payments),
+    [students, payments],
+  )
 
   const studentOptions = students.map((s) => ({ value: s.id, label: s.full_name }))
 

@@ -4,17 +4,22 @@ import supabase from '../lib/supabase'
 const useSupabaseUserNotifications = (userId) => {
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const fetchNotifications = useCallback(async () => {
     if (!userId) return
-    const { data, error } = await supabase
+    const { data, error: fetchError } = await supabase
       .from('notifications')
       .select('*, sender:profiles!notifications_sender_id_fkey(full_name)')
       .eq('recipient_id', userId)
       .order('created_at', { ascending: false })
       .limit(50)
-    if (!error && data) {
-      setNotifications(data)
+    if (fetchError) {
+      setError(fetchError)
+      console.error('[Notifications] Error:', fetchError.message, fetchError)
+    } else {
+      setError(null)
+      setNotifications(data || [])
     }
     setLoading(false)
   }, [userId])
@@ -82,6 +87,7 @@ const useSupabaseUserNotifications = (userId) => {
     notifications,
     unreadCount,
     loading,
+    error,
     markAsRead,
     markAllAsRead,
     refetch: fetchNotifications,

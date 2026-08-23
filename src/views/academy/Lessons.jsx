@@ -45,6 +45,7 @@ const Lessons = () => {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -82,6 +83,7 @@ const Lessons = () => {
   const openCreate = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setFormError('')
     setModalVisible(true)
   }
 
@@ -95,6 +97,7 @@ const Lessons = () => {
       duration: lesson.duration || '60',
       teacher: lesson.teacher || '',
     })
+    setFormError('')
     setModalVisible(true)
   }
 
@@ -106,11 +109,14 @@ const Lessons = () => {
       !form.lessonTime ||
       !form.teacher
     ) {
+      setFormError('Completa estudiante, instrumento, fecha, hora y profesor.')
       return
     }
     setSaving(true)
+    setFormError('')
+    let ok
     if (editingId) {
-      await updateLesson(editingId, {
+      ok = await updateLesson(editingId, {
         student_id: form.studentId,
         instrument: form.instrument,
         lesson_date: form.lessonDate,
@@ -119,7 +125,12 @@ const Lessons = () => {
         teacher: form.teacher,
       })
     } else {
-      await addLesson({ ...form, createdBy: profile.id })
+      ok = await addLesson({ ...form, createdBy: profile.id })
+    }
+    if (!ok) {
+      setFormError('No se pudo guardar la clase. Intenta de nuevo.')
+      setSaving(false)
+      return
     }
     setSaving(false)
     setModalVisible(false)
@@ -217,6 +228,7 @@ const Lessons = () => {
       <CModal visible={modalVisible} onClose={() => setModalVisible(false)}>
         <CModalHeader>{editingId ? 'Editar clase' : 'Nueva clase'}</CModalHeader>
         <CModalBody>
+          {formError && <div className="alert alert-danger">{formError}</div>}
           <CFormSelect
             label="Estudiante"
             className="mb-3"

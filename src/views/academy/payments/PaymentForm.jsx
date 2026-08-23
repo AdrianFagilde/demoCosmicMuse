@@ -27,10 +27,16 @@ const PaymentForm = ({ studentOptions, onSubmit }) => {
     notes: '',
   })
   const [proofFile, setProofFile] = useState(null)
+  const [submitError, setSubmitError] = useState('')
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    await onSubmit(form, proofFile)
+    setSubmitError('')
+    const ok = await onSubmit(form, proofFile)
+    if (!ok) {
+      setSubmitError('No se pudo registrar el pago. Revisa los datos e intenta de nuevo.')
+      return
+    }
     setForm({
       studentId: studentOptions[0]?.value || '',
       amount: '',
@@ -50,6 +56,7 @@ const PaymentForm = ({ studentOptions, onSubmit }) => {
 
   return (
     <CForm onSubmit={handleSubmit}>
+      {submitError && <div className="alert alert-danger">{submitError}</div>}
       <CRow className="g-3">
         <CCol md={6}>
           <CFormSelect

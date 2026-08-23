@@ -6,7 +6,16 @@ import { useAuth } from '../context/AuthContext'
 import { routes } from '../routes'
 
 const AppContent = () => {
-  const { profile } = useAuth()
+  const { profile, loading, isAuthenticated } = useAuth()
+
+  if (loading || (isAuthenticated && !profile)) {
+    return (
+      <CContainer className="px-4 d-flex justify-content-center pt-4" lg>
+        <CSpinner color="primary" variant="grow" />
+      </CContainer>
+    )
+  }
+
   return (
     <CContainer className="px-4" lg>
       <Suspense fallback={<CSpinner color="primary" />}>
