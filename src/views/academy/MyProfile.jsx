@@ -24,6 +24,7 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabaseLessons from '../../hooks/useSupabaseLessons'
 import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
+import AvatarCropModal from '../../components/AvatarCropModal'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 
 const MyProfile = () => {
@@ -35,6 +36,8 @@ const MyProfile = () => {
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [cropOpen, setCropOpen] = useState(false)
+  const [cropSrc, setCropSrc] = useState(null)
 
   const [syncedProfile, setSyncedProfile] = useState(null)
   if (profile && syncedProfile !== profile) {
@@ -61,6 +64,7 @@ const MyProfile = () => {
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0]
+    e.target.value = ''
     if (!file) return
     if (!file.type.startsWith('image/')) {
       setMessage({ type: 'danger', text: 'Solo se permiten archivos de imagen.' })
@@ -70,8 +74,30 @@ const MyProfile = () => {
       setMessage({ type: 'danger', text: 'La imagen no debe superar 2 MB.' })
       return
     }
+    setCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(file)
+    })
+    setCropOpen(true)
+  }
+
+  const handleCancelCrop = () => {
+    setCropOpen(false)
+    setCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+  }
+
+  const handleCropConfirm = async (blob) => {
+    const file = new File([blob], blob.name || 'avatar.jpeg', { type: blob.type || 'image/jpeg' })
     setAvatarFile(file)
     setAvatarPreview(URL.createObjectURL(file))
+    setCropOpen(false)
+    setCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
   }
 
   const handleAvatarUpload = async () => {
@@ -151,12 +177,7 @@ const MyProfile = () => {
               <div className="d-flex flex-column align-items-center text-center mb-3">
                 <div className="position-relative mb-3">
                   {currentAvatar ? (
-                    <img
-                      src={currentAvatar}
-                      alt="Avatar"
-                      className="rounded-circle"
-                      style={{ width: '96px', height: '96px', objectFit: 'cover' }}
-                    />
+                    <CAvatar src={currentAvatar} size="xl" />
                   ) : (
                     <CAvatar color="primary" size="xl">
                       {profile.full_name
@@ -191,20 +212,16 @@ const MyProfile = () => {
             <CCardHeader>Foto de perfil</CCardHeader>
             <CCardBody>
               <div className="d-flex align-items-center gap-3">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center bg-body-secondary overflow-hidden"
-                  style={{ width: '72px', height: '72px', flexShrink: 0 }}
-                >
-                  {currentAvatar ? (
-                    <img
-                      src={currentAvatar}
-                      alt="Vista previa"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
+                {currentAvatar ? (
+                  <CAvatar src={currentAvatar} size="lg" style={{ flexShrink: 0 }} />
+                ) : (
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center bg-body-secondary overflow-hidden"
+                    style={{ width: '72px', height: '72px', flexShrink: 0 }}
+                  >
                     <CIcon icon={cilUser} size="xl" className="text-body-secondary" />
-                  )}
-                </div>
+                  </div>
+                )}
                 <div>
                   <CFormInput
                     type="file"
@@ -318,6 +335,12 @@ const MyProfile = () => {
           </CCard>
         </CCol>
       </CRow>
+      <AvatarCropModal
+        visible={cropOpen}
+        imageSrc={cropSrc}
+        onCancel={handleCancelCrop}
+        onConfirm={handleCropConfirm}
+      />
     </>
   )
 }
