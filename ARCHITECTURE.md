@@ -59,7 +59,7 @@ Cosmic Muse Academy es una SPA construida con React 19, Vite y CoreUI React, con
 ### Acceso a datos
 
 - `src/hooks/useSupabase*.js`
-  - Un hook por dominio: students, lessons, tasks, payments, reminders, notifications, userNotifications
+  - Un hook por dominio: students, lessons, tasks, payments, reminders, notifications, userNotifications, courses
   - Encapsulan queries, mutaciones y estado de carga; exponen `refetch`
   - Las vistas nunca hablan con Supabase directamente salvo casos puntuales (registro, subida de avatar)
 
@@ -77,6 +77,11 @@ Definido en `supabase/migrations/` (idempotentes, aplicar en orden):
 | `notification_log`  | Historial de notificaciones enviadas (WhatsApp/manual)                           |
 | `notifications`     | Notificaciones in-app por destinatario                                           |
 | `instruments`       | Catálogo de instrumentos                                                         |
+| `courses`           | Cursos creados por el admin                                                      |
+| `course_tasks`      | Tareas dentro de un curso (ordenadas por `position`)                             |
+| `task_checklist_items` | Ítems de checklist por tarea (ordenados por `position`)                       |
+| `course_enrollments` | Inscripción manual de estudiantes a cursos                                      |
+| `checklist_progress` | Marcado de ítems por estudiante (fuente del % de avance)                        |
 
 Buckets de Storage: `avatars` (público) y `payment-proofs` (privado, solo admin).
 
