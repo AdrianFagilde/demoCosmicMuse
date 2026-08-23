@@ -1,6 +1,6 @@
 # CoreUI Free React Admin Template - AI Assistant Rules
 
-You are working with the CoreUI Free React Admin Template, a professional admin dashboard built with React 19, CoreUI React components, and modern build tools. This project uses Vite for development and building, React Router for navigation, Redux for state management, and Sass for styling.
+You are working with the Cosmic Muse Academy dashboard (cosmo-music-dashboard), a professional admin dashboard built with React 19, CoreUI React components, and modern build tools. This project uses Vite for development and building, React Router for navigation, React Context + custom Supabase hooks for state and data management, and Sass for styling.
 
 ## Critical Rules
 
@@ -11,15 +11,15 @@ You are working with the CoreUI Free React Admin Template, a professional admin 
 - JSX for component markup
 - CoreUI React 5.x and @coreui/coreui 5.x
 - React Router 7.x for client-side routing
-- Redux 5.x with React-Redux for state management
+- Supabase JS v2 (Auth, Postgres with RLS, Storage, Realtime)
+- Recharts for data visualization
 - Vite 8.x for development server and building
 - Sass/SCSS for styling with Bootstrap 5 variables
-- Chart.js 4.x with @coreui/react-chartjs for data visualization
 
 ## Code Conventions
 
 **JavaScript/React Standards**:
-- Use functional components with Hooks (useState, useEffect, useSelector, etc.)
+- Use functional components with Hooks (useState, useEffect, useContext, etc.)
 - Follow React Hooks rules (only call at top level, only in React functions)
 - Use Prettier formatting: no semicolons, single quotes, 2-space indentation
 - Enforce ESLint rules with React and Prettier plugins
@@ -29,15 +29,17 @@ You are working with the CoreUI Free React Admin Template, a professional admin 
 
 **File Organization**:
 - `src/` - All source code
-  - `components/` - Reusable UI components (AppHeader, AppSidebar, etc.)
-  - `views/` - Page components organized by feature (dashboard, forms, charts, etc.)
+  - `components/` - Reusable UI components (AppHeader, AppSidebar, RestrictedAccess, etc.)
+  - `hooks/` - Custom Supabase data hooks (one per domain)
+  - `context/` - React Context providers (AuthContext)
+  - `utils/` - Shared helpers (students, format, notifications)
+  - `views/` - Page components organized by feature (dashboard, academy, admin, pages)
   - `layout/` - Layout wrapper components (DefaultLayout)
   - `assets/` - Static assets (images, brand logos)
   - `scss/` - Global styles and theme customization
-  - `routes.js` - Route definitions
-  - `_nav.js` - Navigation/sidebar menu configuration
-  - `store.js` - Redux store configuration
-  - `App.js` - Main application component with routing
+  - `routes.js` - Route definitions with allowed roles
+  - `navigation.jsx` - Sidebar menu configuration per role
+  - `App.jsx` - Main application component with routing
   - `index.js` - Application entry point
 
 **React/JSX Practices**:
@@ -58,19 +60,19 @@ You are working with the CoreUI Free React Admin Template, a professional admin 
 - Use SCSS variables from Bootstrap and CoreUI when possible
 
 **Routing Conventions**:
-- Use HashRouter for client-side routing (GitHub Pages compatible)
-- Define routes in routes.js as array of objects
+- Use BrowserRouter for client-side routing (SPA rewrites configured in vercel.json)
+- Define routes in routes.js as array of objects with optional `roles` (e.g. `roles: ['admin']`)
 - Lazy load route components for better performance
 - Use exact path matching where needed
-- Public routes (login, register, 404, 500) defined in App.js
+- Public routes (login, register, 404, 500) defined in App.jsx
 - Protected routes handled in DefaultLayout with AppContent
 
 **State Management**:
-- Use Redux for global state (theme, sidebar visibility)
-- Use Redux Toolkit pattern with actions and reducers
-- Connect components with useSelector and useDispatch hooks
+- Use React Context for global auth/session state (AuthContext: user, profile, role)
+- Use custom Supabase hooks (useSupabase*) per domain for data fetching and mutations
+- Hooks expose `{ data, loading, error }`; forms must surface errors and not reset on failure
 - Keep component-level state in useState when state is local
-- File: `src/store.js` - Redux store configuration
+- Real authorization lives in PostgreSQL RLS policies; the UI only hides or offers options
 
 **Naming Conventions**:
 - PascalCase for component files and component names (AppHeader.js, DefaultLayout.js)
@@ -82,40 +84,40 @@ You are working with the CoreUI Free React Admin Template, a professional admin 
 ## Project Structure
 
 ```
-coreui-free-react-admin-template/
+cosmo-music-dashboard/
 ├── public/              # Static assets served directly
 ├── src/
 │   ├── assets/         # Images, logos, icons
 │   │   ├── brand/     # Logo components
 │   │   └── images/    # Image files
-│   ├── components/     # Reusable UI components
-│   │   ├── AppHeader.js
-│   │   ├── AppSidebar.js
-│   │   ├── AppFooter.js
-│   │   ├── AppContent.js
-│   │   ├── AppBreadcrumb.js
+│   ├── components/     # Reusable UI components (.jsx)
+│   │   ├── AppHeader.jsx
+│   │   ├── AppSidebar.jsx
+│   │   ├── AppFooter.jsx
+│   │   ├── AppContent.jsx
+│   │   ├── AppBreadcrumb.jsx
 │   │   └── header/    # Header sub-components
+│   ├── context/        # React Context (AuthContext)
+│   ├── hooks/          # Supabase data hooks (useSupabase*.js)
+│   ├── utils/          # Shared helpers (students.js, format.js, notifications.js)
 │   ├── layout/         # Layout components
-│   │   └── DefaultLayout.js
+│   │   └── DefaultLayout.jsx
 │   ├── views/          # Page components
 │   │   ├── dashboard/ # Dashboard page
-│   │   ├── base/      # Base UI components examples
-│   │   ├── buttons/   # Button examples
-│   │   ├── forms/     # Form examples
-│   │   ├── charts/    # Chart examples
-│   │   ├── icons/     # Icon examples
-│   │   ├── notifications/ # Notification examples
-│   │   ├── widgets/   # Widget examples
+│   │   ├── academy/   # Students, lessons, payments, tasks, notifications
+│   │   ├── admin/     # Users, send notifications
 │   │   └── pages/     # Auth & error pages
 │   ├── scss/           # Stylesheets
-│   │   ├── style.scss # Main stylesheet
+│   │   ├── style.scss  # Main stylesheet
 │   │   └── _custom.scss # Custom overrides
-│   ├── App.js          # Main app component
+│   ├── App.jsx         # Main app component
 │   ├── index.js        # Entry point
-│   ├── routes.js       # Route definitions
-│   ├── _nav.js         # Navigation config
-│   └── store.js        # Redux store
-├── build/              # Build utilities
+│   ├── routes.js       # Route definitions with roles
+│   └── navigation.jsx  # Sidebar menu per role
+├── supabase/
+│   ├── migrations/     # SQL schema + RLS policies (apply in order)
+│   └── functions/      # Edge Functions (create-student)
+├── build/              # Build output
 ├── index.html          # HTML template
 ├── vite.config.mjs     # Vite configuration
 ├── eslint.config.mjs   # ESLint configuration
@@ -131,13 +133,14 @@ npm install          # Install dependencies
 npm start            # Start dev server (http://localhost:3000)
 npm run build        # Build for production
 npm run serve        # Preview production build
-npm run lint         # Run ESLint
+npm run lint         # Run ESLint + Prettier
+npm run format       # Format the whole project with Prettier
 ```
 
 **Adding a New Page**:
-1. Create component in `src/views/[feature]/ComponentName.js`
-2. Add route to `src/routes.js`
-3. Add navigation item to `src/_nav.js` (if needed)
+1. Create component in `src/views/[feature]/ComponentName.jsx`
+2. Add route to `src/routes.js` (with `roles` if restricted)
+3. Add navigation item to `src/navigation.jsx` (if needed)
 4. Import and use CoreUI components from '@coreui/react'
 
 **Creating Components**:
@@ -166,20 +169,21 @@ export default MyComponent
 **Using Hooks**:
 ```javascript
 import { useState, useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import useSupabaseStudents from '../hooks/useSupabaseStudents'
 
 const MyComponent = () => {
+  const { profile } = useAuth()
+  const { students, loading, error } = useSupabaseStudents()
   const [data, setData] = useState([])
-  const theme = useSelector((state) => state.theme)
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
 
   useEffect(() => {
-    // Fetch data or side effects
+    ;(async () => {
+      // side effects
+    })()
   }, [])
 
-  return <div>Content</div>
+  return <div>{profile?.full_name}</div>
 }
 ```
 
@@ -225,7 +229,7 @@ import { useColorModes } from '@coreui/react'
 const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
 ```
 
-**Navigation Configuration** (`_nav.js`):
+**Navigation Configuration** (`navigation.jsx`):
 ```javascript
 export default [
   {
@@ -267,14 +271,11 @@ export default [
 - react: ^19.2.4 - React library
 - react-dom: ^19.2.4 - React DOM rendering
 - react-router-dom: ^7.13.2 - Routing library
-- redux: 5.0.1 - State management
-- react-redux: ^9.2.0 - React bindings for Redux
+- @supabase/supabase-js: ^2.112.3 - Supabase client (Auth, DB, Storage, Realtime)
 
 **Additional Libraries**:
-- chart.js: ^4.5.1 - Charting library
-- @coreui/react-chartjs: ^3.0.0 - CoreUI Chart.js wrapper
+- recharts: ^2.15.3 - Charting library (dashboard charts)
 - simplebar-react: ^3.3.2 - Custom scrollbars
-- classnames: ^2.5.1 - Conditional class names utility
 - prop-types: ^15.8.1 - Runtime type checking
 
 ## Browser Support
@@ -291,7 +292,7 @@ Modern browsers with ES6+ support:
 - CoreUI Components: https://coreui.io/react/docs/components/
 - React Documentation: https://react.dev/
 - React Router: https://reactrouter.com/
-- Redux: https://redux.js.org/
+- Supabase Documentation: https://supabase.com/docs
 - Vite: https://vitejs.dev/
 
 ---

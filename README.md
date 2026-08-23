@@ -42,12 +42,12 @@ Abre `http://localhost:3000` en tu navegador.
 
 ## Scripts disponibles
 
-| Comando | Descripción |
-| --- | --- |
-| `npm start` | Inicia el servidor de desarrollo en modo HMR |
-| `npm run build` | Genera el bundle de producción con Vite |
-| `npm run serve` | Sirve el build de producción localmente |
-| `npm run lint` | Ejecuta ESLint sobre el código |
+| Comando         | Descripción                                  |
+| --------------- | -------------------------------------------- |
+| `npm start`     | Inicia el servidor de desarrollo en modo HMR |
+| `npm run build` | Genera el bundle de producción con Vite      |
+| `npm run serve` | Sirve el build de producción localmente      |
+| `npm run lint`  | Ejecuta ESLint sobre el código               |
 
 ## Estructura del proyecto
 

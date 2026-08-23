@@ -31,7 +31,7 @@ Cosmic Muse Academy es una SPA construida con React 19, Vite y CoreUI React, con
 - `src/context/AuthContext.jsx`
   - Expone `{ user, profile, login, logout, loading, isAuthenticated }`
   - Restaura la sesión al cargar (`getCurrentSession`) y escucha `onAuthStateChange`
-  - Carga el perfil desde la tabla `profiles` y sincroniza el rol admin al JWT
+  - Carga el perfil desde la tabla `profiles`; el rol de aplicación nunca se escribe ni se lee del JWT
 - `src/auth.js`
   - Wrapper delgado sobre Supabase Auth: `login`, `logout`, `getCurrentSession`, `getProfile`
 - `src/lib/supabase.js`
@@ -67,28 +67,34 @@ Cosmic Muse Academy es una SPA construida con React 19, Vite y CoreUI React, con
 
 Definido en `supabase/migrations/` (idempotentes, aplicar en orden):
 
-| Tabla | Descripción |
-| --- | --- |
-| `profiles` | Perfil de usuario (rol, instrumento, nivel, progreso, asistencia, tutor, avatar) |
-| `lessons` | Clases programadas por estudiante |
-| `tasks` | Tareas académicas asignadas |
-| `payments` | Pagos registrados con comprobante opcional |
-| `payment_reminders` | Recordatorios de pago programados |
-| `notification_log` | Historial de notificaciones enviadas (WhatsApp/manual) |
-| `notifications` | Notificaciones in-app por destinatario |
-| `instruments` | Catálogo de instrumentos |
+| Tabla               | Descripción                                                                      |
+| ------------------- | -------------------------------------------------------------------------------- |
+| `profiles`          | Perfil de usuario (rol, instrumento, nivel, progreso, asistencia, tutor, avatar) |
+| `lessons`           | Clases programadas por estudiante                                                |
+| `tasks`             | Tareas académicas asignadas                                                      |
+| `payments`          | Pagos registrados con comprobante opcional                                       |
+| `payment_reminders` | Recordatorios de pago programados                                                |
+| `notification_log`  | Historial de notificaciones enviadas (WhatsApp/manual)                           |
+| `notifications`     | Notificaciones in-app por destinatario                                           |
+| `instruments`       | Catálogo de instrumentos                                                         |
 
 Buckets de Storage: `avatars` (público) y `payment-proofs` (privado, solo admin).
 
 ### Seguridad (RLS)
 
-La autorización se aplica íntegramente en PostgreSQL:
+La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007_security_hardening.sql`):
 
-- El rol admin se lee del JWT: `auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'` → acceso total.
-- Los estudiantes solo pueden leer/actualizar sus propias filas (`id = auth.uid()` / `student_id = auth.uid()`).
-- Un trigger `handle_new_user` crea el perfil automáticamente tras el registro en Auth.
+- La función `public.is_admin()` (SECURITY DEFINER, STABLE) lee el rol desde la tabla `profiles`, nunca desde metadatos editables del JWT. Todas las políticas de administración pasan por ella.
+- Los estudiantes solo pueden leer/actualizar sus propias filas (`id = auth.uid()` / `student_id = auth.uid()`) y leer los perfiles de staff (`role = 'admin'`) necesarios para mostrar profesores.
+- El campo `profiles.role` está protegido por el trigger `trg_protect_profiles_role`: solo un admin puede modificarlo (con bypass para service_role y contextos sin HTTP).
+- El trigger `handle_new_user` crea el perfil tras el registro forzando siempre `role = 'student'`.
+- Storage `payment-proofs`: cada estudiante solo accede a los comprobantes de su propia carpeta (`(storage.foldername(name))[1] = auth.uid()::text`).
 
-> Nota: el JWT `role` de Supabase siempre es `authenticated`; el rol de aplicación viaja en `user_metadata`.
+> Nota: el JWT `role` de Supabase siempre es `authenticated`; el rol de aplicación vive únicamente en la tabla `profiles`.
+
+### Creación de estudiantes
+
+- `supabase/functions/create-student/index.ts`: Edge Function que verifica que el llamador sea admin vía `profiles` y crea el usuario con `auth.admin.createUser` usando la service role key. El cliente nunca invoca signUp con privilegios de staff.
 
 ## Vistas principales
 

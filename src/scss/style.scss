@@ -7,7 +7,7 @@ $cosmic-purple: #712771;
 $cosmic-cyan: #16c1d6;
 $cosmic-magenta: #b42d75;
 
-@use "@coreui/coreui/scss/coreui" as * with (
+@use '@coreui/coreui/scss/coreui' as * with (
   $enable-deprecation-messages: false,
 
   // Brand primary
@@ -24,14 +24,13 @@ $cosmic-magenta: #b42d75;
   $sidebar-bg: $cosmic-navy,
   $sidebar-color: #ffffff,
   $sidebar-brand-bg: rgba($cosmic-purple, 0.15),
-
   // Header
   $header-bg: $cosmic-purple,
   $header-color: #ffffff,
-  $header-border-color: rgba(255, 255, 255, 0.12),
+  $header-border-color: rgba(255, 255, 255, 0.12)
 );
 
-@use "vendors/simplebar";
+@use 'vendors/simplebar';
 
 :root {
   --color-primary-dark: #{$cosmic-navy};
