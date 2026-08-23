@@ -20,7 +20,7 @@ Deno.serve(async (req: Request) => {
     const authorization = req.headers.get('Authorization') ?? ''
     const admin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SERVICE_ROLE_KEY') ?? '',
     )
 
     const { data: caller, error: callerError } = await admin.auth.getUser(
