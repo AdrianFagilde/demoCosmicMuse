@@ -5,6 +5,7 @@ const useSupabaseReminders = (userId) => {
   const [reminders, setReminders] = useState([])
   const [loading, setLoading] = useState(true)
   const remindersRef = useRef(reminders)
+  const sendingRef = useRef(new Set())
 
   useEffect(() => {
     remindersRef.current = reminders
@@ -138,19 +139,25 @@ const useSupabaseReminders = (userId) => {
         await supabase.from('notifications').insert(inAppEntries)
       }
 
-      const nextSchedule =
-        reminder.interval_value > 0
-          ? new Date(
-              new Date(reminder.schedule_at).getTime() +
-                (reminder.interval_unit === 'Horas'
-                  ? reminder.interval_value * 60 * 60 * 1000
-                  : reminder.interval_value * 24 * 60 * 60 * 1000),
-            ).toISOString()
-          : reminder.schedule_at
+      const intervalValue = Number(reminder.interval_value) || 0
+      let nextSchedule = reminder.schedule_at
+
+      if (intervalValue > 0) {
+        const stepMs =
+          reminder.interval_unit === 'Horas'
+            ? intervalValue * 60 * 60 * 1000
+            : intervalValue * 24 * 60 * 60 * 1000
+        let nextMs = new Date(reminder.schedule_at).getTime()
+        while (nextMs <= Date.now()) {
+          nextMs += stepMs
+        }
+        nextSchedule = new Date(nextMs).toISOString()
+      }
 
       await updateReminder(reminder.id, {
         last_sent: sentAt,
         schedule_at: nextSchedule,
+        ...(intervalValue === 0 ? { active: false } : {}),
       })
 
       return logEntries
@@ -164,12 +171,15 @@ const useSupabaseReminders = (userId) => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const now = new Date()
+      const now = Date.now()
       remindersRef.current.forEach((reminder) => {
         if (!reminder.active || !reminder.schedule_at) return
-        const scheduled = new Date(reminder.schedule_at)
-        if (scheduled <= now) {
+        if (sendingRef.current.has(reminder.id)) return
+        if (new Date(reminder.schedule_at).getTime() <= now) {
+          sendingRef.current.add(reminder.id)
           sendReminder(reminder, 'Automático', [])
+            .catch((error) => console.error('[Reminders] Error:', error))
+            .finally(() => sendingRef.current.delete(reminder.id))
         }
       })
     }, 60000)

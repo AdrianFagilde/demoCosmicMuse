@@ -34,8 +34,13 @@ const Notifications = React.lazy(() => import('./views/academy/Notifications'))
 export const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-  { path: '/students', name: 'Perfiles', element: Students },
-  { path: '/students/:id', name: 'Perfil de estudiante', element: StudentDetail },
+  { path: '/students', name: 'Perfiles', element: Students, roles: ['admin'] },
+  {
+    path: '/students/:id',
+    name: 'Perfil de estudiante',
+    element: StudentDetail,
+    roles: ['admin'],
+  },
   { path: '/lessons', name: 'Clases', element: Lessons, roles: ['admin'] },
   { path: '/tasks', name: 'Tareas', element: Tasks },
   { path: '/payments', name: 'Pagos', element: Payments, roles: ['admin'] },

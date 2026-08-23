@@ -61,14 +61,27 @@ const useSupabaseStudents = () => {
 
     const { data: instruments } = await supabase.from('instruments').select('name')
 
+    const toIsoDate = (d) => {
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+    const today = new Date()
+    const weekEnd = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000)
+
     const { count: lessonsThisWeek } = await supabase
       .from('lessons')
       .select('*', { count: 'exact', head: true })
+      .gte('lesson_date', toIsoDate(today))
+      .lte('lesson_date', toIsoDate(weekEnd))
+
+    const { data: lessonTeachers } = await supabase.from('lessons').select('teacher')
 
     return {
       activeStudents: activeStudents || 0,
       lessonsThisWeek: lessonsThisWeek || 0,
-      teachers: 5,
+      teachers: new Set((lessonTeachers || []).map((l) => l.teacher).filter(Boolean)).size,
       availableInstruments: instruments?.map((i) => i.name) || [],
     }
   }, [])

@@ -92,7 +92,13 @@ const Dashboard = () => {
   }, [getSummary])
 
   useEffect(() => {
-    if (!isStudent) return
+    if (!isStudent) {
+      getSummary().then(setSummary)
+    }
+  }, [getSummary, isStudent])
+
+  useEffect(() => {
+    if (isStudent) return
     ;(async () => {
       await fetchPaymentsByMonth()
     })()
@@ -103,60 +109,60 @@ const Dashboard = () => {
     .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
     .slice(0, 3)
 
-  const currentStudent = students.find((s) => s.email === user?.email)
-
   return (
     <>
-      <CRow className="mb-4">
-        <CCol md={3} sm={6} className="mb-3">
-          <CCard className="kpi-card kpi-card--purple h-100">
-            <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-              <div>
-                <div className="kpi-label">Estudiantes activos</div>
-                <div className="fs-3 fw-semibold">{summary.activeStudents}</div>
-                <div className="kpi-subtext mt-2">Total en la academia</div>
-              </div>
-              <CIcon icon={cilPeople} customClassName="kpi-icon" />
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol md={3} sm={6} className="mb-3">
-          <CCard className="kpi-card kpi-card--cyan h-100">
-            <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-              <div>
-                <div className="kpi-label">Clases esta semana</div>
-                <div className="fs-3 fw-semibold">{summary.lessonsThisWeek}</div>
-                <div className="kpi-subtext mt-2">Horarios programados</div>
-              </div>
-              <CIcon icon={cilCalendar} customClassName="kpi-icon" />
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol md={3} sm={6} className="mb-3">
-          <CCard className="kpi-card kpi-card--magenta h-100">
-            <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-              <div>
-                <div className="kpi-label">Profesores</div>
-                <div className="fs-3 fw-semibold">{summary.teachers}</div>
-                <div className="kpi-subtext mt-2">Mentores disponibles</div>
-              </div>
-              <CIcon icon={cilSchool} customClassName="kpi-icon" />
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol md={3} sm={6} className="mb-3">
-          <CCard className="kpi-card kpi-card--navy h-100">
-            <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-              <div>
-                <div className="kpi-label">Instrumentos</div>
-                <div className="fs-3 fw-semibold">{summary.availableInstruments.length}</div>
-                <div className="kpi-subtext mt-2">Categorías activas</div>
-              </div>
-              <CIcon icon={cilChart} customClassName="kpi-icon" />
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
+      {!isStudent && (
+        <CRow className="mb-4">
+          <CCol md={3} sm={6} className="mb-3">
+            <CCard className="kpi-card kpi-card--purple h-100">
+              <CCardBody className="d-flex align-items-center justify-content-between gap-3">
+                <div>
+                  <div className="kpi-label">Estudiantes activos</div>
+                  <div className="fs-3 fw-semibold">{summary.activeStudents}</div>
+                  <div className="kpi-subtext mt-2">Total en la academia</div>
+                </div>
+                <CIcon icon={cilPeople} customClassName="kpi-icon" />
+              </CCardBody>
+            </CCard>
+          </CCol>
+          <CCol md={3} sm={6} className="mb-3">
+            <CCard className="kpi-card kpi-card--cyan h-100">
+              <CCardBody className="d-flex align-items-center justify-content-between gap-3">
+                <div>
+                  <div className="kpi-label">Clases esta semana</div>
+                  <div className="fs-3 fw-semibold">{summary.lessonsThisWeek}</div>
+                  <div className="kpi-subtext mt-2">Horarios programados</div>
+                </div>
+                <CIcon icon={cilCalendar} customClassName="kpi-icon" />
+              </CCardBody>
+            </CCard>
+          </CCol>
+          <CCol md={3} sm={6} className="mb-3">
+            <CCard className="kpi-card kpi-card--magenta h-100">
+              <CCardBody className="d-flex align-items-center justify-content-between gap-3">
+                <div>
+                  <div className="kpi-label">Profesores</div>
+                  <div className="fs-3 fw-semibold">{summary.teachers}</div>
+                  <div className="kpi-subtext mt-2">Mentores disponibles</div>
+                </div>
+                <CIcon icon={cilSchool} customClassName="kpi-icon" />
+              </CCardBody>
+            </CCard>
+          </CCol>
+          <CCol md={3} sm={6} className="mb-3">
+            <CCard className="kpi-card kpi-card--navy h-100">
+              <CCardBody className="d-flex align-items-center justify-content-between gap-3">
+                <div>
+                  <div className="kpi-label">Instrumentos</div>
+                  <div className="fs-3 fw-semibold">{summary.availableInstruments.length}</div>
+                  <div className="kpi-subtext mt-2">Categorías activas</div>
+                </div>
+                <CIcon icon={cilChart} customClassName="kpi-icon" />
+              </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow>
+      )}
 
       <CCard className="welcome-banner mb-4">
         <CCardBody>
@@ -286,8 +292,8 @@ const Dashboard = () => {
               <CCardHeader>Tu próxima clase</CCardHeader>
               <CCardBody>
                 <div className="fw-semibold">
-                  {currentStudent?.next_lesson
-                    ? new Date(currentStudent.next_lesson).toLocaleString('es-ES', {
+                  {profile?.next_lesson
+                    ? new Date(profile.next_lesson).toLocaleString('es-ES', {
                         dateStyle: 'short',
                         timeStyle: 'short',
                       })
@@ -301,7 +307,7 @@ const Dashboard = () => {
             <CCard>
               <CCardHeader>Progreso actual</CCardHeader>
               <CCardBody>
-                <div className="fw-semibold">{currentStudent?.progress || 0}%</div>
+                <div className="fw-semibold">{profile?.progress || 0}%</div>
                 <div className="text-body-secondary">Avance en tu plan de estudio</div>
               </CCardBody>
             </CCard>

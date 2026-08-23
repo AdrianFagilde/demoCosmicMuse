@@ -21,9 +21,9 @@ const StudentBalances = ({
     return studentBalances.filter((student) => {
       const matchesText =
         filterText === '' ||
-        student.name.toLowerCase().includes(filterText.toLowerCase()) ||
-        student.instrument.toLowerCase().includes(filterText.toLowerCase()) ||
-        student.teacher.toLowerCase().includes(filterText.toLowerCase())
+        student.name?.toLowerCase().includes(filterText.toLowerCase()) ||
+        (student.instrument || '').toLowerCase().includes(filterText.toLowerCase()) ||
+        (student.teacher || '').toLowerCase().includes(filterText.toLowerCase())
       const matchesStatus = filterStatus === 'Todos' || student.paymentStatus === filterStatus
       return matchesText && matchesStatus
     })

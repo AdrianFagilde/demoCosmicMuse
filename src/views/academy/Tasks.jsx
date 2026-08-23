@@ -42,29 +42,41 @@ const Tasks = () => {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    studentId: students[0]?.id || '',
+    studentId: '',
     dueDate: '',
     status: 'Pendiente',
     progress: 0,
   })
+  const [formError, setFormError] = useState('')
 
   const studentTasks = tasks.filter((task) => task.student_id === user?.id)
   const visibleTasks = isAdmin ? tasks : studentTasks
 
   const handleAddTask = async (event) => {
     event.preventDefault()
-    if (!newTask.title || !newTask.description || !newTask.dueDate || !newTask.studentId) {
+    if (!newTask.title || !newTask.description || !newTask.dueDate) {
+      setFormError('Completa título, descripción y fecha de entrega.')
       return
     }
-    await addTask({
+    const studentId = newTask.studentId || students[0]?.id
+    if (!studentId) {
+      setFormError('No hay estudiantes disponibles para asignar la tarea.')
+      return
+    }
+    setFormError('')
+    const ok = await addTask({
       title: newTask.title,
       description: newTask.description,
-      studentId: newTask.studentId,
+      studentId,
       assignedBy: profile.id,
       dueDate: newTask.dueDate,
       status: newTask.status,
       progress: newTask.progress,
     })
+    if (!ok) {
+      setFormError('No se pudo guardar la tarea. Intenta de nuevo.')
+      return
+    }
     setNewTask({
       title: '',
       description: '',
@@ -111,6 +123,7 @@ const Tasks = () => {
               <CCardHeader>Crear nueva tarea</CCardHeader>
               <CCardBody>
                 <CForm onSubmit={handleAddTask}>
+                  {formError && <div className="alert alert-danger">{formError}</div>}
                   <CRow className="g-3">
                     <CCol md={6}>
                       <CFormInput

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   CAvatar,
   CBadge,
@@ -43,6 +43,15 @@ const MyProfile = () => {
       level: profile.level || 'Principiante',
     })
   }
+
+  useEffect(
+    () => () => {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview)
+      }
+    },
+    [avatarPreview],
+  )
 
   if (!profile || (profile.role !== 'student' && profile.role !== 'admin')) {
     return (
@@ -123,6 +132,7 @@ const MyProfile = () => {
       setMessage({ type: 'danger', text: 'Error al guardar los cambios.' })
     } else {
       setMessage({ type: 'success', text: 'Perfil actualizado correctamente.' })
+      await refreshProfile()
     }
     setSaving(false)
   }

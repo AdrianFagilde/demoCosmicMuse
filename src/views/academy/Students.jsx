@@ -95,66 +95,20 @@ const Students = () => {
     setSaving(true)
     setError('')
 
-    const username = form.fullName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '.')
-      .replace(/[^a-z0-9.]/g, '')
-
-    const {
-      data: { session: adminSession },
-    } = await supabase.auth.getSession()
-
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          full_name: form.fullName,
-          username,
-          role: 'student',
-          instrument: form.instrument || undefined,
-          level: form.level || undefined,
-        },
+    const { error: invokeError } = await supabase.functions.invoke('create-student', {
+      body: {
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password,
+        instrument: form.instrument,
+        level: form.level,
       },
     })
 
-    if (adminSession) {
-      await supabase.auth.setSession({
-        access_token: adminSession.access_token,
-        refresh_token: adminSession.refresh_token,
-      })
-    }
-
-    if (signUpError) {
-      setError(signUpError.message || 'Error al crear estudiante')
+    if (invokeError) {
+      setError(invokeError.message || 'Error al crear estudiante')
       setSaving(false)
       return
-    }
-
-    if (data.user?.identities?.length === 0) {
-      setError('Este correo ya está registrado')
-      setSaving(false)
-      return
-    }
-
-    if (data.user) {
-      const { error: upsertError } = await supabase.from('profiles').upsert(
-        {
-          id: data.user.id,
-          full_name: form.fullName,
-          username,
-          email: form.email,
-          role: 'student',
-          instrument: form.instrument || null,
-          level: form.level || null,
-        },
-        { onConflict: 'id' },
-      )
-      if (upsertError) {
-        console.error('[Students] Upsert error:', upsertError.message)
-      }
     }
 
     await refetch()
