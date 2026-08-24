@@ -4,11 +4,11 @@
   "description": "Academia Cosmo Music - Panel de administración",
   "homepage": "https://cosmo-music.vercel.app",
   "bugs": {
-    "url": "https://github.com/adrianfagilde/demoCosmicMuse/issues"
+    "url": "https://github.com/AdrianFagilde/demoCosmicMuse/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/adrianfagilde/demoCosmicMuse.git"
+    "url": "https://github.com/AdrianFagilde/demoCosmicMuse.git"
   },
   "license": "MIT",
   "author": "Adrian Fagilde",
