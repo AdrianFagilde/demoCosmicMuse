@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import supabase from '../lib/supabase'
 import { notifyInApp } from '../utils/notifications'
+import { deleteCourseFile, uploadMaterialFile } from '../utils/forms'
 
 const byPosition = (a, b) => (a.position ?? 0) - (b.position ?? 0)
 
@@ -36,6 +37,8 @@ const useSupabaseCourses = () => {
       .select(
         `*,
         course_tasks(*),
+        course_materials(*),
+        course_forms(*, form_questions(*)),
         course_enrollments(student_id)`,
       )
       .eq('id', courseId)
@@ -75,6 +78,8 @@ const useSupabaseCourses = () => {
         ...t,
         task_checklist_items: itemsByTask[t.id] || [],
       })),
+      course_materials: (data.course_materials || []).sort(byPosition),
+      course_forms: (data.course_forms || []).sort(byPosition),
       enrolled_profiles: enrolledProfiles.sort((a, b) =>
         String(a.full_name).localeCompare(String(b.full_name)),
       ),
@@ -323,6 +328,72 @@ const useSupabaseCourses = () => {
     return data || []
   }, [])
 
+  const addMaterial = useCallback(async (course, materialData, actorId) => {
+    let file = null
+    if (materialData.type === 'file') {
+      if (!materialData.file) {
+        console.error('[Courses] Material de tipo archivo sin archivo')
+        return null
+      }
+      file = await uploadMaterialFile(course.id, materialData.file)
+      if (!file) return null
+    }
+    const position = (course.course_materials || []).reduce(
+      (max, m) => Math.max(max, (m.position ?? 0) + 1),
+      0,
+    )
+    const { data, error: insertError } = await supabase
+      .from('course_materials')
+      .insert({
+        course_id: course.id,
+        task_id: materialData.taskId || null,
+        title: materialData.title,
+        type: materialData.type,
+        body: materialData.type === 'text' ? materialData.body || '' : '',
+        url: materialData.type === 'link' ? materialData.url || null : null,
+        file_path: file?.path ?? null,
+        file_name: file?.fileName ?? null,
+        position,
+        created_by: actorId || null,
+      })
+      .select()
+      .single()
+    if (insertError) {
+      console.error('[Courses] Add material error:', insertError.message, insertError)
+      if (file) await deleteCourseFile(file.path)
+      return null
+    }
+    return data
+  }, [])
+
+  const deleteMaterial = useCallback(async (material) => {
+    const { error: deleteError } = await supabase
+      .from('course_materials')
+      .delete()
+      .eq('id', material.id)
+    if (deleteError) {
+      console.error('[Courses] Delete material error:', deleteError.message, deleteError)
+      return false
+    }
+    if (material.file_path) {
+      await deleteCourseFile(material.file_path)
+    }
+    return true
+  }, [])
+
+  const reorderMaterials = useCallback(async (orderedIds) => {
+    const updates = orderedIds.map((materialId, index) =>
+      supabase.from('course_materials').update({ position: index }).eq('id', materialId),
+    )
+    const results = await Promise.all(updates)
+    const failed = results.find((r) => r.error)
+    if (failed?.error) {
+      console.error('[Courses] Reorder materials error:', failed.error.message, failed.error)
+      return false
+    }
+    return true
+  }, [])
+
   return {
     courses,
     loading,
@@ -343,6 +414,9 @@ const useSupabaseCourses = () => {
     fetchCourseProgress,
     toggleProgressItem,
     fetchStudentCourseProgress,
+    addMaterial,
+    deleteMaterial,
+    reorderMaterials,
   }
 }
 

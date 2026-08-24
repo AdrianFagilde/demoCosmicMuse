@@ -12,6 +12,7 @@ import {
   CFormInput,
   CFormLabel,
   CFormSelect,
+  CFormText,
   CFormTextarea,
   CModal,
   CModalBody,
@@ -49,8 +50,12 @@ import CIcon from '@coreui/icons-react'
 import { cilArrowLeft, cilMenu, cilPencil, cilPlus, cilTrash } from '@coreui/icons'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
+import useSupabaseForms from '../../hooks/useSupabaseForms'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import ChecklistBuilder from '../../components/ChecklistBuilder'
+import FormEditorModal from '../../components/FormEditorModal'
+import FormResponsesModal from '../../components/FormResponsesModal'
+import MaterialList from '../../components/MaterialList'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 
 const computeStats = (tasks, progressRows = [], studentId = null) => {
@@ -109,6 +114,46 @@ const SortableTaskRow = ({ task, onEdit, onDelete }) => {
   )
 }
 
+const SortableFormRow = ({ form, onEdit, onViewResponses, onDelete }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: form.id,
+  })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  }
+  return (
+    <CCard ref={setNodeRef} style={style} className="mb-2">
+      <CCardBody className="d-flex align-items-center gap-3 py-2">
+        <span
+          {...attributes}
+          {...listeners}
+          className="text-medium-emphasis"
+          style={{ cursor: 'grab', touchAction: 'none' }}
+        >
+          <CIcon icon={cilMenu} />
+        </span>
+        <div className="flex-grow-1">
+          <div className="fw-semibold">{form.title}</div>
+          {form.description && <small className="text-medium-emphasis">{form.description}</small>}
+        </div>
+        <CBadge color="info">{(form.form_questions || []).length} preguntas</CBadge>
+        {form.due_date && <CBadge color="warning text-dark">Límite: {form.due_date}</CBadge>}
+        <CButton size="sm" color="primary" variant="outline" onClick={onViewResponses}>
+          Respuestas
+        </CButton>
+        <CButton size="sm" color="primary" variant="outline" onClick={onEdit}>
+          <CIcon icon={cilPencil} />
+        </CButton>
+        <CButton size="sm" color="danger" variant="outline" onClick={onDelete}>
+          <CIcon icon={cilTrash} />
+        </CButton>
+      </CCardBody>
+    </CCard>
+  )
+}
+
 const CourseDetail = () => {
   const { id } = useParams()
   const { user, profile } = useAuth()
@@ -127,7 +172,11 @@ const CourseDetail = () => {
     fetchCourseProgress,
     toggleProgressItem,
     fetchStudentCourseProgress,
+    addMaterial,
+    deleteMaterial,
+    reorderMaterials,
   } = useSupabaseCourses()
+  const { deleteForm: deleteFormApi, reorderForms, fetchMySubmissions } = useSupabaseForms()
   const { students } = useSupabaseStudents()
 
   const [course, setCourse] = useState(null)
@@ -145,9 +194,21 @@ const CourseDetail = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [addingTask, setAddingTask] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const [formEditorTarget, setFormEditorTarget] = useState(null) // null | 'new' | form
+  const [responsesForm, setResponsesForm] = useState(null)
+  const [materialDraft, setMaterialDraft] = useState({
+    type: 'text',
+    title: '',
+    body: '',
+    url: '',
+    file: null,
+  })
+  const [materialError, setMaterialError] = useState('')
+  const [addingMaterial, setAddingMaterial] = useState(false)
 
   // Student state
   const [myProgressRows, setMyProgressRows] = useState([])
+  const [mySubmissions, setMySubmissions] = useState({})
 
   const loadDetail = async () => {
     setDetailLoading(true)
@@ -175,6 +236,8 @@ const CourseDetail = () => {
     if (!isAdmin && user?.id) {
       ;(async () => {
         setMyProgressRows(await fetchStudentCourseProgress(user.id))
+        const formIds = (detail.course_forms || []).map((f) => f.id)
+        setMySubmissions(await fetchMySubmissions(user.id, formIds))
       })()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -271,6 +334,59 @@ const CourseDetail = () => {
         setEnrollmentOverrides({})
         await loadDetail()
       }
+    }
+
+    const handleDeleteForm = async (formId) => {
+      if (!window.confirm('¿Eliminar este cuestionario y todas sus respuestas?')) return
+      const ok = await deleteFormApi(formId)
+      if (ok) await loadDetail()
+    }
+
+    const handleDragEndForms = async (event) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+      const oldIndex = course.course_forms.findIndex((f) => f.id === active.id)
+      const newIndex = course.course_forms.findIndex((f) => f.id === over.id)
+      const reordered = arrayMove(course.course_forms, oldIndex, newIndex)
+      setCourse({ ...course, course_forms: reordered })
+      await reorderForms(reordered.map((f) => f.id))
+    }
+
+    const handleAddMaterial = async () => {
+      const title = materialDraft.title.trim()
+      if (!title) {
+        setMaterialError('El material necesita un título.')
+        return
+      }
+      if (materialDraft.type === 'link' && !materialDraft.url.trim()) {
+        setMaterialError('Ingresa la URL del enlace.')
+        return
+      }
+      if (materialDraft.type === 'file' && !materialDraft.file) {
+        setMaterialError('Selecciona un archivo para subir.')
+        return
+      }
+      setAddingMaterial(true)
+      const created = await addMaterial(course, { ...materialDraft, title }, profile.id)
+      setAddingMaterial(false)
+      if (!created) {
+        setMaterialError('No se pudo guardar el material.')
+        return
+      }
+      setMaterialDraft({ type: materialDraft.type, title: '', body: '', url: '', file: null })
+      setMaterialError('')
+      await loadDetail()
+    }
+
+    const handleDeleteMaterial = async (material) => {
+      if (!window.confirm(`¿Eliminar el material "${material.title}"?`)) return
+      const ok = await deleteMaterial(material)
+      if (ok) await loadDetail()
+    }
+
+    const handleReorderMaterials = async (orderedMaterials) => {
+      setCourse({ ...course, course_materials: orderedMaterials })
+      await reorderMaterials(orderedMaterials.map((m) => m.id))
     }
 
     return (
@@ -391,6 +507,120 @@ const CourseDetail = () => {
                 {addingTask ? <CSpinner size="sm" /> : <CIcon icon={cilPlus} />}
               </CButton>
             </CInputGroup>
+          </CCardBody>
+        </CCard>
+
+        {/* Contenido del curso */}
+        <CCard className="mb-4">
+          <CCardHeader>Contenido del curso (materiales para estudiantes)</CCardHeader>
+          <CCardBody>
+            {(course.course_materials || []).length === 0 ? (
+              <p className="text-medium-emphasis">
+                Aún no hay materiales. Agrega texto, enlaces o archivos abajo.
+              </p>
+            ) : (
+              <MaterialList
+                materials={course.course_materials}
+                onDelete={handleDeleteMaterial}
+                onReorder={handleReorderMaterials}
+              />
+            )}
+            <hr />
+            <CFormLabel className="fw-semibold">Agregar material</CFormLabel>
+            <CRow className="g-2 mb-2">
+              <CCol md={4}>
+                <CFormSelect
+                  value={materialDraft.type}
+                  onChange={(e) => setMaterialDraft({ ...materialDraft, type: e.target.value })}
+                >
+                  <option value="text">Texto</option>
+                  <option value="link">Enlace / video</option>
+                  <option value="file">Archivo</option>
+                </CFormSelect>
+              </CCol>
+              <CCol md={8}>
+                <CFormInput
+                  placeholder="Título del material..."
+                  value={materialDraft.title}
+                  onChange={(e) => setMaterialDraft({ ...materialDraft, title: e.target.value })}
+                />
+              </CCol>
+            </CRow>
+            {materialDraft.type === 'text' && (
+              <CFormTextarea
+                className="mb-2"
+                rows={3}
+                placeholder="Contenido de texto para tus estudiantes..."
+                value={materialDraft.body}
+                onChange={(e) => setMaterialDraft({ ...materialDraft, body: e.target.value })}
+              />
+            )}
+            {materialDraft.type === 'link' && (
+              <CFormInput
+                className="mb-2"
+                type="url"
+                placeholder="https://youtube.com/watch?v=..."
+                value={materialDraft.url}
+                onChange={(e) => setMaterialDraft({ ...materialDraft, url: e.target.value })}
+              />
+            )}
+            {materialDraft.type === 'file' && (
+              <>
+                <CFormInput
+                  className="mb-1"
+                  type="file"
+                  onChange={(e) =>
+                    setMaterialDraft({ ...materialDraft, file: e.target.files?.[0] || null })
+                  }
+                />
+                <CFormText className="mb-2 d-block">
+                  Se subirá al almacenamiento privado del curso (máx. 10&nbsp;MB).
+                </CFormText>
+              </>
+            )}
+            {materialError && <div className="text-danger small mb-2">{materialError}</div>}
+            <CButton color="primary" onClick={handleAddMaterial} disabled={addingMaterial}>
+              {addingMaterial ? <CSpinner size="sm" /> : 'Agregar material'}
+            </CButton>
+          </CCardBody>
+        </CCard>
+
+        {/* Cuestionarios */}
+        <CCard className="mb-4">
+          <CCardHeader>Cuestionarios (arrastra para ordenar)</CCardHeader>
+          <CCardBody>
+            {(course.course_forms || []).length === 0 ? (
+              <p className="text-medium-emphasis">Aún no hay cuestionarios en este curso.</p>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEndForms}
+              >
+                <SortableContext
+                  items={course.course_forms.map((f) => f.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {course.course_forms.map((form) => (
+                    <SortableFormRow
+                      key={form.id}
+                      form={form}
+                      onEdit={() => setFormEditorTarget(form)}
+                      onViewResponses={() => setResponsesForm(form)}
+                      onDelete={() => handleDeleteForm(form.id)}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            )}
+            <CButton
+              color="primary"
+              variant="outline"
+              className="mt-3"
+              onClick={() => setFormEditorTarget('new')}
+            >
+              <CIcon icon={cilPlus} className="me-1" /> Nuevo cuestionario
+            </CButton>
           </CCardBody>
         </CCard>
 
@@ -533,6 +763,30 @@ const CourseDetail = () => {
             onSaved={loadDetail}
           />
         )}
+
+        {/* Modal editor de cuestionario */}
+        {formEditorTarget && (
+          <FormEditorModal
+            course={course}
+            form={formEditorTarget === 'new' ? null : formEditorTarget}
+            actorId={profile.id}
+            onClose={() => setFormEditorTarget(null)}
+            onSaved={loadDetail}
+          />
+        )}
+
+        {/* Modal de respuestas del cuestionario */}
+        {responsesForm && (
+          <FormResponsesModal
+            key={responsesForm.id}
+            course={course}
+            form={{
+              ...responsesForm,
+              form_questions: responsesForm.form_questions || [],
+            }}
+            onClose={() => setResponsesForm(null)}
+          />
+        )}
       </>
     )
   }
@@ -560,6 +814,61 @@ const CourseDetail = () => {
           <CProgressBar variant="thin" value={myStats.percent} />
         </CCardBody>
       </CCard>
+
+      {(course.course_materials || []).length > 0 && (
+        <CCard className="mb-4">
+          <CCardHeader>Contenido del curso</CCardHeader>
+          <CCardBody>
+            <MaterialList materials={course.course_materials} readOnly />
+          </CCardBody>
+        </CCard>
+      )}
+
+      {(course.course_forms || []).length > 0 && (
+        <CCard className="mb-4">
+          <CCardHeader>Cuestionarios</CCardHeader>
+          <CCardBody>
+            {course.course_forms.map((form) => {
+              const submitted = Boolean(mySubmissions[form.id])
+              const overdue = form.due_date && !submitted && new Date(form.due_date) < new Date()
+              return (
+                <div
+                  key={form.id}
+                  className="border rounded p-2 mb-2 d-flex justify-content-between align-items-center gap-2"
+                >
+                  <div>
+                    <div className="fw-semibold">{form.title}</div>
+                    {form.description && (
+                      <small className="text-medium-emphasis">{form.description}</small>
+                    )}
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    {overdue ? (
+                      <CBadge color="danger">Vencido</CBadge>
+                    ) : (
+                      <CBadge color={submitted ? 'success' : 'warning text-dark'}>
+                        {submitted ? 'Enviado' : 'Pendiente'}
+                      </CBadge>
+                    )}
+                    {form.due_date && !submitted && (
+                      <small className="text-medium-emphasis">Límite: {form.due_date}</small>
+                    )}
+                    <CButton
+                      size="sm"
+                      color={submitted ? 'secondary' : 'primary'}
+                      variant={submitted ? 'outline' : 'solid'}
+                      as={Link}
+                      to={`/courses/${id}/forms/${form.id}`}
+                    >
+                      {submitted ? 'Ver respuestas' : 'Responder'}
+                    </CButton>
+                  </div>
+                </div>
+              )
+            })}
+          </CCardBody>
+        </CCard>
+      )}
 
       {course.course_tasks.length === 0 ? (
         <CCard>

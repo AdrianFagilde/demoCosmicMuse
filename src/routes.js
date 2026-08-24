@@ -21,6 +21,7 @@ const StudentDetail = React.lazy(() => import('./views/academy/StudentDetail'))
 const Tasks = React.lazy(() => import('./views/academy/Tasks'))
 const Courses = React.lazy(() => import('./views/courses/Courses'))
 const CourseDetail = React.lazy(() => import('./views/courses/CourseDetail'))
+const CourseFormFill = React.lazy(() => import('./views/courses/CourseFormFill'))
 const MyProfile = React.lazy(() => import('./views/academy/MyProfile'))
 const Payments = React.lazy(() => import('./views/academy/Payments'))
 const Lessons = React.lazy(() => import('./views/academy/Lessons'))
@@ -47,6 +48,11 @@ export const routes = [
   { path: '/tasks', name: 'Tareas', element: Tasks },
   { path: '/courses', name: 'Cursos', element: Courses },
   { path: '/courses/:id', name: 'Curso', element: CourseDetail },
+  {
+    path: '/courses/:courseId/forms/:formId',
+    name: 'Cuestionario',
+    element: CourseFormFill,
+  },
   { path: '/payments', name: 'Pagos', element: Payments, roles: ['admin'] },
   { path: '/users', name: 'Usuarios', element: Users, roles: ['admin'] },
   {
