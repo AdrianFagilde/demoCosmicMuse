@@ -19,7 +19,15 @@ import FormBuilder from './FormBuilder'
 import useSupabaseForms from '../hooks/useSupabaseForms'
 import { CHOICE_TYPES, newQuestion } from '../utils/forms'
 
-const FormEditorModal = ({ course, form, actorId, onClose, onSaved }) => {
+const FormEditorModal = ({
+  course,
+  form,
+  actorId,
+  taskId = null,
+  taskTitle = '',
+  onClose,
+  onSaved,
+}) => {
   const isNew = !form
   const originalQuestions = useMemo(() => form?.form_questions || [], [form])
   const { createForm, updateForm, saveFormQuestions } = useSupabaseForms()
@@ -73,7 +81,7 @@ const FormEditorModal = ({ course, form, actorId, onClose, onSaved }) => {
 
     let targetForm = form
     if (isNew) {
-      targetForm = await createForm(course, formData, actorId)
+      targetForm = await createForm(course, formData, actorId, taskId)
       if (!targetForm) {
         setSaving(false)
         setError('No se pudo crear el cuestionario.')
@@ -116,6 +124,20 @@ const FormEditorModal = ({ course, form, actorId, onClose, onSaved }) => {
           <CModalTitle>{isNew ? 'Nuevo cuestionario' : 'Editar cuestionario'}</CModalTitle>
         </CModalHeader>
         <CModalBody>
+          {taskId && (
+            <CAlert color="info" className="py-2 small">
+              Este cuestionario quedará asociado a la tarea
+              {taskTitle ? (
+                <>
+                  {' '}
+                  <strong>{taskTitle}</strong>
+                </>
+              ) : (
+                ' seleccionada'
+              )}
+              .
+            </CAlert>
+          )}
           <div className="mb-3">
             <CFormLabel>Título *</CFormLabel>
             <CFormInput

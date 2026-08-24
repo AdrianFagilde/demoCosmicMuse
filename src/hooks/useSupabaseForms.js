@@ -12,7 +12,7 @@ const useSupabaseForms = () => {
 
   /* ================= PROFESOR ================= */
 
-  const createForm = useCallback(async (course, formData, actorId) => {
+  const createForm = useCallback(async (course, formData, actorId, taskId = null) => {
     setLoading(true)
     const position = (course.course_forms || []).reduce(
       (max, f) => Math.max(max, (f.position ?? 0) + 1),
@@ -22,6 +22,7 @@ const useSupabaseForms = () => {
       .from('course_forms')
       .insert({
         course_id: course.id,
+        task_id: taskId || null,
         title: formData.title,
         description: formData.description || '',
         due_date: formData.dueDate || null,

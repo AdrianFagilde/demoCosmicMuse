@@ -45,7 +45,7 @@ const useSupabaseCourses = () => {
       .single()
     if (fetchError) {
       console.error('[Courses] Detail error:', fetchError.message, fetchError)
-      return null
+      return { detail: null, error: fetchError }
     }
     let itemsByTask = {}
     const taskIds = (data.course_tasks || []).map((t) => t.id)
@@ -73,16 +73,19 @@ const useSupabaseCourses = () => {
       enrolledProfiles = profilesData || []
     }
     return {
-      ...data,
-      course_tasks: (data.course_tasks || []).sort(byPosition).map((t) => ({
-        ...t,
-        task_checklist_items: itemsByTask[t.id] || [],
-      })),
-      course_materials: (data.course_materials || []).sort(byPosition),
-      course_forms: (data.course_forms || []).sort(byPosition),
-      enrolled_profiles: enrolledProfiles.sort((a, b) =>
-        String(a.full_name).localeCompare(String(b.full_name)),
-      ),
+      detail: {
+        ...data,
+        course_tasks: (data.course_tasks || []).sort(byPosition).map((t) => ({
+          ...t,
+          task_checklist_items: itemsByTask[t.id] || [],
+        })),
+        course_materials: (data.course_materials || []).sort(byPosition),
+        course_forms: (data.course_forms || []).sort(byPosition),
+        enrolled_profiles: enrolledProfiles.sort((a, b) =>
+          String(a.full_name).localeCompare(String(b.full_name)),
+        ),
+      },
+      error: null,
     }
   }, [])
 

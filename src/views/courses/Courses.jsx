@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   CBadge,
   CButton,
@@ -39,6 +39,7 @@ const emptyForm = {
 
 const Courses = () => {
   const { user, profile } = useAuth()
+  const navigate = useNavigate()
   const isAdmin = profile?.role === 'admin'
   const { courses, loading, error, createCourse, deleteCourse, fetchStudentCourseProgress } =
     useSupabaseCourses()
@@ -99,6 +100,7 @@ const Courses = () => {
       return
     }
     setShowCreate(false)
+    navigate(`/courses/${created.id}`)
   }
 
   const handleDelete = async (courseId) => {

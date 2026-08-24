@@ -77,7 +77,15 @@ const computeStats = (tasks, progressRows = [], studentId = null) => {
   }
 }
 
-const SortableTaskRow = ({ task, onEdit, onDelete }) => {
+const SortableTaskRow = ({
+  task,
+  attachedForm,
+  onEdit,
+  onAddForm,
+  onEditForm,
+  onViewFormResponses,
+  onDelete,
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
@@ -88,7 +96,7 @@ const SortableTaskRow = ({ task, onEdit, onDelete }) => {
   }
   return (
     <CCard ref={setNodeRef} style={style} className="mb-2">
-      <CCardBody className="d-flex align-items-center gap-3 py-2">
+      <CCardBody className="d-flex align-items-center gap-2 py-2">
         <span
           {...attributes}
           {...listeners}
@@ -102,6 +110,21 @@ const SortableTaskRow = ({ task, onEdit, onDelete }) => {
           {task.description && <small className="text-medium-emphasis">{task.description}</small>}
         </div>
         <CBadge color="info">{(task.task_checklist_items || []).length} checks</CBadge>
+        {attachedForm ? (
+          <>
+            <CBadge color="success">{(attachedForm.form_questions || []).length} preguntas</CBadge>
+            <CButton size="sm" color="primary" variant="outline" onClick={onEditForm}>
+              Formulario
+            </CButton>
+            <CButton size="sm" color="primary" variant="outline" onClick={onViewFormResponses}>
+              Respuestas
+            </CButton>
+          </>
+        ) : (
+          <CButton size="sm" color="primary" variant="outline" onClick={onAddForm}>
+            <CIcon icon={cilPlus} className="me-1" /> Formulario
+          </CButton>
+        )}
         {task.due_date && <CBadge color="warning text-dark">Entrega: {task.due_date}</CBadge>}
         <CButton size="sm" color="primary" variant="outline" onClick={() => onEdit(task)}>
           <CIcon icon={cilPencil} />
@@ -114,7 +137,7 @@ const SortableTaskRow = ({ task, onEdit, onDelete }) => {
   )
 }
 
-const SortableFormRow = ({ form, onEdit, onViewResponses, onDelete }) => {
+const SortableFormRow = ({ form, taskLabel, onEdit, onViewResponses, onDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: form.id,
   })
@@ -139,6 +162,7 @@ const SortableFormRow = ({ form, onEdit, onViewResponses, onDelete }) => {
           {form.description && <small className="text-medium-emphasis">{form.description}</small>}
         </div>
         <CBadge color="info">{(form.form_questions || []).length} preguntas</CBadge>
+        {taskLabel && <CBadge color="dark">Tarea: {taskLabel}</CBadge>}
         {form.due_date && <CBadge color="warning text-dark">Límite: {form.due_date}</CBadge>}
         <CButton size="sm" color="primary" variant="outline" onClick={onViewResponses}>
           Respuestas
@@ -194,7 +218,7 @@ const CourseDetail = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [addingTask, setAddingTask] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
-  const [formEditorTarget, setFormEditorTarget] = useState(null) // null | 'new' | form
+  const [formEditorTarget, setFormEditorTarget] = useState(null) // { form|null, taskId|null, taskTitle }
   const [responsesForm, setResponsesForm] = useState(null)
   const [materialDraft, setMaterialDraft] = useState({
     type: 'text',
@@ -212,9 +236,13 @@ const CourseDetail = () => {
 
   const loadDetail = async () => {
     setDetailLoading(true)
-    const detail = await fetchCourseDetail(id)
+    const { detail, error: detailError } = await fetchCourseDetail(id)
     if (!detail) {
-      setLoadError('No se pudo cargar el curso o no tienes acceso.')
+      setLoadError(
+        detailError?.message
+          ? `No se pudo cargar el curso: ${detailError.message}`
+          : 'No se pudo cargar el curso o no tienes acceso.',
+      )
     } else {
       setLoadError(null)
       setCourse(detail)
@@ -317,11 +345,16 @@ const CourseDetail = () => {
     }
 
     const handleDeleteTask = async (taskId) => {
-      if (window.confirm('¿Eliminar esta tarea y su checklist?')) {
+      if (window.confirm('¿Eliminar esta tarea, su checklist y su cuestionario asociado?')) {
         const ok = await deleteTask(taskId)
         if (ok) await loadDetail()
       }
     }
+
+    const formsByTask = (course.course_forms || []).reduce((acc, f) => {
+      if (f.task_id) acc[f.task_id] = f
+      return acc
+    }, {})
 
     const handleSaveEnrollments = async () => {
       setSavingEnrollments(true)
@@ -484,7 +517,19 @@ const CourseDetail = () => {
                     <SortableTaskRow
                       key={task.id}
                       task={task}
+                      attachedForm={formsByTask[task.id]}
                       onEdit={setEditingTask}
+                      onAddForm={() =>
+                        setFormEditorTarget({ form: null, taskId: task.id, taskTitle: task.title })
+                      }
+                      onEditForm={() =>
+                        setFormEditorTarget({
+                          form: formsByTask[task.id],
+                          taskId: task.id,
+                          taskTitle: task.title,
+                        })
+                      }
+                      onViewFormResponses={() => setResponsesForm(formsByTask[task.id])}
                       onDelete={handleDeleteTask}
                     />
                   ))}
@@ -587,7 +632,9 @@ const CourseDetail = () => {
 
         {/* Cuestionarios */}
         <CCard className="mb-4">
-          <CCardHeader>Cuestionarios (arrastra para ordenar)</CCardHeader>
+          <CCardHeader>
+            Cuestionarios del curso (arrastra para ordenar · los generales sin tarea)
+          </CCardHeader>
           <CCardBody>
             {(course.course_forms || []).length === 0 ? (
               <p className="text-medium-emphasis">Aún no hay cuestionarios en este curso.</p>
@@ -601,15 +648,27 @@ const CourseDetail = () => {
                   items={course.course_forms.map((f) => f.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {course.course_forms.map((form) => (
-                    <SortableFormRow
-                      key={form.id}
-                      form={form}
-                      onEdit={() => setFormEditorTarget(form)}
-                      onViewResponses={() => setResponsesForm(form)}
-                      onDelete={() => handleDeleteForm(form.id)}
-                    />
-                  ))}
+                  {course.course_forms.map((form) => {
+                    const taskLabel = form.task_id
+                      ? course.course_tasks.find((t) => t.id === form.task_id)?.title
+                      : null
+                    return (
+                      <SortableFormRow
+                        key={form.id}
+                        form={form}
+                        taskLabel={taskLabel}
+                        onEdit={() =>
+                          setFormEditorTarget({
+                            form,
+                            taskId: form.task_id,
+                            taskTitle: taskLabel || '',
+                          })
+                        }
+                        onViewResponses={() => setResponsesForm(form)}
+                        onDelete={() => handleDeleteForm(form.id)}
+                      />
+                    )
+                  })}
                 </SortableContext>
               </DndContext>
             )}
@@ -617,9 +676,9 @@ const CourseDetail = () => {
               color="primary"
               variant="outline"
               className="mt-3"
-              onClick={() => setFormEditorTarget('new')}
+              onClick={() => setFormEditorTarget({ form: null, taskId: null, taskTitle: '' })}
             >
-              <CIcon icon={cilPlus} className="me-1" /> Nuevo cuestionario
+              <CIcon icon={cilPlus} className="me-1" /> Nuevo cuestionario general
             </CButton>
           </CCardBody>
         </CCard>
@@ -768,8 +827,10 @@ const CourseDetail = () => {
         {formEditorTarget && (
           <FormEditorModal
             course={course}
-            form={formEditorTarget === 'new' ? null : formEditorTarget}
+            form={formEditorTarget.form}
             actorId={profile.id}
+            taskId={formEditorTarget.taskId}
+            taskTitle={formEditorTarget.taskTitle}
             onClose={() => setFormEditorTarget(null)}
             onSaved={loadDetail}
           />
@@ -824,48 +885,50 @@ const CourseDetail = () => {
         </CCard>
       )}
 
-      {(course.course_forms || []).length > 0 && (
+      {(course.course_forms || []).some((f) => !f.task_id) && (
         <CCard className="mb-4">
-          <CCardHeader>Cuestionarios</CCardHeader>
+          <CCardHeader>Cuestionarios del curso</CCardHeader>
           <CCardBody>
-            {course.course_forms.map((form) => {
-              const submitted = Boolean(mySubmissions[form.id])
-              const overdue = form.due_date && !submitted && new Date(form.due_date) < new Date()
-              return (
-                <div
-                  key={form.id}
-                  className="border rounded p-2 mb-2 d-flex justify-content-between align-items-center gap-2"
-                >
-                  <div>
-                    <div className="fw-semibold">{form.title}</div>
-                    {form.description && (
-                      <small className="text-medium-emphasis">{form.description}</small>
-                    )}
+            {course.course_forms
+              .filter((f) => !f.task_id)
+              .map((form) => {
+                const submitted = Boolean(mySubmissions[form.id])
+                const overdue = form.due_date && !submitted && new Date(form.due_date) < new Date()
+                return (
+                  <div
+                    key={form.id}
+                    className="border rounded p-2 mb-2 d-flex justify-content-between align-items-center gap-2"
+                  >
+                    <div>
+                      <div className="fw-semibold">{form.title}</div>
+                      {form.description && (
+                        <small className="text-medium-emphasis">{form.description}</small>
+                      )}
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      {overdue ? (
+                        <CBadge color="danger">Vencido</CBadge>
+                      ) : (
+                        <CBadge color={submitted ? 'success' : 'warning text-dark'}>
+                          {submitted ? 'Enviado' : 'Pendiente'}
+                        </CBadge>
+                      )}
+                      {form.due_date && !submitted && (
+                        <small className="text-medium-emphasis">Límite: {form.due_date}</small>
+                      )}
+                      <CButton
+                        size="sm"
+                        color={submitted ? 'secondary' : 'primary'}
+                        variant={submitted ? 'outline' : 'solid'}
+                        as={Link}
+                        to={`/courses/${id}/forms/${form.id}`}
+                      >
+                        {submitted ? 'Ver respuestas' : 'Responder'}
+                      </CButton>
+                    </div>
                   </div>
-                  <div className="d-flex align-items-center gap-2">
-                    {overdue ? (
-                      <CBadge color="danger">Vencido</CBadge>
-                    ) : (
-                      <CBadge color={submitted ? 'success' : 'warning text-dark'}>
-                        {submitted ? 'Enviado' : 'Pendiente'}
-                      </CBadge>
-                    )}
-                    {form.due_date && !submitted && (
-                      <small className="text-medium-emphasis">Límite: {form.due_date}</small>
-                    )}
-                    <CButton
-                      size="sm"
-                      color={submitted ? 'secondary' : 'primary'}
-                      variant={submitted ? 'outline' : 'solid'}
-                      as={Link}
-                      to={`/courses/${id}/forms/${form.id}`}
-                    >
-                      {submitted ? 'Ver respuestas' : 'Responder'}
-                    </CButton>
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
           </CCardBody>
         </CCard>
       )}
@@ -881,6 +944,10 @@ const CourseDetail = () => {
           const taskDone = myStats.doneByTask[task.id] || 0
           const taskTotal = (task.task_checklist_items || []).length
           const taskPercent = taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : 0
+          const taskForm = (course.course_forms || []).find((f) => f.task_id === task.id)
+          const formSubmitted = taskForm ? Boolean(mySubmissions[taskForm.id]) : false
+          const formOverdue =
+            taskForm?.due_date && !formSubmitted && new Date(taskForm.due_date) < new Date()
           return (
             <CCard key={task.id} className="mb-3">
               <CCardHeader className="d-flex justify-content-between align-items-center">
@@ -932,6 +999,26 @@ const CourseDetail = () => {
                       </small>
                     </div>
                   </>
+                )}
+                {taskForm && (
+                  <div className="d-flex justify-content-end align-items-center gap-2 mt-3 border-top pt-2">
+                    {formOverdue ? (
+                      <CBadge color="danger">Formulario vencido</CBadge>
+                    ) : (
+                      <CBadge color={formSubmitted ? 'success' : 'warning text-dark'}>
+                        {formSubmitted ? 'Formulario enviado' : 'Formulario pendiente'}
+                      </CBadge>
+                    )}
+                    <CButton
+                      size="sm"
+                      color={formSubmitted ? 'secondary' : 'primary'}
+                      variant={formSubmitted ? 'outline' : 'solid'}
+                      as={Link}
+                      to={`/courses/${id}/forms/${taskForm.id}`}
+                    >
+                      {formSubmitted ? 'Ver mis respuestas' : 'Responder formulario'}
+                    </CButton>
+                  </div>
                 )}
               </CCardBody>
             </CCard>
