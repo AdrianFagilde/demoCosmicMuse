@@ -14,6 +14,7 @@ import {
   CFormSelect,
   CFormText,
   CFormTextarea,
+  CInputGroup,
   CModal,
   CModalBody,
   CModalFooter,
