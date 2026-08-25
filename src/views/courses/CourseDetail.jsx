@@ -253,6 +253,10 @@ const CourseDetail = () => {
           (t.task_checklist_items || []).map((item) => item.id),
         )
         setProgressRows(await fetchCourseProgress(itemIds))
+      } else if (user?.id) {
+        setMyProgressRows(await fetchStudentCourseProgress(user.id))
+        const formIds = (detail.course_forms || []).map((f) => f.id)
+        setMySubmissions(await fetchMySubmissions(user.id, formIds))
       }
     }
     setDetailLoading(false)
@@ -262,13 +266,6 @@ const CourseDetail = () => {
     ;(async () => {
       await loadDetail()
     })()
-    if (!isAdmin && user?.id) {
-      ;(async () => {
-        setMyProgressRows(await fetchStudentCourseProgress(user.id))
-        const formIds = (detail.course_forms || []).map((f) => f.id)
-        setMySubmissions(await fetchMySubmissions(user.id, formIds))
-      })()
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isAdmin, user?.id])
 
@@ -728,87 +725,89 @@ const CourseDetail = () => {
         </CCard>
 
         {/* Modal meta curso */}
-        <CModal visible={showEditMeta} onClose={() => setShowEditMeta(false)} backdrop="static">
-          <CForm
-            onSubmit={async (event) => {
-              event.preventDefault()
-              if (!metaForm.title.trim()) {
-                setMetaError('El título es obligatorio.')
-                return
-              }
-              const ok = await updateCourse(course.id, {
-                title: metaForm.title.trim(),
-                description: metaForm.description.trim(),
-                instrument: metaForm.instrument || null,
-                level: metaForm.level || null,
-              })
-              if (ok) {
-                setShowEditMeta(false)
-                await loadDetail()
-              } else {
-                setMetaError('No se pudo actualizar el curso.')
-              }
-            }}
-          >
-            <CModalHeader closeButton>
-              <CModalTitle>Editar curso</CModalTitle>
-            </CModalHeader>
-            <CModalBody>
-              <div className="mb-3">
-                <CFormLabel>Título *</CFormLabel>
-                <CFormInput
-                  value={metaForm.title}
-                  onChange={(e) => setMetaForm({ ...metaForm, title: e.target.value })}
-                />
-              </div>
-              <div className="mb-3">
-                <CFormLabel>Descripción</CFormLabel>
-                <CFormTextarea
-                  rows={3}
-                  value={metaForm.description}
-                  onChange={(e) => setMetaForm({ ...metaForm, description: e.target.value })}
-                />
-              </div>
-              <div className="mb-3">
-                <CFormLabel>Instrumento</CFormLabel>
-                <CFormSelect
-                  value={metaForm.instrument}
-                  onChange={(e) => setMetaForm({ ...metaForm, instrument: e.target.value })}
-                >
-                  <option value="">Sin instrumento</option>
-                  {INSTRUMENT_OPTIONS.map((instrument) => (
-                    <option key={instrument} value={instrument}>
-                      {instrument}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-              <div className="mb-1">
-                <CFormLabel>Nivel</CFormLabel>
-                <CFormSelect
-                  value={metaForm.level}
-                  onChange={(e) => setMetaForm({ ...metaForm, level: e.target.value })}
-                >
-                  <option value="">Sin nivel</option>
-                  {LEVEL_OPTIONS.map((level) => (
-                    <option key={level} value={level}>
-                      {level}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-              {metaError && <div className="text-danger mt-3">{metaError}</div>}
-            </CModalBody>
-            <CModalFooter>
-              <CButton color="secondary" variant="outline" onClick={() => setShowEditMeta(false)}>
-                Cancelar
-              </CButton>
-              <CButton type="submit" color="primary">
-                Guardar cambios
-              </CButton>
-            </CModalFooter>
-          </CForm>
-        </CModal>
+        {metaForm && (
+          <CModal visible={showEditMeta} onClose={() => setShowEditMeta(false)} backdrop="static">
+            <CForm
+              onSubmit={async (event) => {
+                event.preventDefault()
+                if (!metaForm.title.trim()) {
+                  setMetaError('El título es obligatorio.')
+                  return
+                }
+                const ok = await updateCourse(course.id, {
+                  title: metaForm.title.trim(),
+                  description: metaForm.description.trim(),
+                  instrument: metaForm.instrument || null,
+                  level: metaForm.level || null,
+                })
+                if (ok) {
+                  setShowEditMeta(false)
+                  await loadDetail()
+                } else {
+                  setMetaError('No se pudo actualizar el curso.')
+                }
+              }}
+            >
+              <CModalHeader closeButton>
+                <CModalTitle>Editar curso</CModalTitle>
+              </CModalHeader>
+              <CModalBody>
+                <div className="mb-3">
+                  <CFormLabel>Título *</CFormLabel>
+                  <CFormInput
+                    value={metaForm.title}
+                    onChange={(e) => setMetaForm({ ...metaForm, title: e.target.value })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <CFormLabel>Descripción</CFormLabel>
+                  <CFormTextarea
+                    rows={3}
+                    value={metaForm.description}
+                    onChange={(e) => setMetaForm({ ...metaForm, description: e.target.value })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <CFormLabel>Instrumento</CFormLabel>
+                  <CFormSelect
+                    value={metaForm.instrument}
+                    onChange={(e) => setMetaForm({ ...metaForm, instrument: e.target.value })}
+                  >
+                    <option value="">Sin instrumento</option>
+                    {INSTRUMENT_OPTIONS.map((instrument) => (
+                      <option key={instrument} value={instrument}>
+                        {instrument}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </div>
+                <div className="mb-1">
+                  <CFormLabel>Nivel</CFormLabel>
+                  <CFormSelect
+                    value={metaForm.level}
+                    onChange={(e) => setMetaForm({ ...metaForm, level: e.target.value })}
+                  >
+                    <option value="">Sin nivel</option>
+                    {LEVEL_OPTIONS.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </div>
+                {metaError && <div className="text-danger mt-3">{metaError}</div>}
+              </CModalBody>
+              <CModalFooter>
+                <CButton color="secondary" variant="outline" onClick={() => setShowEditMeta(false)}>
+                  Cancelar
+                </CButton>
+                <CButton type="submit" color="primary">
+                  Guardar cambios
+                </CButton>
+              </CModalFooter>
+            </CForm>
+          </CModal>
+        )}
 
         {/* Modal editor de tarea */}
         {editingTask && (
