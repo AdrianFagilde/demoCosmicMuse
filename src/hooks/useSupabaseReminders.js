@@ -105,14 +105,29 @@ const useSupabaseReminders = (userId) => {
     return []
   }, [])
 
+  const filterRecipientsByTargetGroup = useCallback((reminder, allStudents) => {
+    if (!allStudents || allStudents.length === 0) return []
+
+    switch (reminder.target_group) {
+      case 'Individual':
+        return allStudents.filter((s) => String(s.id) === String(reminder.student_id))
+      case 'Todos':
+        return allStudents
+      case 'Morosos':
+        return allStudents.filter((s) => s.paymentStatus === 'Moroso')
+      case 'Pagados':
+        return allStudents.filter((s) => s.paymentStatus === 'Pagado')
+      default:
+        return []
+    }
+  }, [])
+
   const sendReminder = useCallback(
     async (reminder, trigger, studentBalances) => {
       const sentAt = new Date().toISOString()
 
-      let recipients = studentBalances || []
-      if (recipients.length === 0) {
-        recipients = await fetchRecipientsFromDB(reminder)
-      }
+      const allStudents = studentBalances || (await fetchRecipientsFromDB(reminder))
+      const recipients = filterRecipientsByTargetGroup(reminder, allStudents)
 
       const methodLabel = reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'
 
@@ -160,7 +175,7 @@ const useSupabaseReminders = (userId) => {
 
       return logEntries
     },
-    [updateReminder, fetchRecipientsFromDB],
+    [updateReminder, fetchRecipientsFromDB, filterRecipientsByTargetGroup],
   )
 
   const upcomingReminders = reminders

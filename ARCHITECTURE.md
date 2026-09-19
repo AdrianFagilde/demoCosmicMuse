@@ -67,21 +67,21 @@ Cosmic Muse Academy es una SPA construida con React 19, Vite y CoreUI React, con
 
 Definido en `supabase/migrations/` (idempotentes, aplicar en orden):
 
-| Tabla               | Descripción                                                                      |
-| ------------------- | -------------------------------------------------------------------------------- |
-| `profiles`          | Perfil de usuario (rol, instrumento, nivel, progreso, asistencia, tutor, avatar) |
-| `lessons`           | Clases programadas por estudiante                                                |
-| `tasks`             | Tareas académicas asignadas                                                      |
-| `payments`          | Pagos registrados con comprobante opcional                                       |
-| `payment_reminders` | Recordatorios de pago programados                                                |
-| `notification_log`  | Historial de notificaciones enviadas (WhatsApp/manual)                           |
-| `notifications`     | Notificaciones in-app por destinatario                                           |
-| `instruments`       | Catálogo de instrumentos                                                         |
-| `courses`           | Cursos creados por el admin                                                      |
-| `course_tasks`      | Tareas dentro de un curso (ordenadas por `position`)                             |
-| `task_checklist_items` | Ítems de checklist por tarea (ordenados por `position`)                       |
-| `course_enrollments` | Inscripción manual de estudiantes a cursos                                      |
-| `checklist_progress` | Marcado de ítems por estudiante (fuente del % de avance)                        |
+| Tabla                  | Descripción                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| `profiles`             | Perfil de usuario (rol, instrumento, nivel, progreso, asistencia, tutor, avatar) |
+| `lessons`              | Clases programadas por estudiante                                                |
+| `tasks`                | Tareas académicas asignadas                                                      |
+| `payments`             | Pagos registrados con comprobante opcional                                       |
+| `payment_reminders`    | Recordatorios de pago programados                                                |
+| `notification_log`     | Historial de notificaciones enviadas (WhatsApp/manual)                           |
+| `notifications`        | Notificaciones in-app por destinatario                                           |
+| `instruments`          | Catálogo de instrumentos                                                         |
+| `courses`              | Cursos creados por el admin                                                      |
+| `course_tasks`         | Tareas dentro de un curso (ordenadas por `position`)                             |
+| `task_checklist_items` | Ítems de checklist por tarea (ordenados por `position`)                          |
+| `course_enrollments`   | Inscripción manual de estudiantes a cursos                                       |
+| `checklist_progress`   | Marcado de ítems por estudiante (fuente del % de avance)                         |
 
 Buckets de Storage: `avatars` (público) y `payment-proofs` (privado, solo admin).
 

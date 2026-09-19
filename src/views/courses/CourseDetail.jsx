@@ -749,7 +749,12 @@ const CourseDetail = () => {
 
         {/* Modal meta curso */}
         {metaForm && (
-          <CModal visible={showEditMeta} onClose={() => setShowEditMeta(false)} backdrop="static">
+          <CModal
+            visible={showEditMeta}
+            onClose={() => setShowEditMeta(false)}
+            backdrop="static"
+            scrollable
+          >
             <CForm
               onSubmit={async (event) => {
                 event.preventDefault()
@@ -774,7 +779,7 @@ const CourseDetail = () => {
               <CModalHeader closeButton>
                 <CModalTitle>Editar curso</CModalTitle>
               </CModalHeader>
-              <CModalBody>
+              <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                 <div className="mb-3">
                   <CFormLabel>Título *</CFormLabel>
                   <CFormInput
@@ -1098,8 +1103,14 @@ const TaskEditorModal = ({
       const created = await onAddItem(task.id, added.label, position)
       if (!created) ok = false
     }
-    const reorderedExisting = items.filter((item) => currentIds.has(item.id))
-    const orderChanged = reorderedExisting.some((item, index) => item.position !== index)
+    // Detect reorder by comparing sequence of existing item IDs
+    const originalExistingIds = original
+      .filter((item) => nextIds.has(item.id))
+      .map((item) => item.id)
+    const currentExistingIds = items
+      .filter((item) => currentIds.has(item.id))
+      .map((item) => item.id)
+    const orderChanged = originalExistingIds.join(',') !== currentExistingIds.join(',')
     if (orderChanged) {
       ok = (await onReorderItems(items)) && ok
     }
@@ -1113,7 +1124,7 @@ const TaskEditorModal = ({
   }
 
   return (
-    <CModal visible onClose={onClose} backdrop="static" size="lg">
+    <CModal visible onClose={onClose} backdrop="static" size="lg" scrollable>
       <CForm
         onSubmit={(event) => {
           event.preventDefault()
@@ -1123,7 +1134,7 @@ const TaskEditorModal = ({
         <CModalHeader closeButton>
           <CModalTitle>Editar tarea</CModalTitle>
         </CModalHeader>
-        <CModalBody>
+        <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <div className="mb-3">
             <CFormLabel>Título *</CFormLabel>
             <CFormInput

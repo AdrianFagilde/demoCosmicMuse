@@ -98,16 +98,15 @@ const Tasks = () => {
       setFormError('Completa título, descripción y fecha de entrega.')
       return
     }
-    const studentId = newTask.studentId || students[0]?.id
-    if (!studentId) {
-      setFormError('No hay estudiantes disponibles para asignar la tarea.')
+    if (!newTask.studentId) {
+      setFormError('Selecciona un estudiante para asignar la tarea.')
       return
     }
     setFormError('')
     const ok = await addTask({
       title: newTask.title,
       description: newTask.description,
-      studentId,
+      studentId: newTask.studentId,
       assignedBy: profile.id,
       dueDate: newTask.dueDate,
       status: newTask.status,
@@ -120,7 +119,7 @@ const Tasks = () => {
     setNewTask({
       title: '',
       description: '',
-      studentId: students[0]?.id || '',
+      studentId: '',
       dueDate: '',
       status: 'Pendiente',
       progress: 0,
@@ -129,15 +128,18 @@ const Tasks = () => {
 
   const handleDelete = async (taskId) => {
     if (!window.confirm('¿Eliminar esta tarea? Esta acción no se puede deshacer.')) return
-    await deleteTask(taskId)
+    const ok = await deleteTask(taskId)
+    if (!ok) setFormError('No se pudo eliminar la tarea.')
   }
 
   const handleStatusChange = async (taskId, status) => {
-    await changeTaskStatus(taskId, status)
+    const ok = await changeTaskStatus(taskId, status)
+    if (!ok) setFormError('No se pudo actualizar el estado.')
   }
 
   const handleProgressCommit = (taskId, value) => {
-    changeTaskProgress(taskId, value)
+    const ok = changeTaskProgress(taskId, value)
+    if (!ok) setFormError('No se pudo actualizar el progreso.')
   }
 
   return (

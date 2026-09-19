@@ -134,7 +134,7 @@ const FormEditorModal = ({
         <CModalHeader closeButton>
           <CModalTitle>{isNew ? 'Nuevo cuestionario' : 'Editar cuestionario'}</CModalTitle>
         </CModalHeader>
-        <CModalBody>
+        <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           {taskId && (
             <CAlert color="info" className="py-2 small">
               Este cuestionario quedará asociado a la tarea

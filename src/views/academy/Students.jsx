@@ -90,7 +90,7 @@ const Students = () => {
     setSaving(true)
     setError('')
 
-    const { error: invokeError } = await supabase.functions.invoke('create-student', {
+    const { data, error: invokeError } = await supabase.functions.invoke('create-student', {
       body: {
         fullName: form.fullName,
         email: form.email,
@@ -100,8 +100,8 @@ const Students = () => {
       },
     })
 
-    if (invokeError) {
-      setError(invokeError.message || 'Error al crear estudiante')
+    if (invokeError || data?.error) {
+      setError(data?.error || invokeError?.message || 'Error al crear estudiante')
       setSaving(false)
       return
     }
@@ -118,9 +118,11 @@ const Students = () => {
           <CCard className="h-100">
             <CCardBody>
               <div className="text-medium-emphasis small">Estudiantes activos</div>
-              <div className="fs-3 fw-semibold">{students.length}</div>
+              <div className="fs-3 fw-semibold">
+                {students.filter((s) => s.status === 'Activo').length}
+              </div>
               <div className="text-body-secondary mt-2 d-flex align-items-center">
-                <CIcon icon={cilPeople} className="me-2" /> Total registrado
+                <CIcon icon={cilPeople} className="me-2" /> Total registrado: {students.length}
               </div>
             </CCardBody>
           </CCard>

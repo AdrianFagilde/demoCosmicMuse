@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   CAvatar,
@@ -37,11 +37,20 @@ const StudentDetail = () => {
   const [localProgress, setLocalProgress] = useState(student?.progress || 0)
   const [localAttendance, setLocalAttendance] = useState(student?.attendance || 0)
   const [syncedId, setSyncedId] = useState(null)
-  if (student && syncedId !== student.id) {
-    setSyncedId(student.id)
-    setLocalProgress(student.progress || 0)
-    setLocalAttendance(student.attendance || 0)
-  }
+  const [savingMetrics, setSavingMetrics] = useState(false)
+  const [quickTaskLoading, setQuickTaskLoading] = useState(false)
+  const [metricsError, setMetricsError] = useState('')
+
+  useEffect(() => {
+    if (student && syncedId !== student.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSyncedId(student.id)
+      setLocalProgress(student.progress || 0)
+      setLocalAttendance(student.attendance || 0)
+    }
+  }, [student, syncedId])
+
+  const clamp = (v) => Math.min(100, Math.max(0, Math.round(Number(v) || 0)))
 
   if (!isAdmin) {
     return (
@@ -69,16 +78,30 @@ const StudentDetail = () => {
   }
 
   const handleSaveMetrics = async () => {
-    await updateStudentMetrics(id, localProgress, localAttendance)
+    setSavingMetrics(true)
+    setMetricsError('')
+    const progress = clamp(localProgress)
+    const attendance = clamp(localAttendance)
+    const ok = await updateStudentMetrics(id, progress, attendance)
+    setSavingMetrics(false)
+    if (!ok) {
+      setMetricsError('No se pudo guardar. Intenta de nuevo.')
+    } else {
+      setLocalProgress(progress)
+      setLocalAttendance(attendance)
+    }
   }
 
   const handleAddQuickTask = async () => {
-    await addTask({
+    setQuickTaskLoading(true)
+    const ok = await addTask({
       title: 'Nueva tarea rápida',
       studentId: id,
       assignedBy: profile.id,
       dueDate: new Date().toISOString().slice(0, 10),
     })
+    setQuickTaskLoading(false)
+    if (!ok) setMetricsError('No se pudo crear la tarea rápida.')
   }
 
   return (
@@ -111,6 +134,11 @@ const StudentDetail = () => {
               </div>
               <div className="mt-3">
                 <CForm>
+                  {metricsError && (
+                    <CAlert color="danger" className="mb-2">
+                      {metricsError}
+                    </CAlert>
+                  )}
                   <div className="mb-2">
                     <label className="form-label">Ajustar progreso</label>
                     <CFormInput
@@ -118,7 +146,7 @@ const StudentDetail = () => {
                       min={0}
                       max={100}
                       value={localProgress}
-                      onChange={(e) => setLocalProgress(e.target.value)}
+                      onChange={(e) => setLocalProgress(clamp(e.target.value))}
                     />
                   </div>
                   <div className="mb-2">
@@ -128,12 +156,12 @@ const StudentDetail = () => {
                       min={0}
                       max={100}
                       value={localAttendance}
-                      onChange={(e) => setLocalAttendance(e.target.value)}
+                      onChange={(e) => setLocalAttendance(clamp(e.target.value))}
                     />
                   </div>
                   <div className="text-end">
-                    <CButton color="primary" onClick={handleSaveMetrics}>
-                      Guardar métricas
+                    <CButton color="primary" onClick={handleSaveMetrics} disabled={savingMetrics}>
+                      {savingMetrics ? 'Guardando...' : 'Guardar métricas'}
                     </CButton>
                   </div>
                 </CForm>
@@ -149,8 +177,13 @@ const StudentDetail = () => {
             <CCardHeader>Tareas de {student.full_name}</CCardHeader>
             <CCardBody>
               <div className="mb-3">
-                <CButton color="primary" size="sm" onClick={handleAddQuickTask}>
-                  Añadir tarea rápida
+                <CButton
+                  color="primary"
+                  size="sm"
+                  onClick={handleAddQuickTask}
+                  disabled={quickTaskLoading}
+                >
+                  {quickTaskLoading ? 'Añadiendo...' : 'Añadir tarea rápida'}
                 </CButton>
               </div>
               {tasksLoading ? (

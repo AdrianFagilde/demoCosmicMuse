@@ -39,15 +39,19 @@ const MyProfile = () => {
   const [cropOpen, setCropOpen] = useState(false)
   const [cropSrc, setCropSrc] = useState(null)
 
-  const [syncedProfile, setSyncedProfile] = useState(null)
-  if (profile && syncedProfile !== profile) {
-    setSyncedProfile(profile)
-    setForm({
-      phone: profile.phone || '',
-      instrument: profile.instrument || '',
-      level: profile.level || 'Principiante',
-    })
-  }
+  const [syncedProfileId, setSyncedProfileId] = useState(null)
+
+  useEffect(() => {
+    if (profile && syncedProfileId !== profile.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSyncedProfileId(profile.id)
+      setForm({
+        phone: profile.phone || '',
+        instrument: profile.instrument || '',
+        level: profile.level || 'Principiante',
+      })
+    }
+  }, [profile, syncedProfileId])
 
   useEffect(
     () => () => {

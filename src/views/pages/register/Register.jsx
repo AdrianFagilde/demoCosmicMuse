@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   CAlert,
@@ -47,7 +47,23 @@ const Register = () => {
     return age < 18
   }, [birthDate])
 
-  const maxBirthDate = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const maxBirthDate = useMemo(() => {
+    const d = new Date()
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }, [])
+
+  const navigateTimeoutRef = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      if (navigateTimeoutRef.current) {
+        clearTimeout(navigateTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -126,7 +142,7 @@ const Register = () => {
       navigate('/dashboard')
     } else {
       setSuccess('Cuenta creada. Ya puedes iniciar sesion.')
-      setTimeout(() => navigate('/login'), 2000)
+      navigateTimeoutRef.current = setTimeout(() => navigate('/login'), 2000)
     }
     setLoading(false)
   }
@@ -161,14 +177,14 @@ const Register = () => {
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-          <CFormInput
-            type="date"
-            placeholder="Fecha de nacimiento"
-            max={maxBirthDate}
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            required
-          />
+                      <CFormInput
+                        type="date"
+                        placeholder="Fecha de nacimiento"
+                        max={maxBirthDate}
+                        value={birthDate}
+                        onChange={(e) => setBirthDate(e.target.value)}
+                        required
+                      />
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>

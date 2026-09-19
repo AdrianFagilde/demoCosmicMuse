@@ -55,13 +55,22 @@ const useSupabaseTasks = () => {
     [fetchTasks],
   )
 
+  const cleanUpdates = (updates) => {
+    const cleaned = {}
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined) cleaned[key] = value
+    })
+    return cleaned
+  }
+
   const updateTask = useCallback(async (taskId, updates) => {
+    const cleaned = cleanUpdates(updates)
     const { error } = await supabase
       .from('tasks')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...cleaned, updated_at: new Date().toISOString() })
       .eq('id', taskId)
     if (!error) {
-      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t)))
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...cleaned } : t)))
     }
     return !error
   }, [])

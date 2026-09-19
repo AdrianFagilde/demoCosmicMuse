@@ -113,10 +113,18 @@ const FormResponsesModal = ({ course, form, onClose }) => {
   const [expandedStudent, setExpandedStudent] = useState(null)
 
   useEffect(() => {
+    let mounted = true
     ;(async () => {
-      setResponses(await fetchFormResponses(form.id))
-      setLoading(false)
+      try {
+        const data = await fetchFormResponses(form.id)
+        if (mounted) setResponses(data)
+      } finally {
+        if (mounted) setLoading(false)
+      }
     })()
+    return () => {
+      mounted = false
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.id])
 
@@ -139,7 +147,7 @@ const FormResponsesModal = ({ course, form, onClose }) => {
       <CModalHeader closeButton>
         <CModalTitle>Respuestas: {form.title}</CModalTitle>
       </CModalHeader>
-      <CModalBody>
+      <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
         {loading ? (
           <div className="text-center py-4">
             <CSpinner color="primary" />

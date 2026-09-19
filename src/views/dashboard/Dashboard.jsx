@@ -68,34 +68,39 @@ const Dashboard = () => {
   }, [students])
 
   const fetchPaymentsByMonth = useCallback(async () => {
-    const { data } = await supabase
-      .from('payments')
-      .select('amount, payment_date')
-      .order('payment_date', { ascending: true })
+    try {
+      const { data } = await supabase
+        .from('payments')
+        .select('amount, payment_date')
+        .order('payment_date', { ascending: true })
 
-    if (!data) return
+      if (!data) return
 
-    const monthMap = {}
-    data.forEach((p) => {
-      const d = new Date(p.payment_date)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      const label = d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' })
-      if (!monthMap[key]) monthMap[key] = { key, label, total: 0 }
-      monthMap[key].total += Number(p.amount)
-    })
+      const monthMap = {}
+      data.forEach((p) => {
+        const d = new Date(p.payment_date)
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        const label = d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' })
+        if (!monthMap[key]) monthMap[key] = { key, label, total: 0 }
+        monthMap[key].total += Number(p.amount)
+      })
 
-    setPaymentsByMonth(Object.values(monthMap).slice(-6))
+      setPaymentsByMonth(Object.values(monthMap).slice(-6))
+    } catch (err) {
+      console.error('[Dashboard] fetchPaymentsByMonth error:', err)
+    }
   }, [])
 
   useEffect(() => {
-    getSummary().then(setSummary)
+    ;(async () => {
+      try {
+        const s = await getSummary()
+        setSummary(s)
+      } catch (err) {
+        console.error('[Dashboard] getSummary error:', err)
+      }
+    })()
   }, [getSummary])
-
-  useEffect(() => {
-    if (!isStudent) {
-      getSummary().then(setSummary)
-    }
-  }, [getSummary, isStudent])
 
   useEffect(() => {
     if (isStudent) return

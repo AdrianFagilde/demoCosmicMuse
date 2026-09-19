@@ -30,14 +30,20 @@ const useSupabasePayments = (userId) => {
     })()
   }, [fetchPayments])
 
+  const sanitizeFileName = (name) =>
+    name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+
   const addPayment = useCallback(
     async (paymentData, proofFile) => {
       let proofPath = ''
       let proofName = ''
 
       if (proofFile) {
-        proofName = proofFile.name
-        proofPath = `${paymentData.studentId}/${Date.now()}-${proofFile.name}`
+        proofName = sanitizeFileName(proofFile.name)
+        proofPath = `${paymentData.studentId}/${Date.now()}-${proofName}`
         const { error: uploadError } = await supabase.storage
           .from('payment-proofs')
           .upload(proofPath, proofFile)
@@ -65,7 +71,12 @@ const useSupabasePayments = (userId) => {
       if (error) {
         // Rollback del archivo subido si el registro del pago falló
         if (proofPath) {
-          await supabase.storage.from('payment-proofs').remove([proofPath])
+          const { error: removeError } = await supabase.storage
+            .from('payment-proofs')
+            .remove([proofPath])
+          if (removeError) {
+            console.error('[Payments] Rollback falló:', removeError.message, removeError)
+          }
         }
         console.error('[Payments] Error al registrar pago:', error.message, error)
         return false
