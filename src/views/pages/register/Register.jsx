@@ -24,6 +24,7 @@ const Register = () => {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [instrument, setInstrument] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [guardianFirstName, setGuardianFirstName] = useState('')
@@ -46,11 +47,19 @@ const Register = () => {
     return age < 18
   }, [birthDate])
 
+  const maxBirthDate = useMemo(() => new Date().toISOString().slice(0, 10), [])
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setLoading(true)
     setError('')
     setSuccess('')
+
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden')
+      setLoading(false)
+      return
+    }
 
     if (isMinor && (!guardianFirstName || !guardianLastName || !guardianPhone)) {
       setError('Como eres menor de edad, los datos del representante son obligatorios')
@@ -152,13 +161,14 @@ const Register = () => {
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-                      <CFormInput
-                        type="date"
-                        placeholder="Fecha de nacimiento"
-                        value={birthDate}
-                        onChange={(e) => setBirthDate(e.target.value)}
-                        required
-                      />
+          <CFormInput
+            type="date"
+            placeholder="Fecha de nacimiento"
+            max={maxBirthDate}
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            required
+          />
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
@@ -166,7 +176,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="email"
-                        placeholder="Correo electronico"
+                        placeholder="Correo electrónico"
                         autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -179,10 +189,24 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="password"
-                        placeholder="Contrasena (minimo 6 caracteres)"
+                        placeholder="Contraseña (mínimo 6 caracteres)"
                         autoComplete="new-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                      />
+                    </CInputGroup>
+                    <CInputGroup className="mb-3">
+                      <CInputGroupText>
+                        <CIcon icon={cilLockLocked} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="password"
+                        placeholder="Confirmar contraseña"
+                        autoComplete="new-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         required
                         minLength={6}
                       />
@@ -240,7 +264,7 @@ const Register = () => {
                           </CInputGroupText>
                           <CFormInput
                             type="tel"
-                            placeholder="Telefono del representante"
+                            placeholder="Teléfono del representante"
                             value={guardianPhone}
                             onChange={(e) => setGuardianPhone(e.target.value)}
                             required

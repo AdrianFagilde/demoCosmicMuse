@@ -32,20 +32,20 @@ const useSupabasePayments = (userId) => {
 
   const addPayment = useCallback(
     async (paymentData, proofFile) => {
-      let proofUrl = ''
+      let proofPath = ''
       let proofName = ''
 
       if (proofFile) {
         proofName = proofFile.name
-        const filePath = `${paymentData.studentId}/${Date.now()}-${proofFile.name}`
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        proofPath = `${paymentData.studentId}/${Date.now()}-${proofFile.name}`
+        const { error: uploadError } = await supabase.storage
           .from('payment-proofs')
-          .upload(filePath, proofFile)
-        if (!uploadError && uploadData) {
-          const { data: urlData } = supabase.storage.from('payment-proofs').getPublicUrl(filePath)
-          proofUrl = urlData?.publicUrl || ''
-        } else if (uploadError) {
-          console.warn('[Payments] Upload comprobante falló:', uploadError.message)
+          .upload(proofPath, proofFile)
+        if (uploadError) {
+          // Sin comprobante subido no se registra el pago para evitar
+          // registros financieros incompletos sin aviso.
+          console.error('[Payments] Upload comprobante falló:', uploadError.message, uploadError)
+          return false
         }
       }
 
@@ -55,51 +55,48 @@ const useSupabasePayments = (userId) => {
         payment_date: paymentData.date,
         method: paymentData.method,
         frequency: paymentData.frequency,
-        proof_url: proofUrl,
+        // proof_url guarda el PATH dentro del bucket privado; la URL de
+        // descarga se genera firmada bajo demanda (ver getPaymentProofUrl)
+        proof_url: proofPath,
         proof_name: proofName,
         notes: paymentData.notes || '',
         recorded_by: userId,
       })
-      if (!error) {
-        await notifyInApp({
-          senderId: userId,
-          recipients: [{ id: paymentData.studentId }],
-          title: 'Pago registrado',
-          message: `Se registró un pago de $${Number(paymentData.amount).toFixed(2)} (${paymentData.method})`,
-        })
-        await fetchPayments()
+      if (error) {
+        // Rollback del archivo subido si el registro del pago falló
+        if (proofPath) {
+          await supabase.storage.from('payment-proofs').remove([proofPath])
+        }
+        console.error('[Payments] Error al registrar pago:', error.message, error)
+        return false
       }
-      return !error
+
+      await notifyInApp({
+        senderId: userId,
+        recipients: [{ id: paymentData.studentId }],
+        title: 'Pago registrado',
+        message: `Se registró un pago de $${Number(paymentData.amount).toFixed(2)} (${paymentData.method})`,
+      })
+      await fetchPayments()
+      return true
     },
     [fetchPayments, userId],
   )
 
-  const getStudentBalances = useCallback(async (students) => {
-    const { data: allPayments } = await supabase
-      .from('payments')
-      .select('student_id, amount, payment_date')
-
-    return students.map((student) => {
-      const studentPayments = (allPayments || []).filter((p) => p.student_id === student.id)
-      const totalPaid = studentPayments.reduce((sum, p) => sum + Number(p.amount), 0)
-      const sorted = studentPayments
-        .slice()
-        .sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date))
-      const lastPaidDate = sorted[0] ? new Date(sorted[0].payment_date) : null
-      const isDelinquent = !lastPaidDate || (new Date() - lastPaidDate) / (1000 * 60 * 60 * 24) > 30
-
-      return {
-        ...student,
-        name: student.full_name,
-        totalPaid,
-        paymentsCount: studentPayments.length,
-        lastPaidDate,
-        paymentStatus: isDelinquent ? 'Moroso' : 'Pagado',
-      }
-    })
+  // URL firmada de corta duración para ver un comprobante (bucket privado)
+  const getPaymentProofUrl = useCallback(async (proofPath) => {
+    if (!proofPath) return null
+    const { data, error } = await supabase.storage
+      .from('payment-proofs')
+      .createSignedUrl(proofPath, 300)
+    if (error) {
+      console.error('[Payments] Signed URL error:', error.message, error)
+      return null
+    }
+    return data?.signedUrl ?? null
   }, [])
 
-  return { payments, loading, error, addPayment, getStudentBalances, refetch: fetchPayments }
+  return { payments, loading, error, addPayment, getPaymentProofUrl, refetch: fetchPayments }
 }
 
 export default useSupabasePayments

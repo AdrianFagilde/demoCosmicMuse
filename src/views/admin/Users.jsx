@@ -20,12 +20,16 @@ import { cilTrash, cilUser } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import supabase from '../../lib/supabase'
+import RestrictedAccess from '../../components/RestrictedAccess'
 
 const Users = () => {
   const { user, profile } = useAuth()
   const currentUserId = user?.id
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [notice, setNotice] = useState({ type: '', text: '' })
+
+  const showNotice = (type, text) => setNotice({ type, text })
 
   const fetchUsers = useCallback(async () => {
     const { data, error } = await supabase
@@ -72,33 +76,55 @@ const Users = () => {
     }
     const { error } = await supabase
       .from('profiles')
-      .update({ role: newRole, updated_at: new Date().toISOString() })
+      .update({ role: newRole })
       .eq('id', targetUser.id)
-    if (!error) {
-      setUsers((prev) => prev.map((u) => (u.id === targetUser.id ? { ...u, role: newRole } : u)))
+    if (error) {
+      console.error('[Users] Error cambiando rol:', error.message, error)
+      showNotice('danger', 'No se pudo cambiar el rol.')
+      return
     }
+    setUsers((prev) => prev.map((u) => (u.id === targetUser.id ? { ...u, role: newRole } : u)))
+    showNotice('success', `Rol actualizado para ${targetUser.full_name}.`)
   }
 
   const handleStatusChange = async (userId, newStatus) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq('id', userId)
-    if (!error) {
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u)))
+    const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', userId)
+    if (error) {
+      console.error('[Users] Error cambiando estado:', error.message, error)
+      showNotice('danger', 'No se pudo cambiar el estado.')
+      return
     }
+    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u)))
   }
 
-  const handleDelete = async (userId) => {
-    if (!window.confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')) return
-    const { error } = await supabase.from('profiles').delete().eq('id', userId)
-    if (!error) {
-      setUsers((prev) => prev.filter((u) => u.id !== userId))
+  const handleDelete = async (user) => {
+    if (
+      !window.confirm(
+        `¿Eliminar a ${user.full_name}? Se eliminará su cuenta, su perfil y sus datos asociados. Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return
     }
+    // Elimina la cuenta en auth.users (cascada al perfil) vía Edge Function
+    const { data, error } = await supabase.functions.invoke('delete-user', {
+      body: { userId: user.id },
+    })
+    if (error) {
+      console.error('[Users] Error eliminando usuario:', error.message, error)
+      showNotice('danger', 'No se pudo eliminar la cuenta. Intenta de nuevo.')
+      return
+    }
+    if (data && data.error) {
+      showNotice('danger', data.error)
+      return
+    }
+    setUsers((prev) => prev.filter((u) => u.id !== user.id))
+    showNotice('success', `${user.full_name} fue eliminado.`)
   }
 
   return (
     <>
+      {notice.text && <div className={`alert alert-${notice.type} mb-3`}>{notice.text}</div>}
       <CRow className="mb-4">
         <CCol md={3} sm={6}>
           <CCard className="h-100">
@@ -178,20 +204,24 @@ const Users = () => {
                         style={{ width: '140px' }}
                       >
                         <option value="admin">Admin</option>
-                        <option value="student">Student</option>
+                        <option value="student">Estudiante</option>
                       </CFormSelect>
                     )}
                   </CTableDataCell>
                   <CTableDataCell>
-                    <CFormSelect
-                      size="sm"
-                      value={user.status}
-                      onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                      style={{ width: '130px' }}
-                    >
-                      <option value="Activo">Activo</option>
-                      <option value="Inactivo">Inactivo</option>
-                    </CFormSelect>
+                    {user.id === currentUserId ? (
+                      user.status
+                    ) : (
+                      <CFormSelect
+                        size="sm"
+                        value={user.status}
+                        onChange={(e) => handleStatusChange(user.id, e.target.value)}
+                        style={{ width: '130px' }}
+                      >
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                      </CFormSelect>
+                    )}
                   </CTableDataCell>
                   <CTableDataCell>{user.instrument || '—'}</CTableDataCell>
                   <CTableDataCell>
@@ -205,7 +235,7 @@ const Users = () => {
                         color="danger"
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(user.id)}
+                        onClick={() => handleDelete(user)}
                       >
                         <CIcon icon={cilTrash} />
                       </CButton>

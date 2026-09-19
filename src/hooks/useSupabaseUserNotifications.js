@@ -33,7 +33,7 @@ const useSupabaseUserNotifications = (userId) => {
   useEffect(() => {
     if (!userId) return
 
-    const instanceId = Math.random().toString(36).slice(2, 10)
+    const instanceId = crypto.randomUUID()
     const channel = supabase
       .channel(`notifications-realtime-${userId}-${instanceId}`)
       .on(

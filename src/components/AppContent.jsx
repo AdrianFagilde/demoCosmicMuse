@@ -1,13 +1,25 @@
 import React, { Suspense } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { CContainer, CSpinner } from '@coreui/react'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { CButton, CContainer, CSpinner } from '@coreui/react'
 
 import { useAuth } from '../context/AuthContext'
 import { routes } from '../routes'
 
 const AppContent = () => {
-  const { profile, loading, isAuthenticated } = useAuth()
-  const location = useLocation()
+  const { profile, loading, isAuthenticated, authError, retry } = useAuth()
+
+  if (authError) {
+    return (
+      <CContainer className="px-4 pt-4" lg>
+        <div className="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <span>{authError}</span>
+          <CButton color="danger" variant="outline" size="sm" onClick={retry}>
+            Reintentar
+          </CButton>
+        </div>
+      </CContainer>
+    )
+  }
 
   if (loading || (isAuthenticated && !profile)) {
     return (
@@ -30,15 +42,7 @@ const AppContent = () => {
               <Route
                 key={idx}
                 path={route.path}
-                exact={route.exact}
-                name={route.name}
-                element={
-                  allowed ? (
-                    <route.element key={location.pathname} />
-                  ) : (
-                    <Navigate to="/dashboard" replace />
-                  )
-                }
+                element={allowed ? <route.element /> : <Navigate to="/dashboard" replace />}
               />
             )
           })}

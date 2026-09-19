@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CSpinner } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import { cilSchool, cilPeople, cilCalendar, cilChart } from '@coreui/icons'
-import CIcon from '@coreui/icons-react'
 import {
   BarChart,
   Bar,
@@ -22,6 +21,7 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import supabase from '../../lib/supabase'
+import KpiCard from '../../components/KpiCard'
 
 const BRAND = {
   purple: '#712771',
@@ -36,7 +36,7 @@ const Dashboard = () => {
   const { user, profile } = useAuth()
   const isStudent = profile?.role === 'student'
   const { students, getSummary } = useSupabaseStudents()
-  const { tasks } = useSupabaseTasks(user?.id)
+  const { tasks } = useSupabaseTasks()
   const [summary, setSummary] = useState({
     activeStudents: 0,
     lessonsThisWeek: 0,
@@ -113,54 +113,34 @@ const Dashboard = () => {
     <>
       {!isStudent && (
         <CRow className="mb-4">
-          <CCol md={3} sm={6} className="mb-3">
-            <CCard className="kpi-card kpi-card--purple h-100">
-              <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-                <div>
-                  <div className="kpi-label">Estudiantes activos</div>
-                  <div className="fs-3 fw-semibold">{summary.activeStudents}</div>
-                  <div className="kpi-subtext mt-2">Total en la academia</div>
-                </div>
-                <CIcon icon={cilPeople} customClassName="kpi-icon" />
-              </CCardBody>
-            </CCard>
-          </CCol>
-          <CCol md={3} sm={6} className="mb-3">
-            <CCard className="kpi-card kpi-card--cyan h-100">
-              <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-                <div>
-                  <div className="kpi-label">Clases esta semana</div>
-                  <div className="fs-3 fw-semibold">{summary.lessonsThisWeek}</div>
-                  <div className="kpi-subtext mt-2">Horarios programados</div>
-                </div>
-                <CIcon icon={cilCalendar} customClassName="kpi-icon" />
-              </CCardBody>
-            </CCard>
-          </CCol>
-          <CCol md={3} sm={6} className="mb-3">
-            <CCard className="kpi-card kpi-card--magenta h-100">
-              <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-                <div>
-                  <div className="kpi-label">Profesores</div>
-                  <div className="fs-3 fw-semibold">{summary.teachers}</div>
-                  <div className="kpi-subtext mt-2">Mentores disponibles</div>
-                </div>
-                <CIcon icon={cilSchool} customClassName="kpi-icon" />
-              </CCardBody>
-            </CCard>
-          </CCol>
-          <CCol md={3} sm={6} className="mb-3">
-            <CCard className="kpi-card kpi-card--navy h-100">
-              <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-                <div>
-                  <div className="kpi-label">Instrumentos</div>
-                  <div className="fs-3 fw-semibold">{summary.availableInstruments.length}</div>
-                  <div className="kpi-subtext mt-2">Categorías activas</div>
-                </div>
-                <CIcon icon={cilChart} customClassName="kpi-icon" />
-              </CCardBody>
-            </CCard>
-          </CCol>
+          <KpiCard
+            color="purple"
+            label="Estudiantes activos"
+            value={summary.activeStudents}
+            subtext="Total en la academia"
+            icon={cilPeople}
+          />
+          <KpiCard
+            color="cyan"
+            label="Clases esta semana"
+            value={summary.lessonsThisWeek}
+            subtext="Horarios programados"
+            icon={cilCalendar}
+          />
+          <KpiCard
+            color="magenta"
+            label="Profesores"
+            value={summary.teachers}
+            subtext="Mentores disponibles"
+            icon={cilSchool}
+          />
+          <KpiCard
+            color="navy"
+            label="Instrumentos"
+            value={summary.availableInstruments.length}
+            subtext="Categorías activas"
+            icon={cilChart}
+          />
         </CRow>
       )}
 

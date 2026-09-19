@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import {
   CBadge,
   CButton,
@@ -33,12 +33,52 @@ const statusColors = {
   Completado: 'success',
 }
 
+// Input con estado local: confirma en blur/Enter y clampa a 0-100.
+// Evita que el debounce sobrescriba lo que el usuario está tecleando.
+const TaskProgressInput = ({ value, onCommit }) => {
+  const [draft, setDraft] = useState(() => String(value))
+  const [lastSynced, setLastSynced] = useState(value)
+
+  if (lastSynced !== value) {
+    setLastSynced(value)
+    setDraft(String(value))
+  }
+
+  const commit = () => {
+    const parsed = Number(draft)
+    if (draft === '' || Number.isNaN(parsed)) {
+      setDraft(String(value))
+      return
+    }
+    const clamped = Math.min(100, Math.max(0, Math.round(parsed)))
+    setDraft(String(clamped))
+    if (clamped !== value) onCommit(clamped)
+  }
+
+  return (
+    <CFormInput
+      type="number"
+      min={0}
+      max={100}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          commit()
+        }
+      }}
+    />
+  )
+}
+
 const Tasks = () => {
   const { user, profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const { students } = useSupabaseStudents()
   const { tasks, loading, addTask, deleteTask, changeTaskStatus, changeTaskProgress } =
-    useSupabaseTasks(user?.id)
+    useSupabaseTasks()
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -48,14 +88,6 @@ const Tasks = () => {
     progress: 0,
   })
   const [formError, setFormError] = useState('')
-  const progressTimersRef = useRef({})
-
-  useEffect(
-    () => () => {
-      Object.values(progressTimersRef.current).forEach(clearTimeout)
-    },
-    [],
-  )
 
   const studentTasks = tasks.filter((task) => task.student_id === user?.id)
   const visibleTasks = isAdmin ? tasks : studentTasks
@@ -96,6 +128,7 @@ const Tasks = () => {
   }
 
   const handleDelete = async (taskId) => {
+    if (!window.confirm('¿Eliminar esta tarea? Esta acción no se puede deshacer.')) return
     await deleteTask(taskId)
   }
 
@@ -103,11 +136,8 @@ const Tasks = () => {
     await changeTaskStatus(taskId, status)
   }
 
-  const handleProgressChange = (taskId, value) => {
-    clearTimeout(progressTimersRef.current[taskId])
-    progressTimersRef.current[taskId] = setTimeout(() => {
-      changeTaskProgress(taskId, value)
-    }, 500)
+  const handleProgressCommit = (taskId, value) => {
+    changeTaskProgress(taskId, value)
   }
 
   return (
@@ -278,14 +308,9 @@ const Tasks = () => {
                           <div className="mt-2">
                             <CInputGroup size="sm">
                               <CInputGroupText>Progreso</CInputGroupText>
-                              <CFormInput
-                                type="number"
-                                min={0}
-                                max={100}
-                                value={task.progress}
-                                onChange={(event) =>
-                                  handleProgressChange(task.id, event.target.value)
-                                }
+                              <TaskProgressInput
+                                value={task.progress ?? 0}
+                                onCommit={(value) => handleProgressCommit(task.id, value)}
                               />
                             </CInputGroup>
                           </div>

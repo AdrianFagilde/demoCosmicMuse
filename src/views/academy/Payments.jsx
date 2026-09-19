@@ -21,8 +21,9 @@ const Payments = () => {
   const [filterStatus, setFilterStatus] = useState('Todos')
 
   const { students } = useSupabaseStudents()
-  const { payments, addPayment } = useSupabasePayments(user?.id)
-  const { upcomingReminders, addReminder, sendReminder } = useSupabaseReminders(user?.id)
+  const { payments, addPayment, getPaymentProofUrl } = useSupabasePayments(user?.id)
+  const { upcomingReminders, addReminder, updateReminder, deleteReminder, sendReminder } =
+    useSupabaseReminders(user?.id)
   const { entries: notificationLog, notifyBrowser } = useSupabaseNotifications()
 
   const studentBalances = useMemo(
@@ -118,6 +119,13 @@ const Payments = () => {
                     </tr>
                   </thead>
                   <tbody>
+                    {studentBalances.length === 0 && (
+                      <tr>
+                        <td colSpan={2} className="text-center text-body-secondary py-4">
+                          No hay estudiantes registrados.
+                        </td>
+                      </tr>
+                    )}
                     {studentBalances.map((student) => (
                       <tr key={student.id}>
                         <td>{student.name}</td>
@@ -146,6 +154,8 @@ const Payments = () => {
           upcomingReminders={upcomingReminders}
           onAddReminder={addReminder}
           onSendReminder={handleSendReminder}
+          onUpdateReminder={updateReminder}
+          onDeleteReminder={deleteReminder}
           userName={profile?.full_name}
         />
       )}
@@ -162,7 +172,7 @@ const Payments = () => {
 
       {activeTab === 'history' && (
         <>
-          <PaymentHistory payments={mappedPayments} />
+          <PaymentHistory payments={mappedPayments} onViewProof={getPaymentProofUrl} />
           <NotificationLog entries={notificationLog} />
         </>
       )}

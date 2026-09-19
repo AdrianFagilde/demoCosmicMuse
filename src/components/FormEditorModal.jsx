@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import {
   CAlert,
   CButton,
@@ -45,6 +45,9 @@ const FormEditorModal = ({
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // Si el cuestionario ya se creó (y falló el guardado de preguntas),
+  // el reintento debe actualizar ese cuestionario y no crear otro.
+  const createdFormRef = useRef(null)
 
   const validate = () => {
     if (!meta.title.trim()) return 'El cuestionario necesita un título.'
@@ -80,13 +83,17 @@ const FormEditorModal = ({
     }
 
     let targetForm = form
-    if (isNew) {
+    if (isNew && !createdFormRef.current) {
       targetForm = await createForm(course, formData, actorId, taskId)
       if (!targetForm) {
         setSaving(false)
         setError('No se pudo crear el cuestionario.')
         return
       }
+      // El cuestionario quedó creado: reintentos futuros deben actualizarlo
+      createdFormRef.current = targetForm
+    } else if (isNew) {
+      targetForm = createdFormRef.current
     } else {
       const ok = await updateForm(form.id, {
         title: formData.title,
@@ -100,12 +107,16 @@ const FormEditorModal = ({
       }
     }
 
-    const questionsOk = await saveFormQuestions(targetForm.id, originalQuestions, questions)
+    const resolved = await saveFormQuestions(targetForm.id, questions)
     setSaving(false)
-    if (!questionsOk) {
-      setError('Hubo un problema guardando algunas preguntas. Revisa y vuelve a intentar.')
+    if (!resolved) {
+      setError(
+        'Hubo un problema guardando las preguntas. El cuestionario ya quedó creado; vuelve a guardar para reintentar las preguntas.',
+      )
       return
     }
+    // Sustituye los ids temporales por los reales devueltos por el RPC
+    setQuestions((prev) => prev.map((q, index) => ({ ...q, id: resolved[index]?.id ?? q.id })))
     onClose()
     await onSaved()
   }

@@ -21,10 +21,58 @@ export const SCALE_MAX = 5
 export const MAX_FILE_SIZE_MB = 10
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
+const ALLOWED_FILE_EXTENSIONS = new Set([
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'pdf',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'txt',
+  'csv',
+  'mp3',
+  'wav',
+  'ogg',
+  'm4a',
+  'flac',
+  'mp4',
+  'mov',
+  'm4v',
+  'webm',
+  'zip',
+  'rar',
+  '7z',
+  'tar',
+  'gz',
+])
+
+export const FILE_ACCEPT = [...ALLOWED_FILE_EXTENSIONS].map((ext) => `.${ext}`).join(',')
+
+export const validateCourseFile = (file) => {
+  if (!(file instanceof File) || file.size === 0) {
+    console.warn('[Forms] Archivo inválido o vacío.')
+    return 'El archivo está vacío o no es válido.'
+  }
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return `El archivo supera el limite de ${MAX_FILE_SIZE_MB} MB.`
+  }
+  const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : ''
+  if (!ALLOWED_FILE_EXTENSIONS.has(ext)) {
+    return 'El tipo de archivo no esta permitido.'
+  }
+  return null
+}
+
 const COURSE_FILES_BUCKET = 'course-files'
 
 export const newQuestion = (position = 0) => ({
-  id: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  id: `temp-${crypto.randomUUID()}`,
   question_text: '',
   type: 'short_text',
   options: [],
@@ -89,6 +137,11 @@ export const getCourseFileUrl = async (filePath) => {
 }
 
 export const uploadAnswerFile = async (studentId, questionId, file) => {
+  const validationError = validateCourseFile(file)
+  if (validationError) {
+    console.warn('[Forms] Answer file rejected:', validationError)
+    return null
+  }
   const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin'
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const path = `answers/${studentId}/${questionId}/${unique}.${ext}`
@@ -101,6 +154,11 @@ export const uploadAnswerFile = async (studentId, questionId, file) => {
 }
 
 export const uploadMaterialFile = async (courseId, file) => {
+  const validationError = validateCourseFile(file)
+  if (validationError) {
+    console.warn('[Forms] Material file rejected:', validationError)
+    return null
+  }
   const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin'
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const path = `materials/${courseId}/${unique}.${ext}`

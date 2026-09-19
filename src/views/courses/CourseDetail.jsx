@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   CBadge,
@@ -58,6 +58,7 @@ import FormEditorModal from '../../components/FormEditorModal'
 import FormResponsesModal from '../../components/FormResponsesModal'
 import MaterialList from '../../components/MaterialList'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
+import { FILE_ACCEPT, validateCourseFile } from '../../utils/forms'
 
 const computeStats = (tasks, progressRows = [], studentId = null) => {
   const items = tasks.flatMap((task) => task.task_checklist_items || [])
@@ -236,8 +237,10 @@ const CourseDetail = () => {
   const [mySubmissions, setMySubmissions] = useState({})
 
   const loadDetail = async () => {
+    const seq = ++loadSeqRef.current
     setDetailLoading(true)
     const { detail, error: detailError } = await fetchCourseDetail(id)
+    if (seq !== loadSeqRef.current) return
     if (!detail) {
       setLoadError(
         detailError?.message
@@ -252,15 +255,24 @@ const CourseDetail = () => {
         const itemIds = detail.course_tasks.flatMap((t) =>
           (t.task_checklist_items || []).map((item) => item.id),
         )
-        setProgressRows(await fetchCourseProgress(itemIds))
+        const progress = await fetchCourseProgress(itemIds)
+        if (seq !== loadSeqRef.current) return
+        setProgressRows(progress)
       } else if (user?.id) {
-        setMyProgressRows(await fetchStudentCourseProgress(user.id))
         const formIds = (detail.course_forms || []).map((f) => f.id)
-        setMySubmissions(await fetchMySubmissions(user.id, formIds))
+        const [progress, submissions] = await Promise.all([
+          fetchStudentCourseProgress(user.id),
+          fetchMySubmissions(user.id, formIds),
+        ])
+        if (seq !== loadSeqRef.current) return
+        setMyProgressRows(progress)
+        setMySubmissions(submissions)
       }
     }
     setDetailLoading(false)
   }
+
+  const loadSeqRef = useRef(0)
 
   useEffect(() => {
     ;(async () => {
@@ -327,7 +339,8 @@ const CourseDetail = () => {
       const newIndex = course.course_tasks.findIndex((t) => t.id === over.id)
       const reordered = arrayMove(course.course_tasks, oldIndex, newIndex)
       setCourse({ ...course, course_tasks: reordered })
-      await reorderTasks(reordered.map((t) => t.id))
+      const ok = await reorderTasks(reordered.map((t) => t.id))
+      if (!ok) await loadDetail()
     }
 
     const handleAddTask = async () => {
@@ -380,7 +393,8 @@ const CourseDetail = () => {
       const newIndex = course.course_forms.findIndex((f) => f.id === over.id)
       const reordered = arrayMove(course.course_forms, oldIndex, newIndex)
       setCourse({ ...course, course_forms: reordered })
-      await reorderForms(reordered.map((f) => f.id))
+      const ok = await reorderForms(reordered.map((f) => f.id))
+      if (!ok) await loadDetail()
     }
 
     const handleAddMaterial = async () => {
@@ -396,6 +410,13 @@ const CourseDetail = () => {
       if (materialDraft.type === 'file' && !materialDraft.file) {
         setMaterialError('Selecciona un archivo para subir.')
         return
+      }
+      if (materialDraft.type === 'file') {
+        const fileError = validateCourseFile(materialDraft.file)
+        if (fileError) {
+          setMaterialError(fileError)
+          return
+        }
       }
       setAddingMaterial(true)
       const created = await addMaterial(course, { ...materialDraft, title }, profile.id)
@@ -417,7 +438,8 @@ const CourseDetail = () => {
 
     const handleReorderMaterials = async (orderedMaterials) => {
       setCourse({ ...course, course_materials: orderedMaterials })
-      await reorderMaterials(orderedMaterials.map((m) => m.id))
+      const ok = await reorderMaterials(orderedMaterials.map((m) => m.id))
+      if (!ok) await loadDetail()
     }
 
     return (
@@ -612,6 +634,7 @@ const CourseDetail = () => {
                 <CFormInput
                   className="mb-1"
                   type="file"
+                  accept={FILE_ACCEPT}
                   onChange={(e) =>
                     setMaterialDraft({ ...materialDraft, file: e.target.files?.[0] || null })
                   }

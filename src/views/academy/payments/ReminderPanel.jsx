@@ -19,44 +19,66 @@ import { formatDateTime } from '../../../utils/format'
 const reminderUnits = ['Días', 'Horas']
 const reminderTargetGroups = ['Individual', 'Todos', 'Morosos', 'Pagados']
 
+const emptyForm = (studentId = '') => ({
+  studentId,
+  message: 'Recordatorio de pago próximo.',
+  scheduleAt: '',
+  intervalValue: 7,
+  intervalUnit: reminderUnits[0],
+  targetGroup: reminderTargetGroups[2],
+  notifyWhatsApp: false,
+  active: true,
+})
+
 const ReminderPanel = ({
   studentOptions,
   upcomingReminders,
   onAddReminder,
   onSendReminder,
+  onUpdateReminder,
+  onDeleteReminder,
   userName,
 }) => {
-  const [form, setForm] = useState({
-    studentId: studentOptions[0]?.value || '',
-    message: 'Recordatorio de pago próximo.',
-    scheduleAt: '',
-    intervalValue: 7,
-    intervalUnit: reminderUnits[0],
-    targetGroup: reminderTargetGroups[2],
-    notifyWhatsApp: false,
-    active: true,
-  })
+  const [form, setForm] = useState(() => emptyForm(studentOptions[0]?.value || ''))
+  const [usersLoaded, setUsersLoaded] = useState(false)
   const [submitError, setSubmitError] = useState('')
+
+  // Las opciones llegan asíncronas: ajusta el estado durante el render
+  // cuando estén disponibles la primera vez (patrón recomendado por React).
+  if (!usersLoaded && studentOptions.length > 0) {
+    setUsersLoaded(true)
+    setForm((prev) => (prev.studentId ? prev : { ...prev, studentId: studentOptions[0].value }))
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    if (!form.scheduleAt) return
     setSubmitError('')
+
+    if (!form.scheduleAt) {
+      setSubmitError('Selecciona la fecha de programación del recordatorio.')
+      return
+    }
+    if (!form.message.trim()) {
+      setSubmitError('El mensaje del recordatorio no puede estar vacío.')
+      return
+    }
+    if (form.targetGroup === 'Individual' && !form.studentId) {
+      setSubmitError('Selecciona el estudiante destinatario.')
+      return
+    }
+
+    const interval = Number(form.intervalValue)
+    if (form.intervalValue !== '' && (!Number.isFinite(interval) || interval < 0)) {
+      setSubmitError('El intervalo debe ser un número mayor o igual a 0.')
+      return
+    }
+
     const ok = await onAddReminder(form)
     if (!ok) {
       setSubmitError('No se pudo crear el recordatorio. Intenta de nuevo.')
       return
     }
-    setForm({
-      studentId: studentOptions[0]?.value || '',
-      message: 'Recordatorio de pago próximo.',
-      scheduleAt: '',
-      intervalValue: 7,
-      intervalUnit: reminderUnits[0],
-      targetGroup: reminderTargetGroups[2],
-      notifyWhatsApp: false,
-      active: true,
-    })
+    setForm(emptyForm(studentOptions[0]?.value || ''))
   }
 
   return (
@@ -122,12 +144,13 @@ const ReminderPanel = ({
                         label="Programado para"
                         value={form.scheduleAt}
                         onChange={(event) => setForm({ ...form, scheduleAt: event.target.value })}
+                        required
                       />
                     </CCol>
                     <CCol md={4}>
                       <CFormInput
                         type="number"
-                        label="Intervalo"
+                        label="Intervalo (0 = una sola vez)"
                         value={form.intervalValue}
                         min={0}
                         onChange={(event) =>
@@ -198,19 +221,53 @@ const ReminderPanel = ({
                             {reminder.last_sent ? formatDateTime(reminder.last_sent) : 'Nunca'}
                           </td>
                           <td>
-                            <CButton
-                              size="sm"
-                              color="warning"
-                              onClick={() => onSendReminder(reminder, 'Manual')}
-                            >
-                              <CIcon icon={cilSend} className="me-1" /> Enviar ahora
-                            </CButton>
+                            <div className="d-flex gap-1 flex-wrap">
+                              <CButton
+                                size="sm"
+                                color="warning"
+                                onClick={() => onSendReminder(reminder, 'Manual')}
+                              >
+                                <CIcon icon={cilSend} className="me-1" /> Enviar ahora
+                              </CButton>
+                              {onUpdateReminder && (
+                                <CButton
+                                  size="sm"
+                                  color={reminder.active ? 'secondary' : 'success'}
+                                  variant="ghost"
+                                  onClick={() =>
+                                    onUpdateReminder(reminder.id, { active: !reminder.active })
+                                  }
+                                >
+                                  {reminder.active ? 'Desactivar' : 'Reactivar'}
+                                </CButton>
+                              )}
+                              {onDeleteReminder && (
+                                <CButton
+                                  size="sm"
+                                  color="danger"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    if (
+                                      window.confirm(
+                                        '¿Eliminar este recordatorio? Esta acción no se puede deshacer.',
+                                      )
+                                    ) {
+                                      onDeleteReminder(reminder.id)
+                                    }
+                                  }}
+                                >
+                                  Eliminar
+                                </CButton>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
                       {upcomingReminders.length === 0 && (
                         <tr>
-                          <td colSpan={7}>No hay recordatorios programados.</td>
+                          <td colSpan={7} className="text-center text-body-secondary py-4">
+                            No hay recordatorios programados.
+                          </td>
                         </tr>
                       )}
                     </tbody>

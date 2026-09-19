@@ -62,6 +62,9 @@ const NotificationToasts = () => {
     if (isFirstBatch) {
       initializedRef.current = true
       seenIdsRef.current = new Set(notifications.map((n) => n.id))
+    } else {
+      // Marca como vistas las nuevas para no repetir toasts en cada refetch
+      incoming.forEach((n) => seenIdsRef.current.add(n.id))
     }
 
     const showSummary = isFirstBatch && unreadCount > MAX_INITIAL_SNIPPETS
@@ -69,7 +72,7 @@ const NotificationToasts = () => {
 
     const created = incoming.map((notification, index) => ({
       key: nextToastKey++,
-      title: notification.title || 'Nueva notificacion',
+      title: notification.title || 'Nueva notificación',
       body: buildBody(notification.message),
       meta: buildMeta(notification),
       notificationId: notification.id,

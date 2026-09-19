@@ -1,18 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import supabase from '../lib/supabase'
 import { notifyInApp } from '../utils/notifications'
-import { isDelinquentSince } from '../utils/students'
+import { computeStudentBalances } from '../utils/students'
 
 const useSupabaseReminders = (userId) => {
   const [reminders, setReminders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const remindersRef = useRef(reminders)
-  const sendingRef = useRef(new Set())
-
-  useEffect(() => {
-    remindersRef.current = reminders
-  }, [reminders])
 
   const fetchReminders = useCallback(async () => {
     setLoading(true)
@@ -61,8 +55,20 @@ const useSupabaseReminders = (userId) => {
 
   const updateReminder = useCallback(async (reminderId, updates) => {
     const { error } = await supabase.from('payment_reminders').update(updates).eq('id', reminderId)
-    if (!error) {
+    if (error) {
+      console.error('[Reminders] Error al actualizar:', error.message, error)
+    } else {
       setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, ...updates } : r)))
+    }
+    return !error
+  }, [])
+
+  const deleteReminder = useCallback(async (reminderId) => {
+    const { error } = await supabase.from('payment_reminders').delete().eq('id', reminderId)
+    if (error) {
+      console.error('[Reminders] Error al eliminar:', error.message, error)
+    } else {
+      setReminders((prev) => prev.filter((r) => r.id !== reminderId))
     }
     return !error
   }, [])
@@ -87,21 +93,7 @@ const useSupabaseReminders = (userId) => {
 
     const { data: allPayments } = await supabase.from('payments').select('student_id, payment_date')
 
-    const studentsWithStatus = students.map((s) => {
-      const lastPayment = (allPayments || [])
-        .filter((p) => p.student_id === s.id && p.payment_date)
-        .reduce(
-          (latest, p) =>
-            !latest || new Date(p.payment_date) > new Date(latest) ? p.payment_date : latest,
-          null,
-        )
-      return {
-        id: s.id,
-        name: s.full_name,
-        email: s.email,
-        paymentStatus: isDelinquentSince(lastPayment) ? 'Moroso' : 'Pagado',
-      }
-    })
+    const studentsWithStatus = computeStudentBalances(students, allPayments || [])
 
     if (reminder.target_group === 'Morosos') {
       return studentsWithStatus.filter((s) => s.paymentStatus === 'Moroso')
@@ -175,23 +167,6 @@ const useSupabaseReminders = (userId) => {
     .filter((r) => r.active)
     .sort((a, b) => new Date(a.schedule_at) - new Date(b.schedule_at))
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = Date.now()
-      remindersRef.current.forEach((reminder) => {
-        if (!reminder.active || !reminder.schedule_at) return
-        if (sendingRef.current.has(reminder.id)) return
-        if (new Date(reminder.schedule_at).getTime() <= now) {
-          sendingRef.current.add(reminder.id)
-          sendReminder(reminder, 'Automático', [])
-            .catch((error) => console.error('[Reminders] Error:', error))
-            .finally(() => sendingRef.current.delete(reminder.id))
-        }
-      })
-    }, 60000)
-    return () => clearInterval(timer)
-  }, [sendReminder])
-
   return {
     reminders,
     upcomingReminders,
@@ -199,6 +174,7 @@ const useSupabaseReminders = (userId) => {
     error,
     addReminder,
     updateReminder,
+    deleteReminder,
     sendReminder,
     refetch: fetchReminders,
   }

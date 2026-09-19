@@ -154,8 +154,6 @@ const useSupabaseCourses = () => {
         console.error('[Courses] Enroll error:', insertError.message, insertError)
         return false
       }
-      const namesById = new Map((course.enrolled_profiles || []).map((p) => [p.id, p.full_name]))
-      void namesById
       await notifyInApp({
         senderId: actorId || null,
         recipients: toAdd.map((id) => ({ id })),

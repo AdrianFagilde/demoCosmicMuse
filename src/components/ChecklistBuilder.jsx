@@ -56,7 +56,7 @@ const ChecklistBuilder = ({ items, onChange }) => {
   const handleAdd = () => {
     const label = newLabel.trim()
     if (!label) return
-    onChange([...items, { id: `temp-${Date.now()}`, label }])
+    onChange([...items, { id: `temp-${crypto.randomUUID()}`, label }])
     setNewLabel('')
   }
 

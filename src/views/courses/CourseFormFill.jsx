@@ -21,11 +21,11 @@ import {
   QUESTION_TYPE_LABELS,
   SCALE_MAX,
   SCALE_MIN,
-  MAX_FILE_SIZE_BYTES,
-  MAX_FILE_SIZE_MB,
+  FILE_ACCEPT,
   deleteCourseFile,
   uploadAnswerFile,
   validateAnswers,
+  validateCourseFile,
 } from '../../utils/forms'
 
 const ScaleInput = ({ questionId, value, onChange }) => (
@@ -54,8 +54,9 @@ const FileQuestion = ({ answer, onUploaded, onRemoved }) => {
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      setUploadError(`El archivo supera el límite de ${MAX_FILE_SIZE_MB} MB.`)
+    const validationError = validateCourseFile(file)
+    if (validationError) {
+      setUploadError(validationError)
       event.target.value = ''
       return
     }
@@ -76,7 +77,12 @@ const FileQuestion = ({ answer, onUploaded, onRemoved }) => {
 
   return (
     <div>
-      <CFormInput type="file" onChange={handleFileChange} disabled={uploading} />
+      <CFormInput
+        type="file"
+        accept={FILE_ACCEPT}
+        onChange={handleFileChange}
+        disabled={uploading}
+      />
       {uploading && (
         <div className="mt-2 d-flex align-items-center gap-2">
           <CSpinner size="sm" /> <small>Subiendo archivo...</small>

@@ -39,8 +39,8 @@ const App = () => {
             }
           >
             <Routes>
-              <Route exact path="/login" element={<Login />} />
-              <Route exact path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route
                 path="/*"
                 element={
@@ -49,7 +49,6 @@ const App = () => {
                   </RequireAuth>
                 }
               />
-              <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

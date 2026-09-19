@@ -1,6 +1,11 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import supabase from '../lib/supabase'
-import { getCurrentSession, getProfile } from '../auth'
+import {
+  getCurrentSession,
+  getProfile,
+  login as loginWithSupabase,
+  logout as logoutWithSupabase,
+} from '../auth'
 
 const AuthContext = createContext(null)
 
@@ -8,31 +13,71 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState(null)
+  // Secuencia para descartar respuestas de perfil que lleguen fuera de orden
+  const requestSeq = useRef(0)
 
   useEffect(() => {
-    getCurrentSession().then(async (session) => {
-      if (session?.user) {
-        setUser(session.user)
-        const p = await getProfile(session.user.id)
+    let cancelled = false
+
+    const loadProfile = async (userId) => {
+      const seq = ++requestSeq.current
+      try {
+        const p = await getProfile(userId)
+        if (cancelled || seq !== requestSeq.current) return
         setProfile(p)
+        setAuthError(null)
+      } catch (err) {
+        if (cancelled || seq !== requestSeq.current) return
+        console.error('[Auth] Error cargando perfil:', err?.message || err)
+        setProfile(null)
+        setAuthError(
+          err?.code === 'PGRST116'
+            ? 'Tu cuenta no tiene un perfil asociado. Contacta con la academia.'
+            : 'No se pudo cargar tu perfil. Comprueba tu conexión e inténtalo de nuevo.',
+        )
       }
-      setLoading(false)
-    })
+    }
+
+    const init = async () => {
+      try {
+        const session = await getCurrentSession()
+        if (cancelled) return
+        if (session?.user) {
+          setUser(session.user)
+          await loadProfile(session.user.id)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('[Auth] Error restaurando sesión:', err?.message || err)
+          setAuthError('No se pudo conectar con el servicio de autenticación.')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    init()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return
       if (session?.user) {
         setUser(session.user)
-        const p = await getProfile(session.user.id)
-        setProfile(p)
+        void loadProfile(session.user.id)
       } else {
+        requestSeq.current += 1 // invalida cargas de perfil en curso
         setUser(null)
         setProfile(null)
+        setAuthError(null)
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   const login = useCallback(async (email, password) => {
@@ -41,16 +86,26 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const logout = useCallback(async () => {
-    await logoutSupabase()
+    await logoutWithSupabase()
     setUser(null)
     setProfile(null)
+    setAuthError(null)
   }, [])
 
   const refreshProfile = useCallback(async () => {
     if (!user?.id) return
-    const p = await getProfile(user.id)
-    if (p) setProfile(p)
+    try {
+      const p = await getProfile(user.id)
+      setProfile(p)
+      setAuthError(null)
+    } catch (err) {
+      console.error('[Auth] Error refrescando perfil:', err?.message || err)
+    }
   }, [user])
+
+  const retry = useCallback(() => {
+    window.location.reload()
+  }, [])
 
   const value = {
     user,
@@ -59,20 +114,12 @@ export const AuthProvider = ({ children }) => {
     logout,
     refreshProfile,
     loading,
+    authError,
+    retry,
     isAuthenticated: Boolean(user),
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-async function loginWithSupabase(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) throw error
-  return data
-}
-
-async function logoutSupabase() {
-  await supabase.auth.signOut()
 }
 
 export const useAuth = () => {

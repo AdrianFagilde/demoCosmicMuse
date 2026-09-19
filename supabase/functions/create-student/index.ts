@@ -18,10 +18,15 @@ Deno.serve(async (req: Request) => {
 
   try {
     const authorization = req.headers.get('Authorization') ?? ''
-    const admin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SERVICE_ROLE_KEY') ?? '',
-    )
+    // Supabase inyecta SUPABASE_SERVICE_ROLE_KEY automáticamente;
+    // se mantiene el fallback al nombre legado por compatibilidad.
+    const serviceRoleKey =
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SERVICE_ROLE_KEY') ?? ''
+    if (!serviceRoleKey) {
+      console.error('create-student: falta SUPABASE_SERVICE_ROLE_KEY en el entorno')
+      return json({ error: 'Error de configuración del servidor' }, 500)
+    }
+    const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceRoleKey)
 
     const { data: caller, error: callerError } = await admin.auth.getUser(
       authorization.replace('Bearer ', ''),
@@ -54,13 +59,31 @@ Deno.serve(async (req: Request) => {
         400,
       )
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return json({ error: 'El email no tiene un formato válido' }, 400)
+    }
 
-    const username = fullName
+    const baseUsername = fullName
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[̀-ͯ]/g, '')
       .replace(/\s+/g, '.')
       .replace(/[^a-z0-9.]/g, '')
+
+    // Garantiza unicidad del username (dos alumnos pueden llamarse igual)
+    let username = baseUsername
+    const { data: existing } = await admin
+      .from('profiles')
+      .select('username')
+      .ilike('username', `${baseUsername}%`)
+    if (existing?.length) {
+      const taken = new Set(existing.map((row: { username: string }) => row.username))
+      let suffix = 2
+      while (taken.has(username)) {
+        username = `${baseUsername}${suffix}`
+        suffix += 1
+      }
+    }
 
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
@@ -69,7 +92,12 @@ Deno.serve(async (req: Request) => {
       user_metadata: { full_name: fullName, username, role: 'student' },
     })
     if (createError) {
-      return json({ error: createError.message }, 400)
+      // No exponer mensajes internos de GoTrue (filtran detalles del esquema)
+      const msg = /already been registered|already exists|duplicate/i.test(createError.message)
+        ? 'Ya existe una cuenta registrada con ese email'
+        : 'No se pudo crear la cuenta del estudiante'
+      console.error('create-student createUser error:', createError.message)
+      return json({ error: msg }, 400)
     }
 
     // El trigger handle_new_user ya inserta la fila base; este upsert
@@ -87,7 +115,8 @@ Deno.serve(async (req: Request) => {
       { onConflict: 'id' },
     )
     if (profileError) {
-      return json({ error: profileError.message }, 500)
+      console.error('create-student profile upsert error:', profileError.message)
+      return json({ error: 'La cuenta se creó pero no se pudo completar el perfil' }, 500)
     }
 
     return json({ userId: created.user.id })

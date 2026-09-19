@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import supabase from '../lib/supabase'
 import { notifyInApp } from '../utils/notifications'
 
-const useSupabaseTasks = (userId) => {
+const useSupabaseTasks = () => {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -87,9 +87,11 @@ const useSupabaseTasks = (userId) => {
   const changeTaskProgress = useCallback(
     async (taskId, value) => {
       const num = Number(value)
+      if (Number.isNaN(num)) return false
+      const clamped = Math.min(100, Math.max(0, Math.round(num)))
       return updateTask(taskId, {
-        progress: num,
-        status: num === 100 ? 'Completado' : undefined,
+        progress: clamped,
+        status: clamped === 100 ? 'Completado' : undefined,
       })
     },
     [updateTask],

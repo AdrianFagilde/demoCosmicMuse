@@ -5,7 +5,6 @@ const AppContext = createContext(null)
 export const AppProvider = ({ children }) => {
   const [sidebarShow, setSidebarShow] = useState(true)
   const [sidebarUnfoldable, setSidebarUnfoldable] = useState(false)
-  const [theme, setTheme] = useState('light')
 
   const toggleSidebar = useCallback(() => {
     setSidebarShow((prev) => !prev)
@@ -20,8 +19,6 @@ export const AppProvider = ({ children }) => {
     setSidebarShow,
     sidebarUnfoldable,
     setSidebarUnfoldable,
-    theme,
-    setTheme,
     toggleSidebar,
     toggleSidebarUnfoldable,
   }

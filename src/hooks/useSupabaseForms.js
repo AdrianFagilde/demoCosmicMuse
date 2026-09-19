@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import supabase from '../lib/supabase'
-import { CHOICE_TYPES } from '../utils/forms'
+import { CHOICE_TYPES, isPersistedQuestion } from '../utils/forms'
 import { notifyInApp } from '../utils/notifications'
 
 const logError = (scope, error) => {
@@ -83,45 +83,31 @@ const useSupabaseForms = () => {
   }, [])
 
   /**
-   * Guarda el conjunto completo de preguntas de un formulario.
-   * Elimina las borradas, actualiza las existentes y crea las nuevas,
-   * respetando el orden del arreglo recibido.
+   * Guarda el conjunto completo de preguntas de un formulario en una sola
+   * transacción (RPC). Devuelve el array de preguntas con ids resueltos,
+   * o null si algo falló (en cuyo caso no se persistió nada a medias).
    */
-  const saveFormQuestions = useCallback(async (formId, originalQuestions, nextQuestions) => {
-    let ok = true
-    const nextIds = new Set(nextQuestions.map((q) => q.id))
+  const saveFormQuestions = useCallback(async (formId, questions) => {
+    const p_questions = questions.map((question, index) => ({
+      id: isPersistedQuestion(question) ? question.id : null,
+      question_text: question.question_text,
+      type: question.type,
+      options: CHOICE_TYPES.includes(question.type)
+        ? (question.options || []).filter((option) => String(option).trim())
+        : [],
+      required: Boolean(question.required),
+      position: index,
+    }))
 
-    for (const removed of originalQuestions.filter((q) => !nextIds.has(q.id))) {
-      const { error } = await supabase.from('form_questions').delete().eq('id', removed.id)
-      if (error) {
-        logError('Delete question', error)
-        ok = false
-      }
+    const { data, error } = await supabase.rpc('save_form_questions', {
+      p_form_id: formId,
+      p_questions,
+    })
+    if (error) {
+      logError('Save questions', error)
+      return null
     }
-
-    for (let index = 0; index < nextQuestions.length; index++) {
-      const question = nextQuestions[index]
-      const payload = {
-        form_id: formId,
-        question_text: question.question_text.trim(),
-        type: question.type,
-        options: CHOICE_TYPES.includes(question.type)
-          ? (question.options || []).filter((option) => String(option).trim())
-          : [],
-        required: Boolean(question.required),
-        position: index,
-      }
-      const isNew = String(question.id).startsWith('temp-')
-      const request = isNew
-        ? supabase.from('form_questions').insert(payload)
-        : supabase.from('form_questions').update(payload).eq('id', question.id)
-      const { error } = await request
-      if (error) {
-        logError(isNew ? 'Insert question' : 'Update question', error)
-        ok = false
-      }
-    }
-    return ok
+    return data || []
   }, [])
 
   /** Respuestas de todos los estudiantes para un formulario (vista profesor). */
@@ -210,35 +196,15 @@ const useSupabaseForms = () => {
   }, [])
 
   /**
-   * Crea o actualiza el envio del estudiante (la ultima version gana).
-   * `answers` es un mapa { [questionId]: respuesta } ya validado y con los
-   * archivos previamente subidos a Storage (file_path/file_name incluidos).
+   * Crea o actualiza el envio del estudiante y todas sus respuestas en una
+   * sola transacción (RPC). `answers` es un mapa { [questionId]: respuesta }
+   * ya validado y con los archivos previamente subidos a Storage.
    */
   const submitForm = useCallback(async (form, questions, answers, studentId) => {
     setLoading(true)
-    const { data: submission, error: submissionError } = await supabase
-      .from('form_submissions')
-      .upsert(
-        {
-          form_id: form.id,
-          student_id: studentId,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'form_id,student_id' },
-      )
-      .select()
-      .single()
-    if (submissionError) {
-      logError('Submit form', submissionError)
-      setLoading(false)
-      return false
-    }
-
-    let ok = true
-    for (const question of questions) {
+    const p_answers = questions.map((question) => {
       const answer = answers[question.id] || {}
-      const row = {
-        submission_id: submission.id,
+      return {
         question_id: question.id,
         value_text: ['short_text', 'long_text'].includes(question.type)
           ? (answer.value_text ?? null)
@@ -248,17 +214,20 @@ const useSupabaseForms = () => {
         file_path: question.type === 'file_upload' ? (answer.file_path ?? null) : null,
         file_name: question.type === 'file_upload' ? (answer.file_name ?? null) : null,
       }
-      const { error } = await supabase
-        .from('form_answers')
-        .upsert(row, { onConflict: 'submission_id,question_id' })
-      if (error) {
-        logError('Save answer', error)
-        ok = false
-      }
-    }
-    setLoading(false)
+    })
 
-    if (ok && form.created_by && form.created_by !== studentId) {
+    const { error } = await supabase.rpc('submit_form', {
+      p_form_id: form.id,
+      p_student_id: studentId,
+      p_answers,
+    })
+    setLoading(false)
+    if (error) {
+      logError('Submit form', error)
+      return false
+    }
+
+    if (form.created_by && form.created_by !== studentId) {
       void notifyInApp({
         senderId: studentId,
         recipients: [{ id: form.created_by }],
@@ -266,7 +235,7 @@ const useSupabaseForms = () => {
         message: `${form.title}: respuesta actualizada`,
       })
     }
-    return ok
+    return true
   }, [])
 
   return {
