@@ -33,7 +33,7 @@ import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 // Build version to force cache busting
 const BUILD_VERSION = '2026.09.19.5'
 
-const Students = () => {
+const emptyForm = {
   fullName: '',
   email: '',
   password: '',
