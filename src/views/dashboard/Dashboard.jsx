@@ -22,28 +22,19 @@ import {
   cilBook,
   cilMusicNote,
 } from '@coreui/icons'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-  LineChart,
-  Line,
-} from 'recharts'
 
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import useSupabasePractice from '../../hooks/useSupabasePractice'
+import useSupabaseCourses from '../../hooks/useSupabaseCourses'
 import supabase from '../../lib/supabase'
 import KpiCard from '../../components/KpiCard'
+import StatPill from '../../components/dashboard/StatPill'
+import TaskUrgencyRow from '../../components/dashboard/TaskUrgencyRow'
+import LearningPathCard from '../../components/dashboard/LearningPathCard'
+import WeeklySparkline from '../../components/dashboard/WeeklySparkline'
+import NextBadgeCard from '../../components/dashboard/NextBadgeCard'
 
 const BRAND = {
   purple: '#712771',
@@ -129,7 +120,6 @@ const getNextLessonCountdown = (nextLesson) => {
   const now = new Date()
   const lesson = new Date(nextLesson)
 
-  // Check if date is valid
   if (isNaN(lesson.getTime())) {
     return { text: 'Fecha inválida', isOverdue: false }
   }
@@ -150,14 +140,14 @@ const getNextLessonCountdown = (nextLesson) => {
 const xpForLevel = (level) => (level - 1) ** 2 * 100
 const xpForNextLevel = (level) => level ** 2 * 100
 
-// Build version to force cache busting
-const BUILD_VERSION = '2026.09.19.5'
+const BUILD_VERSION = '2026.09.20.1'
 
 const Dashboard = () => {
   const { user, profile } = useAuth()
   const isStudent = profile?.role === 'student'
   const { students, getSummary } = useSupabaseStudents()
   const { tasks } = useSupabaseTasks()
+  const { courses } = useSupabaseCourses()
   const practice = useSupabasePractice(user?.id)
   const [summary, setSummary] = useState({
     activeStudents: 0,
@@ -167,10 +157,7 @@ const Dashboard = () => {
   })
   const [paymentsByMonth, setPaymentsByMonth] = useState([])
 
-  // Force build hash update - build version reference
   const buildVersion = BUILD_VERSION
-
-  // Force build hash update - used in rendered output to force hash change
   const buildHash = `v${BUILD_VERSION}`
 
   const instrumentData = useMemo(() => {
@@ -256,86 +243,94 @@ const Dashboard = () => {
       ? Math.round(((currentXP - xpCurrentLevel) / (xpNextLevel - xpCurrentLevel)) * 100)
       : 100
 
-  const weeklyChartData = useMemo(() => {
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-    return (practice.weeklySummary || []).map((d, i) => ({
-      day: days[new Date(d.day).getDay()],
-      minutes: d.minutes || 0,
-      sessions: d.sessions || 0,
-    }))
-  }, [practice.weeklySummary])
+  const enrolledCourses = courses.filter((c) =>
+    c.course_enrollments?.some((e) => e.student_id === user?.id),
+  )
+  const myProgressRows = practice.gamification ? [] : []
+
+  const sortTasksByUrgency = (taskList) => {
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    return [...taskList].sort((a, b) => {
+      const aDue = a.due_date ? new Date(a.due_date) : null
+      const bDue = b.due_date ? new Date(b.due_date) : null
+      const aOverdue = aDue && aDue < now
+      const bOverdue = bDue && bDue < now
+      if (aOverdue && !bOverdue) return -1
+      if (!aOverdue && bOverdue) return 1
+      if (aDue && bDue) return aDue - bDue
+      return 0
+    })
+  }
+
+  const urgentTasks = sortTasksByUrgency(pendingTasks).slice(0, 3)
+
+  const getPrimaryCTA = () => {
+    if (urgentTasks.length > 0) {
+      const task = urgentTasks[0]
+      const due = task.due_date ? new Date(task.due_date) : null
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+      const isOverdue = due && due < now
+      const isDueToday = due && due.toDateString() === now.toDateString()
+      return {
+        label: isOverdue
+          ? `Ponerte al día: ${task.title}`
+          : isDueToday
+            ? `Hacer hoy: ${task.title}`
+            : `Continuar: ${task.title}`,
+        onClick: () => (window.location.href = `/courses/${task.course_id}?task=${task.id}`),
+        variant: 'solid',
+      }
+    }
+    if (nextLessonCountdown.text !== 'Sin programar' && !nextLessonCountdown.isOverdue) {
+      const diff = new Date(profile.next_lesson) - new Date()
+      const hours = diff / (1000 * 60 * 60)
+      if (hours < 24) {
+        return {
+          label: 'Preparar clase',
+          onClick: () => (window.location.href = '/lessons'),
+          variant: 'outline',
+        }
+      }
+    }
+    return {
+      label: 'Iniciar práctica libre',
+      onClick: () => practice.startPractice({}),
+      variant: 'solid',
+    }
+  }
+
+  const primaryCTA = getPrimaryCTA()
 
   if (isStudent) {
     return (
       <>
-        <CRow className="mb-4">
-          <CCol xs={12} md={6} lg={3} className="mb-3">
-            <CCard className="h-100 streak-card">
-              <CCardBody className="d-flex flex-column align-items-center text-center py-4">
-                <CIcon icon={cilFire} size="xl" className="text-danger mb-2" />
-                <div className="fs-1 fw-bold text-danger">
-                  {practice.streak?.current_streak || 0}
-                </div>
-                <div className="text-medium-emphasis small">Días seguidos</div>
-                <div className="mt-1 small">
-                  <CBadge color="info">Mejor: {practice.streak?.longest_streak || 0}</CBadge>
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-          <CCol xs={12} md={6} lg={3} className="mb-3">
-            <CCard className="h-100 xp-card">
-              <CCardBody className="d-flex flex-column align-items-center text-center py-4">
-                <CIcon icon={cilStar} size="xl" className="text-warning mb-2" />
-                <div className="fs-1 fw-bold text-warning">Nivel {currentLevel}</div>
-                <div className="text-medium-emphasis small">{currentXP} XP</div>
-                <CProgress className="w-100 mt-2" value={xpProgress} height={6} color="warning" />
-                <div className="text-medium-emphasis small mt-1">
-                  {xpNextLevel - currentXP} XP para siguiente nivel
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-          <CCol xs={12} md={6} lg={3} className="mb-3">
-            <CCard className="h-100 practice-card">
-              <CCardBody className="d-flex flex-column align-items-center text-center py-4">
-                <CIcon icon={cilClock} size="xl" className="text-info mb-2" />
-                <div className="fs-1 fw-bold text-info">
-                  {practice.gamification?.total_practice_minutes || 0} min
-                </div>
-                <div className="text-medium-emphasis small">Práctica total</div>
-                <div className="mt-1 small">
-                  <CBadge color="secondary">{practice.sessions?.length || 0} sesiones</CBadge>
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-          <CCol xs={12} md={6} lg={3} className="mb-3">
-            <CCard className="h-100 tasks-card">
-              <CCardBody className="d-flex flex-column align-items-center text-center py-4">
-                <CIcon icon={cilMusicNote} size="xl" className="text-success mb-2" />
-                <div className="fs-1 fw-bold text-success">{completedTasks.length}</div>
-                <div className="text-medium-emphasis small">Tareas completadas</div>
-                <div className="mt-1 small">
-                  <CBadge color="warning text-dark">{pendingTasks.length} pendientes</CBadge>
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-        </CRow>
+        <div data-build-version={buildHash} style={{ display: 'none' }} />
 
+        {/* HERO SECTION */}
         <CRow className="mb-4">
           <CCol lg={8} className="mb-3">
-            <CCard className="welcome-banner h-100">
-              <CCardBody className="d-flex flex-column justify-content-center">
-                <h5 className="welcome-title">
+            <CCard className="hero-card h-100">
+              <CCardBody className="d-flex flex-column justify-content-center py-4 px-4">
+                <h4 className="welcome-title mb-2">
                   Bienvenido, {profile?.full_name?.split(' ')[0] || 'estudiante'} 👋
-                </h5>
-                <p className="welcome-text mb-3">Tu panel de práctica y progreso personal.</p>
-
+                </h4>
+                <p className="welcome-text mb-3 text-medium-emphasis">
+                  {urgentTasks.length > 0
+                    ? `Tienes ${urgentTasks.length} tarea${urgentTasks.length > 1 ? 's' : ''} urgente${urgentTasks.length > 1 ? 's' : ''}.`
+                    : 'Tu panel de práctica y progreso personal.'}
+                </p>
                 <div className="d-flex flex-wrap gap-2">
-                  <CButton color="primary" size="lg" onClick={() => practice.startPractice({})}>
-                    <CIcon icon={cilMediaPlay} className="me-2" /> Iniciar práctica
+                  <CButton
+                    color="primary"
+                    size="lg"
+                    variant={primaryCTA.variant}
+                    onClick={primaryCTA.onClick}
+                    className="fw-semibold"
+                  >
+                    <CIcon icon={cilMediaPlay} className="me-2" />
+                    {primaryCTA.label}
                   </CButton>
                   <CButton
                     color="secondary"
@@ -343,15 +338,7 @@ const Dashboard = () => {
                     size="lg"
                     onClick={() => (window.location.href = '/tasks')}
                   >
-                    <CIcon icon={cilMusicNote} className="me-2" /> Ver tareas
-                  </CButton>
-                  <CButton
-                    color="secondary"
-                    variant="outline"
-                    size="lg"
-                    onClick={() => (window.location.href = '/courses')}
-                  >
-                    <CIcon icon={cilBook} className="me-2" /> Mis cursos
+                    <CIcon icon={cilMusicNote} className="me-2" /> Ver todas las tareas
                   </CButton>
                 </div>
               </CCardBody>
@@ -359,10 +346,10 @@ const Dashboard = () => {
           </CCol>
           <CCol lg={4} className="mb-3">
             <CCard className="h-100 next-lesson-card">
-              <CCardHeader>Próxima clase</CCardHeader>
+              <CCardHeader className="py-2">Próxima clase</CCardHeader>
               <CCardBody className="d-flex flex-column align-items-center text-center py-3">
                 <div
-                  className={`fs-2 fw-bold ${nextLessonCountdown.isOverdue ? 'text-danger' : 'text-primary'}`}
+                  className={`fs-3 fw-bold ${nextLessonCountdown.isOverdue ? 'text-danger' : 'text-primary'}`}
                 >
                   {nextLessonCountdown.text}
                 </div>
@@ -386,237 +373,106 @@ const Dashboard = () => {
           </CCol>
         </CRow>
 
-        {/* Build version marker - forces new build hash on deploy */}
-        <div data-build-version={buildHash} style={{ display: 'none' }} />
-
-        <CRow className="mb-4">
-          <CCol lg={8} className="mb-3">
-            <CCard className="chart-card h-100">
-              <CCardHeader>Práctica semanal (minutos)</CCardHeader>
-              <CCardBody>
-                {weeklyChartData.length > 0 && weeklyChartData.some((d) => d.minutes > 0) ? (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={weeklyChartData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis type="number" />
-                      <YAxis dataKey="day" type="category" width={50} />
-                      <Tooltip formatter={(v) => `${v} min`} />
-                      <Bar
-                        dataKey="minutes"
-                        fill={BRAND.cyan}
-                        radius={[0, 4, 4, 0]}
-                        layout="vertical"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="text-center text-medium-emphasis py-5">
-                    <CIcon icon={cilClock} size="lg" className="mb-2" />
-                    <p>Sin datos de práctica esta semana</p>
-                    <CButton
-                      color="primary"
-                      size="sm"
-                      onClick={() => practice.startPractice({})}
-                      className="mt-2"
-                    >
-                      <CIcon icon={cilMediaPlay} className="me-1" /> Iniciar primera sesión
-                    </CButton>
-                  </div>
-                )}
-              </CCardBody>
-            </CCard>
+        {/* QUICK STATS ROW - 3 compact pills */}
+        <CRow className="mb-4 g-3">
+          <CCol xs={12} md={4} className="mb-0">
+            <StatPill
+              icon={cilFire}
+              value={practice.streak?.current_streak || 0}
+              label="Racha actual"
+              subLabel={`Mejor: ${practice.streak?.longest_streak || 0}`}
+              color="danger"
+              onClick={() => (window.location.href = '/practice-tools')}
+            />
           </CCol>
-          <CCol lg={4} className="mb-3">
-            <CCard className="chart-card h-100">
-              <CCardHeader>Próximos logros</CCardHeader>
-              <CCardBody>
-                {(practice.nextBadges || []).length > 0 ? (
-                  <div className="d-flex flex-column gap-3">
-                    {(practice.nextBadges || []).slice(0, 3).map((badge) => {
-                      const def = BADGE_DEFINITIONS[badge.badge_key]
-                      const progress = Math.min(
-                        100,
-                        Math.round((badge.progress / badge.target) * 100),
-                      )
-                      return (
-                        <div key={badge.badge_key} className="d-flex align-items-center gap-3">
-                          <div
-                            className={`badge-icon bg-${def.color} bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center`}
-                            style={{ width: 48, height: 48 }}
-                          >
-                            <CIcon icon={def.icon} className={`text-${def.color}`} size="lg" />
-                          </div>
-                          <div className="flex-grow-1">
-                            <div className="fw-semibold small">{def.name}</div>
-                            <div className="text-medium-emphasis small">{def.description}</div>
-                            <CProgress
-                              className="mt-1"
-                              value={progress}
-                              height={4}
-                              color={def.color}
-                            />
-                            <div className="text-medium-emphasis small mt-1">
-                              {badge.progress}/{badge.target}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center text-medium-emphasis py-4">
-                    <CIcon icon={cilStar} size="lg" className="mb-2" />
-                    <p>¡Has desbloqueado todos los logros disponibles!</p>
-                  </div>
-                )}
-              </CCardBody>
-            </CCard>
+          <CCol xs={12} md={4} className="mb-0">
+            <StatPill
+              icon={cilStar}
+              value={`Nivel ${currentLevel}`}
+              label="XP total"
+              subLabel={`${currentXP.toLocaleString()} XP`}
+              color="warning"
+              progress={xpProgress}
+              progressColor="warning"
+              onClick={() => (window.location.href = '/courses')}
+            />
+          </CCol>
+          <CCol xs={12} md={4} className="mb-0">
+            <StatPill
+              icon={cilClock}
+              value={`${practice.gamification?.total_practice_minutes || 0} min`}
+              label="Práctica total"
+              subLabel={`${practice.sessions?.length || 0} sesiones`}
+              color="info"
+              onClick={() => (window.location.href = '/tasks')}
+            />
           </CCol>
         </CRow>
 
+        {/* MAIN CONTENT ROW: Tareas Urgentes + Ruta de Aprendizaje */}
         <CRow className="mb-4">
-          <CCol lg={8} className="mb-3">
-            <CCard className="chart-card h-100">
-              <CCardHeader>Tareas pendientes</CCardHeader>
-              <CCardBody>
-                {pendingTasks.length > 0 ? (
-                  <div className="table-responsive">
-                    <table className="table table-hover mb-0">
-                      <thead>
-                        <tr>
-                          <th>Tarea</th>
-                          <th>Curso</th>
-                          <th>Entrega</th>
-                          <th>Progreso</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pendingTasks.slice(0, 5).map((task) => (
-                          <tr key={task.id}>
-                            <td className="fw-semibold">{task.title}</td>
-                            <td>{task.course_title || 'General'}</td>
-                            <td>
-                              <CBadge
-                                color={
-                                  new Date(task.due_date) < new Date()
-                                    ? 'danger'
-                                    : 'warning text-dark'
-                                }
-                              >
-                                {task.due_date}
-                              </CBadge>
-                            </td>
-                            <td>
-                              <CProgress
-                                value={task.progress || 0}
-                                height={6}
-                                className="w-50"
-                                color="info"
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center text-medium-emphasis py-4">
-                    <CIcon icon={cilMusicNote} size="lg" className="mb-2" />
-                    <p>¡No tienes tareas pendientes!</p>
-                  </div>
+          <CCol lg={7} className="mb-3">
+            <CCard className="h-100 urgent-tasks-card">
+              <CCardHeader className="d-flex justify-content-between align-items-center py-2">
+                <span className="fw-semibold d-flex align-items-center gap-2">
+                  <CIcon icon={cilMusicNote} className="text-primary" />
+                  Tareas urgentes
+                </span>
+                {pendingTasks.length > 3 && (
+                  <CButton
+                    color="secondary"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => (window.location.href = '/tasks')}
+                  >
+                    Ver todas ({pendingTasks.length})
+                  </CButton>
                 )}
-              </CCardBody>
-            </CCard>
-          </CCol>
-          <CCol lg={4} className="mb-3">
-            <CCard className="h-100 recent-practice-card">
-              <CCardHeader>Sesiones recientes</CCardHeader>
+              </CCardHeader>
               <CCardBody className="p-0">
-                {(practice.sessions || []).length > 0 ? (
-                  <div className="list-group list-group-flush">
-                    {(practice.sessions || []).slice(0, 5).map((session) => (
-                      <div
-                        key={session.id}
-                        className="list-group-item px-3 py-2 d-flex justify-content-between align-items-center"
-                      >
-                        <div>
-                          <div className="fw-semibold small">
-                            {session.notes || 'Práctica libre'}
-                          </div>
-                          <div className="text-medium-emphasis small">
-                            {session.task_id
-                              ? 'Tarea asignada'
-                              : session.course_task_id
-                                ? 'Tarea de curso'
-                                : 'Práctica libre'}
-                            • {formatTimeAgo(session.started_at)}
-                          </div>
-                        </div>
-                        <div className="text-end">
-                          <div className="fw-semibold">{session.duration_minutes || 0} min</div>
-                          {session.metronome_used && (
-                            <CBadge color="info" className="mt-1" style={{ fontSize: '0.65rem' }}>
-                              Metrónomo: {session.metronome_bpm} BPM
-                            </CBadge>
-                          )}
-                        </div>
-                      </div>
+                {urgentTasks.length > 0 ? (
+                  <div className="p-2">
+                    {urgentTasks.map((task) => (
+                      <TaskUrgencyRow
+                        key={task.id}
+                        task={task}
+                        onClick={(t) =>
+                          (window.location.href = `/courses/${t.course_id}?task=${t.id}`)
+                        }
+                      />
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center text-medium-emphasis py-4">
-                    <CIcon icon={cilClock} size="lg" className="mb-2" />
-                    <p>Sin sesiones registradas</p>
-                    <CButton
-                      color="primary"
-                      size="sm"
-                      onClick={() => practice.startPractice({})}
-                      className="mt-2"
-                    >
-                      <CIcon icon={cilMediaPlay} className="me-1" /> Empezar ahora
+                  <div className="text-center text-medium-emphasis py-5">
+                    <CIcon icon={cilMusicNote} size="lg" className="mb-2" />
+                    <p className="mb-2">¡No tienes tareas pendientes!</p>
+                    <CButton color="primary" size="sm" onClick={() => practice.startPractice({})}>
+                      <CIcon icon={cilMediaPlay} className="me-1" /> Práctica libre
                     </CButton>
                   </div>
                 )}
               </CCardBody>
             </CCard>
           </CCol>
+          <CCol lg={5} className="mb-3">
+            <LearningPathCard
+              courses={enrolledCourses}
+              myProgressRows={practice.gamification ? [] : []}
+              onViewCourses={() => (window.location.href = '/courses')}
+            />
+          </CCol>
         </CRow>
 
+        {/* BOTTOM ROW: Weekly Sparkline + Próximo Logro */}
         <CRow className="mb-4">
-          <CCol>
-            <CCard className="chart-card">
-              <CCardHeader className="d-flex justify-content-between align-items-center">
-                <span>Logros desbloqueados</span>
-                <CBadge color="primary">{practice.badges?.length || 0}</CBadge>
-              </CCardHeader>
-              <CCardBody>
-                {(practice.badges || []).length > 0 ? (
-                  <div className="d-flex flex-wrap gap-2">
-                    {(practice.badges || []).map((badge) => {
-                      const def = BADGE_DEFINITIONS[badge.badge_key]
-                      return (
-                        <div key={badge.id} className="badge-tooltip" style={{ cursor: 'default' }}>
-                          <CBadge
-                            color={def?.color || 'secondary'}
-                            className="fs-6 px-3 py-2 d-flex align-items-center gap-1"
-                            style={{ cursor: 'help' }}
-                            title={`${def?.description} • ${new Date(badge.earned_at).toLocaleDateString('es-ES')}`}
-                          >
-                            <CIcon icon={def?.icon || cilStar} size="sm" />
-                            {def?.name || badge.badge_key}
-                          </CBadge>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center text-medium-emphasis py-4">
-                    <CIcon icon={cilStar} size="lg" className="mb-2" />
-                    <p>Completa tareas y practica para desbloquear logros</p>
-                  </div>
-                )}
-              </CCardBody>
-            </CCard>
+          <CCol lg={7} className="mb-3">
+            <WeeklySparkline
+              weeklySummary={practice.weeklySummary}
+              onStartPractice={() => practice.startPractice({})}
+            />
+          </CCol>
+          <CCol lg={5} className="mb-3">
+            <NextBadgeCard nextBadges={practice.nextBadges} />
           </CCol>
         </CRow>
       </>
