@@ -1,0 +1,326 @@
+/* Dashboard compact card styles - Duolingo-inspired */
+.dash-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  background: var(--cui-card-bg);
+}
+
+.dash-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.08),
+    0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.dash-card-compact {
+  padding: 12px;
+}
+
+.dash-card-compact .card-body {
+  padding: 12px;
+}
+
+/* Progress ring integration */
+.progress-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Journey path styles */
+.journey-path {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 4px 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.journey-path::-webkit-scrollbar {
+  height: 6px;
+}
+
+.journey-path::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.journey-path::-webkit-scrollbar-thumb {
+  background: var(--cui-border-color);
+  border-radius: 3px;
+}
+
+.journey-node {
+  flex: 0 0 auto;
+  width: 84px;
+  scroll-snap-align: start;
+  position: relative;
+}
+
+.journey-node:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 36px;
+  right: -12px;
+  width: 24px;
+  height: 3px;
+  background: var(--cui-border-color);
+  border-radius: 2px;
+  z-index: 0;
+}
+
+.journey-node.completed::after {
+  background: linear-gradient(90deg, var(--node-color) 50%, var(--cui-border-color) 50%);
+}
+
+.journey-node-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.journey-node.completed .journey-node-icon {
+  background: var(--node-color);
+  color: white;
+}
+
+.journey-node.current .journey-node-icon {
+  background: var(--node-color);
+  color: white;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+.journey-node.locked .journey-node-icon {
+  background: var(--cui-secondary-bg);
+  color: var(--cui-text-muted);
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--node-color);
+  }
+  70% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.journey-node-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--cui-text);
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.journey-node.current .journey-node-label {
+  color: var(--node-color);
+}
+
+.journey-node.locked .journey-node-label {
+  color: var(--cui-text-muted);
+}
+
+.journey-node-sub {
+  font-size: 0.6rem;
+  text-align: center;
+  color: var(--cui-text-muted);
+  margin-top: 2px;
+}
+
+/* Daily goal ring */
+.daily-goal-card {
+  background: linear-gradient(
+    135deg,
+    var(--daily-color) 0%,
+    color-mix(in srgb, var(--daily-color) 80%, black) 100%
+  );
+  color: white;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.daily-goal-ring {
+  --daily-ring-bg: rgba(255, 255, 255, 0.2);
+}
+
+/* Action cards */
+.action-card {
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--cui-card-bg);
+  border: 1px solid var(--cui-border-color);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.action-card:hover {
+  border-color: var(--action-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.action-card.urgent-overdue {
+  border-left: 3px solid #ef4444;
+}
+
+.action-card.urgent-today {
+  border-left: 3px solid #f59e0b;
+}
+
+.action-card.urgent-week {
+  border-left: 3px solid #06b6d4;
+}
+
+.action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--action-color) 15%, transparent);
+  color: var(--action-color);
+  flex-shrink: 0;
+}
+
+/* League widget */
+.league-widget {
+  background: linear-gradient(135deg, var(--league-bg-start) 0%, var(--league-bg-end) 100%);
+  border-radius: 16px;
+  padding: 16px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.league-rank {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Daily chest */
+.chest-widget {
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--cui-card-bg);
+  border: 1px solid var(--cui-border-color);
+  text-align: center;
+}
+
+.chest-icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 8px;
+  animation: chest-bounce 3s ease-in-out infinite;
+}
+
+@keyframes chest-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  10% {
+    transform: translateY(-6px) scale(1.05);
+  }
+  20% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Top bar */
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dash-greeting {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--cui-text);
+}
+
+.dash-stats-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dash-stat-mini {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cui-text-muted);
+  white-space: nowrap;
+}
+
+.dash-stat-mini .icon {
+  font-size: 1rem;
+}
+
+/* Weekly dots */
+.weekly-dots {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  height: 60px;
+  justify-content: center;
+}
+
+.weekly-dot {
+  flex: 1;
+  max-width: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.weekly-dot-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  background: var(--cui-border-color);
+  transition: all 0.3s ease;
+}
+
+.weekly-dot-bar.active {
+  background: var(--dot-color);
+}
+
+.weekly-dot-bar.today {
+  background: var(--cui-primary);
+}
+
+.weekly-dot-label {
+  font-size: 0.55rem;
+  color: var(--cui-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
