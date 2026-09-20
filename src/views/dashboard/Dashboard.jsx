@@ -1,14 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CButton } from '@coreui/react'
 import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CRow,
-  CButton,
-  CBadge,
-  CProgress,
-} from '@coreui/react'
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts'
 import CIcon from '@coreui/icons-react'
 import {
   cilSchool,
@@ -285,9 +290,9 @@ const Dashboard = () => {
                   urgentTasks.map((task) => (
                     <ActionCard
                       key={task.id}
-                      task={{ ...task, instrument_color: getInstrumentColor(task.instrument) }}
+                      task={{ ...task, instrument_color: getInstrumentColor(profile?.instrument) }}
                       onClick={() => {
-                        window.location.href = `/courses/${task.course_id}?task=${task.id}`
+                        window.location.href = '/tasks'
                       }}
                     />
                   ))

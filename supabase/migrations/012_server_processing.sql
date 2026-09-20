@@ -129,7 +129,7 @@ BEGIN
       PERFORM cron.schedule(
         'send-due-payment-reminders',
         '0 * * * *',
-        $$SELECT public.send_due_payment_reminders()$$
+        $cmd$SELECT public.send_due_payment_reminders()$cmd$
       );
     END IF;
   END IF;
