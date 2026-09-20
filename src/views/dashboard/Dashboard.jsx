@@ -38,7 +38,6 @@ import JourneyPath from '../../components/dashboard/JourneyPath'
 import ActionCard from '../../components/dashboard/ActionCard'
 import DailyGoalCard from '../../components/dashboard/DailyGoalCard'
 import WeeklyDots from '../../components/dashboard/WeeklyDots'
-import DailyChest from '../../components/dashboard/DailyChest'
 import { getInstrumentColor } from '../../utils/colors'
 
 // Import compact styles
@@ -225,9 +224,9 @@ const Dashboard = () => {
   const instrumentColor = enrolledCourses[0]
     ? getInstrumentColor(enrolledCourses[0].instrument)
     : '#6366f1'
-  const practicesThisWeek =
-    practice.weeklySummary?.reduce((sum, d) => sum + (d.sessions || 0), 0) || 0
   const streakDays = practice.streak?.current_streak || 0
+  const hasNextLesson =
+    Boolean(profile?.next_lesson) && !isNaN(new Date(profile.next_lesson).getTime())
 
   if (isStudent) {
     return (
@@ -268,7 +267,7 @@ const Dashboard = () => {
             />
           </CCol>
           <CCol lg={5} className="mb-0">
-            <div className="dash-card dash-card-compact h-100">
+            <div className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <span className="fw-semibold d-flex align-items-center gap-2">
                   <CIcon icon={cilMusicNote} className="text-primary" size="lg" />
@@ -316,85 +315,67 @@ const Dashboard = () => {
           </CCol>
         </CRow>
 
-        {/* BOTTOM ROW: Weekly + Chest */}
+        {/* BOTTOM ROW: Weekly + Próxima clase */}
         <CRow className="mb-4 g-3">
-          <CCol lg={8} className="mb-0">
+          <CCol lg={hasNextLesson ? 8 : 12} className="mb-0">
             <WeeklyDots
               weeklySummary={practice.weeklySummary}
               instrumentColor={instrumentColor}
               onStartPractice={() => practice.startPractice({})}
             />
           </CCol>
-          <CCol lg={4} className="mb-0">
-            <DailyChest
-              practicesThisWeek={practicesThisWeek}
-              practicesForChest={5}
-              onClaimChest={() => {
-                alert('¡Cofre abierto! +50 XP + Badge semanal')
-              }}
-              chestClaimed={false}
-            />
-          </CCol>
-        </CRow>
-
-        {/* NEXT LESSON - Compact */}
-        {profile?.next_lesson && !isNaN(new Date(profile.next_lesson).getTime()) && (
-          <CRow className="mb-4">
-            <CCol>
+          {hasNextLesson && (
+            <CCol lg={4} className="mb-0">
               <div
-                className="dash-card dash-card-compact"
+                className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center"
                 style={{
                   background: 'linear-gradient(135deg, var(--cui-primary) 0%, #5c6bc0 100%)',
                   color: 'white',
                 }}
               >
-                <div className="d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center gap-3">
-                    <div
-                      className="d-flex align-items-center justify-content-center rounded-circle"
-                      style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.2)' }}
-                    >
-                      <CIcon icon={cilCalendar} size="xl" color="white" />
-                    </div>
-                    <div>
-                      <div className="fw-bold" style={{ fontSize: '1.1rem' }}>
-                        Próxima clase
-                      </div>
-                      <div className="text-white-50 small">
-                        {new Date(profile.next_lesson).toLocaleString('es-ES', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                        {profile?.teacher && ` • Con ${profile.teacher}`}
-                      </div>
-                    </div>
+                <div className="d-flex align-items-center gap-3">
+                  <div
+                    className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                    style={{ width: 44, height: 44, background: 'rgba(255,255,255,0.2)' }}
+                  >
+                    <CIcon icon={cilCalendar} size="xl" color="white" />
                   </div>
-                  <div className="text-end">
-                    <div
-                      className={`fw-bold ${nextLessonCountdown.isOverdue ? 'text-warning' : ''}`}
-                      style={{ fontSize: '1.3rem' }}
-                    >
-                      {nextLessonCountdown.text}
+                  <div className="flex-grow-1">
+                    <div className="fw-bold">Próxima clase</div>
+                    <div className="text-white-50 small">
+                      {new Date(profile.next_lesson).toLocaleString('es-ES', {
+                        weekday: 'long',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </div>
-                    <button
-                      className="btn btn-outline-light btn-sm mt-2"
-                      onClick={() => {
-                        window.location.href = '/lessons'
-                      }}
-                      type="button"
-                    >
-                      Ver detalles
-                    </button>
+                    {profile?.teacher && (
+                      <div className="text-white-50 small">Con {profile.teacher}</div>
+                    )}
                   </div>
+                </div>
+                <div className="d-flex align-items-center justify-content-between mt-3">
+                  <span
+                    className={`fw-bold ${nextLessonCountdown.isOverdue ? 'text-warning' : ''}`}
+                  >
+                    {nextLessonCountdown.text}
+                  </span>
+                  <button
+                    className="btn btn-outline-light btn-sm"
+                    onClick={() => {
+                      window.location.href = '/lessons'
+                    }}
+                    type="button"
+                  >
+                    Ver detalles
+                  </button>
                 </div>
               </div>
             </CCol>
-          </CRow>
-        )}
+          )}
+        </CRow>
 
         {/* ACHIEVEMENTS - Compact row */}
         {(practice.badges || []).length > 0 && (

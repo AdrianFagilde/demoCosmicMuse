@@ -1,6 +1,6 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
-import { cilSpeedometer, cilGift, cilClock, cilFire } from '@coreui/icons'
+import { cilSpeedometer, cilCheck, cilFire } from '@coreui/icons'
 import ProgressRing from './ProgressRing'
 
 const DAILY_GOAL_MINUTES = 30
@@ -77,9 +77,9 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
       {isComplete && (
         <div className="mt-3 p-3 rounded" style={{ background: 'rgba(255,255,255,0.15)' }}>
           <div className="d-flex align-items-center justify-content-center gap-2">
-            <CIcon icon={cilGift} size="lg" />
-            <span className="fw-semibold">¡Cofre de recompensa disponible!</span>
-            <CIcon icon={cilGift} size="lg" />
+            <CIcon icon={cilCheck} size="lg" />
+            <span className="fw-semibold">¡Meta completada! Gran trabajo hoy.</span>
+            <CIcon icon={cilCheck} size="lg" />
           </div>
         </div>
       )}

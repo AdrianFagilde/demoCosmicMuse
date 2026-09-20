@@ -86,7 +86,7 @@ const JourneyPath = ({ courses, myProgressRows, onViewCourse, onViewAll }) => {
   if (pathNodes.length === 0) return null
 
   return (
-    <div className="dash-card dash-card-compact mb-4">
+    <div className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center">
       <div className="d-flex justify-content-between align-items-center mb-3 px-2">
         <span className="fw-semibold d-flex align-items-center gap-2">
           <CIcon icon={cilBook} className="text-primary" size="lg" />

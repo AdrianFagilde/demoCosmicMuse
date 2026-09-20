@@ -35,7 +35,7 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
 
   if (!hasData) {
     return (
-      <div className="dash-card dash-card-compact mb-4 text-center py-4">
+      <div className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center text-center py-4">
         <CIcon icon={cilClock} size="xl" className="text-medium-emphasis mb-2" />
         <div className="fw-semibold mb-1">Sin práctica esta semana</div>
         <div className="text-medium-emphasis small mb-3">Comienza tu racha hoy</div>
@@ -47,7 +47,7 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
   }
 
   return (
-    <div className="dash-card dash-card-compact mb-4">
+    <div className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <span className="fw-semibold d-flex align-items-center gap-2">
           <CIcon icon={cilClock} className="text-info" size="lg" />
