@@ -30,7 +30,10 @@ import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 
-const emptyForm = {
+// Build version to force cache busting
+const BUILD_VERSION = '2026.09.19.5'
+
+const Students = () => {
   fullName: '',
   email: '',
   password: '',
@@ -39,6 +42,9 @@ const emptyForm = {
 }
 
 const Students = () => {
+  // Force build hash update - build version reference
+  const buildHash = `v2026.09.19.5`
+
   const { profile } = useAuth()
   const { students, loading, refetch } = useSupabaseStudents()
   const [search, setSearch] = useState('')
@@ -113,6 +119,8 @@ const Students = () => {
 
   return (
     <>
+      {/* Build version marker - forces new build hash on deploy */}
+      <div data-build-version={buildHash} style={{ display: 'none' }} />
       <CRow className="mb-4">
         <CCol md={3} sm={6} className="mb-3">
           <CCard className="h-100">

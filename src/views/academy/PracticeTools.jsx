@@ -43,7 +43,13 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabasePractice from '../../hooks/useSupabasePractice'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 
+// Build version to force cache busting
+const BUILD_VERSION = '2026.09.19.5'
+
 const PracticeTools = () => {
+  // Force build hash update - build version reference
+  const buildHash = `v2026.09.19.5`
+
   const { user, profile } = useAuth()
   const { tasks } = useSupabaseTasks()
   const practice = useSupabasePractice(user?.id)
@@ -1218,6 +1224,8 @@ const PracticeTools = () => {
 
   return (
     <>
+      {/* Build version marker - forces new build hash on deploy */}
+      <div data-build-version={buildHash} style={{ display: 'none' }} />
       <CRow className="mb-4">
         <CCol>
           <CCard>

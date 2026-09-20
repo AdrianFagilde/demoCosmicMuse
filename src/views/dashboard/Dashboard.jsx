@@ -151,7 +151,7 @@ const xpForLevel = (level) => (level - 1) ** 2 * 100
 const xpForNextLevel = (level) => level ** 2 * 100
 
 // Build version to force cache busting
-const BUILD_VERSION = '2026.09.19.4'
+const BUILD_VERSION = '2026.09.19.5'
 
 const Dashboard = () => {
   const { user, profile } = useAuth()
@@ -172,6 +172,9 @@ const Dashboard = () => {
 
   // Force build hash update - used in rendered output to force hash change
   const buildHash = `v${BUILD_VERSION}`
+
+  // Force component re-render on build - adds build timestamp to component
+  const buildTimestamp = Date.now()
 
   const instrumentData = useMemo(() => {
     const counts = {}
@@ -384,7 +387,7 @@ const Dashboard = () => {
         </CRow>
 
         {/* Build version marker - forces new build hash on deploy */}
-        <div data-build-version={buildHash} style={{ display: 'none' }} />
+        <div data-build-version={buildHash} data-build-timestamp={buildTimestamp} style={{ display: 'none' }} />
 
         <CRow className="mb-4">
           <CCol lg={8} className="mb-3">
