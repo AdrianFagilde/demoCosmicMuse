@@ -150,6 +150,9 @@ const getNextLessonCountdown = (nextLesson) => {
 const xpForLevel = (level) => (level - 1) ** 2 * 100
 const xpForNextLevel = (level) => level ** 2 * 100
 
+// Build version to force cache busting
+const BUILD_VERSION = '2026.09.19.3'
+
 const Dashboard = () => {
   const { user, profile } = useAuth()
   const isStudent = profile?.role === 'student'
@@ -163,6 +166,9 @@ const Dashboard = () => {
     availableInstruments: [],
   })
   const [paymentsByMonth, setPaymentsByMonth] = useState([])
+
+  // Force build hash update - build version reference
+  const buildVersion = BUILD_VERSION
 
   const instrumentData = useMemo(() => {
     const counts = {}
