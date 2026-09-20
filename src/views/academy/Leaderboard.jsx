@@ -17,7 +17,15 @@ import {
   CProgress,
   CFormSelect,
 } from '@coreui/react'
-import { cilFire, cilUser, cilStar, cilBadge, cilStarHalf } from '@coreui/icons'
+import {
+  cilFire,
+  cilUser,
+  cilStar,
+  cilBadge,
+  cilStarHalf,
+  cilStar as cilTrophy,
+  cilBadge as cilAward,
+} from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import supabase from '../../lib/supabase'

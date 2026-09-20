@@ -11,6 +11,7 @@ import {
   cilClock,
   cilEnvelopeOpen,
   cilChart,
+  cilStar as cilTrophy,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
