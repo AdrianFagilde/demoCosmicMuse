@@ -976,13 +976,20 @@ const CourseDetail = () => {
           const formSubmitted = taskForm ? Boolean(mySubmissions[taskForm.id]) : false
           const formOverdue =
             taskForm?.due_date && !formSubmitted && new Date(taskForm.due_date) < new Date()
+          const sortedItems = [...(task.task_checklist_items || [])].sort(
+            (a, b) => (a.position ?? 0) - (b.position ?? 0),
+          )
+
           return (
             <CCard key={task.id} className="mb-3">
               <CCardHeader className="d-flex justify-content-between align-items-center">
                 <span className="fw-semibold">{task.title}</span>
-                {task.due_date && (
-                  <CBadge color="warning text-dark">Entrega: {task.due_date}</CBadge>
-                )}
+                <div className="d-flex align-items-center gap-2">
+                  {task.due_date && (
+                    <CBadge color="warning text-dark">Entrega: {task.due_date}</CBadge>
+                  )}
+                  <CBadge color={taskPercent >= 100 ? 'success' : 'info'}>{taskPercent}%</CBadge>
+                </div>
               </CCardHeader>
               <CCardBody>
                 {task.description && <p className="mb-2">{task.description}</p>}
@@ -990,36 +997,55 @@ const CourseDetail = () => {
                   <p className="text-medium-emphasis mb-0">Esta tarea no tiene checklist.</p>
                 ) : (
                   <>
-                    {(task.task_checklist_items || []).map((item) => {
-                      const checked = myProgressRows.some((row) => row.item_id === item.id)
-                      return (
-                        <CFormCheck
-                          key={item.id}
-                          id={`check-${item.id}`}
-                          label={item.label}
-                          checked={checked}
-                          onChange={async (event) => {
-                            const next = event.target.checked
-                            setMyProgressRows((rows) =>
-                              next
-                                ? [...rows, { item_id: item.id, student_id: user.id }]
-                                : rows.filter(
-                                    (row) =>
-                                      !(row.item_id === item.id && row.student_id === user.id),
-                                  ),
-                            )
-                            const ok = await toggleProgressItem(item.id, user.id, next)
-                            if (!ok) {
-                              setMyProgressRows((rows) =>
-                                !next
-                                  ? [...rows, { item_id: item.id, student_id: user.id }]
-                                  : rows.filter((row) => row.item_id !== item.id),
-                              )
-                            }
-                          }}
-                        />
-                      )
-                    })}
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={async (event) => {
+                        const { active, over } = event
+                        if (!over || active.id === over.id) return
+                        const oldIndex = sortedItems.findIndex((i) => i.id === active.id)
+                        const newIndex = sortedItems.findIndex((i) => i.id === over.id)
+                        const reordered = arrayMove(sortedItems, oldIndex, newIndex)
+                        const ok = await reorderChecklistItems(reordered)
+                        if (!ok) {
+                          // Revert on failure - the UI will reset since items come from course state
+                        }
+                      }}
+                    >
+                      <SortableContext
+                        items={sortedItems.map((i) => i.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {sortedItems.map((item) => {
+                          const checked = myProgressRows.some((row) => row.item_id === item.id)
+                          return (
+                            <StudentSortableChecklistItem
+                              key={item.id}
+                              item={item}
+                              checked={checked}
+                              onChange={async (next) => {
+                                setMyProgressRows((rows) =>
+                                  next
+                                    ? [...rows, { item_id: item.id, student_id: user.id }]
+                                    : rows.filter(
+                                        (row) =>
+                                          !(row.item_id === item.id && row.student_id === user.id),
+                                      ),
+                                )
+                                const ok = await toggleProgressItem(item.id, user.id, next)
+                                if (!ok) {
+                                  setMyProgressRows((rows) =>
+                                    !next
+                                      ? [...rows, { item_id: item.id, student_id: user.id }]
+                                      : rows.filter((row) => row.item_id !== item.id),
+                                  )
+                                }
+                              }}
+                            />
+                          )
+                        })}
+                      </SortableContext>
+                    </DndContext>
                     <div className="d-flex align-items-center gap-2 mt-3">
                       <CProgress value={taskPercent} height={6} className="flex-grow-1" />
                       <small className="text-medium-emphasis">
@@ -1054,6 +1080,36 @@ const CourseDetail = () => {
         })
       )}
     </>
+  )
+}
+
+const StudentSortableChecklistItem = ({ item, checked, onChange }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  }
+  return (
+    <div ref={setNodeRef} style={style} className="mb-2">
+      <div
+        {...attributes}
+        {...listeners}
+        className="text-medium-emphasis d-flex align-items-center gap-2"
+        style={{ cursor: 'grab', touchAction: 'none', padding: '4px 8px', borderRadius: '4px' }}
+      >
+        <CIcon icon={cilMenu} />
+        <CFormCheck
+          id={`check-${item.id}`}
+          label={item.label}
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+          className="flex-grow-1 mb-0"
+        />
+      </div>
+    </div>
   )
 }
 

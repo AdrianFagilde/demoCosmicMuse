@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   CBadge,
   CButton,
@@ -21,7 +21,15 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import { cilCheckCircle, cilPencil, cilTrash } from '@coreui/icons'
+import {
+  cilCheckCircle,
+  cilPencil,
+  cilTrash,
+  cilFilter,
+  cilSortAscending,
+  cilCalendar,
+  cilFlagAlt,
+} from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
@@ -33,8 +41,17 @@ const statusColors = {
   Completado: 'success',
 }
 
-// Input con estado local: confirma en blur/Enter y clampa a 0-100.
-// Evita que el debounce sobrescriba lo que el usuario está tecleando.
+const sortOptions = [
+  { value: 'due_date_asc', label: 'Entrega ↑ (más próxima)' },
+  { value: 'due_date_desc', label: 'Entrega ↓ (más lejana)' },
+  { value: 'status', label: 'Estado' },
+  { value: 'title', label: 'Título (A-Z)' },
+  { value: 'created_desc', label: 'Más recientes' },
+  { value: 'created_asc', label: 'Más antiguas' },
+]
+
+const statusOptions = ['Todos', 'Pendiente', 'En progreso', 'Completado']
+
 const TaskProgressInput = ({ value, onCommit }) => {
   const [draft, setDraft] = useState(() => String(value))
   const [lastSynced, setLastSynced] = useState(value)
@@ -89,8 +106,56 @@ const Tasks = () => {
   })
   const [formError, setFormError] = useState('')
 
+  // Student filter/sort state
+  const [statusFilter, setStatusFilter] = useState('Todos')
+  const [sortBy, setSortBy] = useState('due_date_asc')
+  const [searchText, setSearchText] = useState('')
+
   const studentTasks = tasks.filter((task) => task.student_id === user?.id)
   const visibleTasks = isAdmin ? tasks : studentTasks
+
+  const filteredAndSortedTasks = useMemo(() => {
+    let result = [...visibleTasks]
+
+    // Search filter
+    if (searchText.trim()) {
+      const term = searchText.trim().toLowerCase()
+      result = result.filter(
+        (task) =>
+          task.title?.toLowerCase().includes(term) ||
+          task.description?.toLowerCase().includes(term) ||
+          task.profiles?.full_name?.toLowerCase().includes(term),
+      )
+    }
+
+    // Status filter
+    if (statusFilter !== 'Todos') {
+      result = result.filter((task) => task.status === statusFilter)
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'due_date_asc':
+          return new Date(a.due_date) - new Date(b.due_date)
+        case 'due_date_desc':
+          return new Date(b.due_date) - new Date(a.due_date)
+        case 'status':
+          const statusOrder = { Pendiente: 0, 'En progreso': 1, Completado: 2 }
+          return (statusOrder[a.status] || 3) - (statusOrder[b.status] || 3)
+        case 'title':
+          return (a.title || '').localeCompare(b.title || '')
+        case 'created_desc':
+          return new Date(b.created_at) - new Date(a.created_at)
+        case 'created_asc':
+          return new Date(a.created_at) - new Date(b.created_at)
+        default:
+          return 0
+      }
+    })
+
+    return result
+  }, [visibleTasks, searchText, statusFilter, sortBy])
 
   const handleAddTask = async (event) => {
     event.preventDefault()
@@ -141,6 +206,21 @@ const Tasks = () => {
     const ok = changeTaskProgress(taskId, value)
     if (!ok) setFormError('No se pudo actualizar el progreso.')
   }
+
+  const getTaskStats = () => {
+    const userTasks = tasks.filter((t) => t.student_id === user?.id)
+    return {
+      total: userTasks.length,
+      pending: userTasks.filter((t) => t.status === 'Pendiente').length,
+      inProgress: userTasks.filter((t) => t.status === 'En progreso').length,
+      completed: userTasks.filter((t) => t.status === 'Completado').length,
+      overdue: userTasks.filter(
+        (t) => t.status !== 'Completado' && new Date(t.due_date) < new Date(),
+      ).length,
+    }
+  }
+
+  const stats = getTaskStats()
 
   return (
     <>
@@ -236,8 +316,84 @@ const Tasks = () => {
         </CRow>
       )}
 
+      {!isAdmin && (
+        <CRow className="mb-4">
+          <CCol md={3} sm={6} className="mb-3">
+            <CCard className="h-100 text-center">
+              <CCardBody className="py-3">
+                <div className="fs-3 fw-bold text-primary">{stats.total}</div>
+                <div className="text-medium-emphasis small">Total tareas</div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+          <CCol md={3} sm={6} className="mb-3">
+            <CCard className="h-100 text-center">
+              <CCardBody className="py-3">
+                <div className="fs-3 fw-bold text-warning">{stats.pending}</div>
+                <div className="text-medium-emphasis small">Pendientes</div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+          <CCol md={3} sm={6} className="mb-3">
+            <CCard className="h-100 text-center">
+              <CCardBody className="py-3">
+                <div className="fs-3 fw-bold text-info">{stats.inProgress}</div>
+                <div className="text-medium-emphasis small">En progreso</div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+          <CCol md={3} sm={6} className="mb-3">
+            <CCard className="h-100 text-center">
+              <CCardBody className="py-3">
+                <div className="fs-3 fw-bold text-success">{stats.completed}</div>
+                <div className="text-medium-emphasis small">Completadas</div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow>
+      )}
+
       <CCard>
-        <CCardHeader>{isAdmin ? 'Tareas asignadas' : 'Tus tareas'}</CCardHeader>
+        <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <span>{isAdmin ? 'Tareas asignadas' : 'Tus tareas'}</span>
+          <div className="d-flex flex-wrap gap-2">
+            {!isAdmin && (
+              <CInputGroup size="sm" style={{ minWidth: 250 }}>
+                <CInputGroupText>
+                  <CIcon icon={cilFilter} />
+                </CInputGroupText>
+                <CFormInput
+                  type="text"
+                  placeholder="Buscar tareas..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </CInputGroup>
+            )}
+            <CFormSelect
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ minWidth: 160 }}
+            >
+              {statusOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </CFormSelect>
+            <CFormSelect
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{ minWidth: 200 }}
+            >
+              {sortOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </CFormSelect>
+          </div>
+        </CCardHeader>
         <CCardBody>
           {loading ? (
             <CSpinner color="primary" />
@@ -246,7 +402,7 @@ const Tasks = () => {
               <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell>Título</CTableHeaderCell>
-                  <CTableHeaderCell>Estudiante</CTableHeaderCell>
+                  {isAdmin && <CTableHeaderCell>Estudiante</CTableHeaderCell>}
                   <CTableHeaderCell>Fecha de entrega</CTableHeaderCell>
                   <CTableHeaderCell>Estado</CTableHeaderCell>
                   <CTableHeaderCell>Progreso</CTableHeaderCell>
@@ -254,15 +410,32 @@ const Tasks = () => {
                 </CTableRow>
               </CTableHead>
               <CTableBody>
-                {visibleTasks.length > 0 ? (
-                  visibleTasks.map((task) => (
+                {filteredAndSortedTasks.length > 0 ? (
+                  filteredAndSortedTasks.map((task) => (
                     <CTableRow key={task.id}>
                       <CTableDataCell>
                         <div className="fw-semibold">{task.title}</div>
                         <div className="text-medium-emphasis small">{task.description}</div>
                       </CTableDataCell>
-                      <CTableDataCell>{task.profiles?.full_name || '—'}</CTableDataCell>
-                      <CTableDataCell>{task.due_date}</CTableDataCell>
+                      {isAdmin && (
+                        <CTableDataCell>{task.profiles?.full_name || '—'}</CTableDataCell>
+                      )}
+                      <CTableDataCell>
+                        <span
+                          className={
+                            new Date(task.due_date) < new Date() && task.status !== 'Completado'
+                              ? 'text-danger fw-semibold'
+                              : ''
+                          }
+                        >
+                          {task.due_date}
+                        </span>
+                        {new Date(task.due_date) < new Date() && task.status !== 'Completado' && (
+                          <CBadge color="danger" className="ms-1" style={{ fontSize: '0.65rem' }}>
+                            Vencida
+                          </CBadge>
+                        )}
+                      </CTableDataCell>
                       <CTableDataCell>
                         <CBadge color={statusColors[task.status] || 'secondary'}>
                           {task.status}

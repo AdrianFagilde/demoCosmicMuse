@@ -8,6 +8,9 @@ import {
   cilGroup,
   cilBell,
   cilBook,
+  cilClock,
+  cilEnvelopeOpen,
+  cilChart,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -26,6 +29,36 @@ export const getNavigation = (profile) => {
             name: 'Mis cursos',
             to: '/courses',
             icon: <CIcon icon={cilBook} customClassName="nav-icon" />,
+          },
+          {
+            component: CNavItem,
+            name: 'Herramientas de práctica',
+            to: '/practice-tools',
+            icon: <CIcon icon={cilClock} customClassName="nav-icon" />,
+          },
+          {
+            component: CNavItem,
+            name: 'Mensajes',
+            to: '/messages',
+            icon: <CIcon icon={cilEnvelopeOpen} customClassName="nav-icon" />,
+          },
+          {
+            component: CNavItem,
+            name: 'Ranking',
+            to: '/leaderboard',
+            icon: <CIcon icon={cilTrophy} customClassName="nav-icon" />,
+          },
+          {
+            component: CNavItem,
+            name: 'Analítica',
+            to: '/analytics',
+            icon: <CIcon icon={cilChart} customClassName="nav-icon" />,
+          },
+          {
+            component: CNavItem,
+            name: 'Portal de tutores',
+            to: '/parent-portal',
+            icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
           },
           {
             component: CNavItem,

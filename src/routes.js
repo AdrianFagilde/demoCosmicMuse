@@ -28,6 +28,11 @@ const Lessons = React.lazy(() => import('./views/academy/Lessons'))
 const Users = React.lazy(() => import('./views/admin/Users'))
 const SendNotifications = React.lazy(() => import('./views/admin/SendNotifications'))
 const Notifications = React.lazy(() => import('./views/academy/Notifications'))
+const PracticeTools = React.lazy(() => import('./views/academy/PracticeTools'))
+const Messages = React.lazy(() => import('./views/academy/Messages'))
+const Leaderboard = React.lazy(() => import('./views/academy/Leaderboard'))
+const Analytics = React.lazy(() => import('./views/academy/Analytics'))
+const ParentPortal = React.lazy(() => import('./views/academy/ParentPortal'))
 
 /**
  * Application Routes Configuration
@@ -53,6 +58,16 @@ export const routes = [
     name: 'Cuestionario',
     element: CourseFormFill,
   },
+  {
+    path: '/practice-tools',
+    name: 'Herramientas de práctica',
+    element: PracticeTools,
+    roles: ['student'],
+  },
+  { path: '/messages', name: 'Mensajes', element: Messages, roles: ['student'] },
+  { path: '/leaderboard', name: 'Ranking', element: Leaderboard, roles: ['student'] },
+  { path: '/analytics', name: 'Analítica', element: Analytics, roles: ['student'] },
+  { path: '/parent-portal', name: 'Portal de tutores', element: ParentPortal, roles: ['student'] },
   { path: '/payments', name: 'Pagos', element: Payments, roles: ['admin'] },
   { path: '/users', name: 'Usuarios', element: Users, roles: ['admin'] },
   {
