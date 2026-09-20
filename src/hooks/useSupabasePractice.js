@@ -8,15 +8,6 @@ const useSupabasePractice = (studentId) => {
     longest_streak: 0,
     last_practice_date: null,
   })
-  const [gamification, setGamification] = useState({
-    xp: 0,
-    level: 1,
-    total_practice_minutes: 0,
-    tasks_completed: 0,
-    courses_completed: 0,
-  })
-  const [badges, setBadges] = useState([])
-  const [nextBadges, setNextBadges] = useState([])
   const [weeklySummary, setWeeklySummary] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -28,9 +19,6 @@ const useSupabasePractice = (studentId) => {
       const [
         { data: sessionsData, error: sessionsError },
         { data: streakData, error: streakError },
-        { data: gamifData, error: gamifError },
-        { data: badgesData, error: badgesError },
-        { data: nextBadgesData, error: nextBadgesError },
         { data: weeklyData, error: weeklyError },
       ] = await Promise.all([
         supabase
@@ -40,38 +28,16 @@ const useSupabasePractice = (studentId) => {
           .order('started_at', { ascending: false })
           .limit(50),
         supabase.from('practice_streaks').select('*').eq('student_id', studentId).single(),
-        supabase.from('student_gamification').select('*').eq('student_id', studentId).single(),
-        supabase
-          .from('student_badges')
-          .select('*')
-          .eq('student_id', studentId)
-          .order('earned_at', { ascending: false }),
-        supabase.rpc('get_next_badges', { p_student_id: studentId }),
         supabase.rpc('get_weekly_practice_summary', { p_student_id: studentId }),
       ])
 
       if (sessionsError) console.error('[Practice] Sessions error:', sessionsError.message)
       if (streakError && streakError.code !== 'PGRST116')
         console.error('[Practice] Streak error:', streakError.message)
-      if (gamifError && gamifError.code !== 'PGRST116')
-        console.error('[Practice] Gamif error:', gamifError.message)
-      if (badgesError) console.error('[Practice] Badges error:', badgesError.message)
-      if (nextBadgesError) console.error('[Practice] Next badges error:', nextBadgesError.message)
       if (weeklyError) console.error('[Practice] Weekly error:', weeklyError.message)
 
       setSessions(sessionsData || [])
       setStreak(streakData || { current_streak: 0, longest_streak: 0, last_practice_date: null })
-      setGamification(
-        gamifData || {
-          xp: 0,
-          level: 1,
-          total_practice_minutes: 0,
-          tasks_completed: 0,
-          courses_completed: 0,
-        },
-      )
-      setBadges(badgesData || [])
-      setNextBadges(nextBadgesData || [])
       setWeeklySummary(weeklyData || [])
       setError(null)
     } catch (err) {
@@ -159,9 +125,6 @@ const useSupabasePractice = (studentId) => {
   return {
     sessions,
     streak,
-    gamification,
-    badges,
-    nextBadges,
     weeklySummary,
     loading,
     error,

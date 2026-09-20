@@ -16,13 +16,8 @@ import {
   cilCalendar,
   cilChart,
   cilFire,
-  cilStar,
-  cilClock,
-  cilGift,
   cilMediaPlay,
-  cilBook,
   cilMusicNote,
-  cilArrowRight,
 } from '@coreui/icons'
 
 import { useAuth } from '../../context/AuthContext'
@@ -376,47 +371,6 @@ const Dashboard = () => {
             </CCol>
           )}
         </CRow>
-
-        {/* ACHIEVEMENTS - Compact row */}
-        {(practice.badges || []).length > 0 && (
-          <CRow className="mb-4">
-            <CCol>
-              <div className="dash-card dash-card-compact">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span className="fw-semibold d-flex align-items-center gap-2">
-                    <CIcon icon={cilGift} className="text-warning" size="lg" />
-                    Logros ({practice.badges.length})
-                  </span>
-                </div>
-                <div className="d-flex flex-wrap gap-2">
-                  {(practice.badges || []).slice(0, 6).map((badge) => (
-                    <span
-                      key={badge.id}
-                      className="badge d-flex align-items-center gap-1"
-                      style={{
-                        backgroundColor: `var(--cui-${badge.badge_key?.includes('streak') ? 'danger' : badge.badge_key?.includes('course') ? 'info' : 'warning'})`,
-                        padding: '6px 10px',
-                        fontSize: '0.7rem',
-                      }}
-                      title={`${badge.badge_key} • ${new Date(badge.earned_at).toLocaleDateString('es-ES')}`}
-                    >
-                      <CIcon icon={cilStar} size="xs" />
-                      {badge.badge_key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </span>
-                  ))}
-                  {(practice.badges || []).length > 6 && (
-                    <span
-                      className="badge bg-secondary"
-                      style={{ padding: '6px 10px', fontSize: '0.7rem' }}
-                    >
-                      +{(practice.badges || []).length - 6} más
-                    </span>
-                  )}
-                </div>
-              </div>
-            </CCol>
-          </CRow>
-        )}
       </>
     )
   }
