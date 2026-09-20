@@ -42,16 +42,56 @@ CREATE TABLE IF NOT EXISTS public.messages (
 );
 
 -- Notificaciones push (suscripciones Web Push)
-CREATE TABLE IF NOT EXISTS public.push_subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  endpoint TEXT NOT NULL,
-  p256dh TEXT NOT NULL,
-  auth TEXT NOT NULL,
-  user_agent TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE (user_id, endpoint)
-);
+-- La migración 013 puede haber creado push_subscriptions con student_id.
+-- Aqui se adopta el esquema canónico con user_id (creación/migración idempotente).
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'push_subscriptions') THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'push_subscriptions' AND column_name = 'user_id'
+    ) THEN
+      ALTER TABLE public.push_subscriptions
+        ADD COLUMN user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'push_subscriptions' AND column_name = 'student_id'
+      ) THEN
+        UPDATE public.push_subscriptions SET user_id = student_id;
+      END IF;
+      ALTER TABLE public.push_subscriptions ALTER COLUMN user_id SET NOT NULL;
+    END IF;
+
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'push_subscriptions' AND column_name = 'student_id'
+    ) THEN
+      DROP POLICY IF EXISTS "Admin all push_subscriptions" ON public.push_subscriptions;
+      DROP POLICY IF EXISTS "Student manage own push_subscriptions" ON public.push_subscriptions;
+      ALTER TABLE public.push_subscriptions DROP COLUMN student_id;
+    END IF;
+
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint
+      WHERE conname = 'push_subscriptions_user_endpoint_key'
+        AND conrelid = 'public.push_subscriptions'::regclass
+    ) THEN
+      ALTER TABLE public.push_subscriptions
+        ADD CONSTRAINT push_subscriptions_user_endpoint_key UNIQUE (user_id, endpoint);
+    END IF;
+  ELSE
+    CREATE TABLE public.push_subscriptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+      endpoint TEXT NOT NULL,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      user_agent TEXT,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      UNIQUE (user_id, endpoint)
+    );
+  END IF;
+END $$;
 
 -- 2. ÍNDICES
 -- =============================================
