@@ -18,6 +18,7 @@ import {
   cilFire,
   cilStar,
   cilClock,
+  cilGift,
   cilMediaPlay,
   cilBook,
   cilMusicNote,
@@ -33,12 +34,10 @@ import supabase from '../../lib/supabase'
 import KpiCard from '../../components/KpiCard'
 
 // New Duolingo-style components
-import ProgressRing from '../../components/dashboard/ProgressRing'
 import JourneyPath from '../../components/dashboard/JourneyPath'
 import ActionCard from '../../components/dashboard/ActionCard'
 import DailyGoalCard from '../../components/dashboard/DailyGoalCard'
 import WeeklyDots from '../../components/dashboard/WeeklyDots'
-import LeagueWidget from '../../components/dashboard/LeagueWidget'
 import DailyChest from '../../components/dashboard/DailyChest'
 import { getInstrumentColor } from '../../utils/colors'
 
@@ -89,9 +88,6 @@ const getNextLessonCountdown = (nextLesson) => {
   return { text: `${minutes}m`, isOverdue: false }
 }
 
-const xpForLevel = (level) => (level - 1) ** 2 * 100
-const xpForNextLevel = (level) => level ** 2 * 100
-
 const BUILD_VERSION = '2026.09.20.2'
 
 const Dashboard = () => {
@@ -99,7 +95,7 @@ const Dashboard = () => {
   const isStudent = profile?.role === 'student'
   const { students, getSummary } = useSupabaseStudents()
   const { tasks } = useSupabaseTasks()
-  const { courses } = useSupabaseCourses()
+  const { courses, fetchStudentCourseProgress } = useSupabaseCourses()
   const practice = useSupabasePractice(user?.id)
   const [summary, setSummary] = useState({
     activeStudents: 0,
@@ -108,6 +104,7 @@ const Dashboard = () => {
     availableInstruments: [],
   })
   const [paymentsByMonth, setPaymentsByMonth] = useState([])
+  const [myProgressRows, setMyProgressRows] = useState([])
 
   const buildVersion = BUILD_VERSION
   const buildHash = `v${BUILD_VERSION}`
@@ -186,20 +183,18 @@ const Dashboard = () => {
   const completedTasks = studentTasks.filter((t) => t.status === 'Completado')
 
   const nextLessonCountdown = getNextLessonCountdown(profile?.next_lesson)
-  const currentXP = practice.gamification?.xp || 0
-  const currentLevel = practice.gamification?.level || 1
-  const xpCurrentLevel = xpForLevel(currentLevel)
-  const xpNextLevel = xpForNextLevel(currentLevel)
-  const xpProgress =
-    xpNextLevel > xpCurrentLevel
-      ? Math.round(((currentXP - xpCurrentLevel) / (xpNextLevel - xpCurrentLevel)) * 100)
-      : 100
 
   const enrolledCourses = courses.filter((c) =>
     c.course_enrollments?.some((e) => e.student_id === user?.id),
   )
 
-  const myProgressRows = practice.gamification ? [] : []
+  useEffect(() => {
+    if (!isStudent || !user?.id) return
+    ;(async () => {
+      const progress = await fetchStudentCourseProgress(user.id)
+      setMyProgressRows(progress)
+    })()
+  }, [isStudent, user?.id, fetchStudentCourseProgress])
 
   const sortTasksByUrgency = (taskList) => {
     const now = new Date()
@@ -227,46 +222,6 @@ const Dashboard = () => {
       })
       .reduce((sum, s) => sum + (s.duration_minutes || 0), 0) || 0
 
-  const getPrimaryCTA = () => {
-    if (urgentTasks.length > 0) {
-      const task = urgentTasks[0]
-      const due = task.due_date ? new Date(task.due_date) : null
-      const now = new Date()
-      now.setHours(0, 0, 0, 0)
-      const isOverdue = due && due < now
-      const isDueToday = due && due.toDateString() === now.toDateString()
-      return {
-        label: isOverdue
-          ? `Ponerte al día: ${task.title}`
-          : isDueToday
-            ? `Hacer hoy: ${task.title}`
-            : `Continuar: ${task.title}`,
-        onClick: () => {
-          window.location.href = `/courses/${task.course_id}?task=${task.id}`
-        },
-      }
-    }
-    if (nextLessonCountdown.text !== 'Sin programar' && !nextLessonCountdown.isOverdue) {
-      const diff = new Date(profile.next_lesson) - new Date()
-      const hours = diff / (1000 * 60 * 60)
-      if (hours < 24) {
-        return {
-          label: 'Preparar clase',
-          onClick: () => {
-            window.location.href = '/lessons'
-          },
-        }
-      }
-    }
-    return {
-      label: 'Iniciar práctica libre',
-      onClick: () => {
-        practice.startPractice({})
-      },
-    }
-  }
-
-  const primaryCTA = getPrimaryCTA()
   const instrumentColor = enrolledCourses[0]
     ? getInstrumentColor(enrolledCourses[0].instrument)
     : '#6366f1'
@@ -287,19 +242,6 @@ const Dashboard = () => {
           <div className="dash-stats-inline">
             <div className="dash-stat-mini">
               <CIcon icon={cilFire} className="icon text-danger" /> <span>{streakDays}</span>
-            </div>
-            <div className="dash-stat-mini">
-              <CIcon icon={cilStar} className="icon text-warning" /> <span>Nv.{currentLevel}</span>
-            </div>
-            <div className="dash-stat-mini">
-              <ProgressRing
-                progress={xpProgress}
-                size={28}
-                strokeWidth={3}
-                color="#f59e0b"
-                backgroundColor="rgba(0,0,0,0.1)"
-                showValue={false}
-              />
             </div>
           </div>
         </div>
@@ -374,9 +316,9 @@ const Dashboard = () => {
           </CCol>
         </CRow>
 
-        {/* BOTTOM ROW: Weekly + League + Chest */}
+        {/* BOTTOM ROW: Weekly + Chest */}
         <CRow className="mb-4 g-3">
-          <CCol lg={5} className="mb-0">
+          <CCol lg={8} className="mb-0">
             <WeeklyDots
               weeklySummary={practice.weeklySummary}
               instrumentColor={instrumentColor}
@@ -384,17 +326,6 @@ const Dashboard = () => {
             />
           </CCol>
           <CCol lg={4} className="mb-0">
-            <LeagueWidget
-              league="plata"
-              rank={3}
-              totalPlayers={30}
-              xpThisWeek={practice.gamification?.xp || 0}
-              onViewLeague={() => {
-                window.location.href = '/leaderboard'
-              }}
-            />
-          </CCol>
-          <CCol lg={3} className="mb-0">
             <DailyChest
               practicesThisWeek={practicesThisWeek}
               practicesForChest={5}
@@ -472,7 +403,7 @@ const Dashboard = () => {
               <div className="dash-card dash-card-compact">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <span className="fw-semibold d-flex align-items-center gap-2">
-                    <CIcon icon={cilTrophy} className="text-warning" size="lg" />
+                    <CIcon icon={cilGift} className="text-warning" size="lg" />
                     Logros ({practice.badges.length})
                   </span>
                 </div>

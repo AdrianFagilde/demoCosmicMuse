@@ -104,10 +104,10 @@ const JourneyPath = ({ courses, myProgressRows, onViewCourse, onViewAll }) => {
             className={`journey-node ${node.type}`}
             style={{
               '--node-color': node.color,
+              cursor: node.onClick ? 'pointer' : 'default',
             }}
             role="listitem"
             onClick={node.onClick}
-            style={{ cursor: node.onClick ? 'pointer' : 'default' }}
           >
             <div
               className="journey-node-icon"
