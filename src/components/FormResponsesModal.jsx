@@ -100,7 +100,10 @@ const SubmissionDetail = ({ questions, submission }) => {
         )
       })}
       <small className="text-medium-emphasis">
-        Última actualización: {new Date(submission.updated_at).toLocaleString()}
+        Última actualización:{' '}
+        {submission.updated_at && !isNaN(new Date(submission.updated_at).getTime())
+          ? new Date(submission.updated_at).toLocaleString()
+          : 'Fecha inválida'}
       </small>
     </div>
   )

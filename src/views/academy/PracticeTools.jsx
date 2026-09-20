@@ -1299,7 +1299,9 @@ const PracticeTools = () => {
                         <div className="fw-semibold small">{session.notes || 'Práctica libre'}</div>
                         <div className="text-medium-emphasis small">
                           {session.task_id ? 'Tarea asociada' : 'Práctica libre'}•{' '}
-                          {new Date(session.started_at).toLocaleString('es-ES')}
+                          {session.started_at && !isNaN(new Date(session.started_at).getTime())
+                            ? new Date(session.started_at).toLocaleString('es-ES')
+                            : 'Fecha inválida'}
                           {session.duration_minutes && ` • ${session.duration_minutes} min`}
                           {session.metronome_used && ` • Metrónomo: ${session.metronome_bpm} BPM`}
                         </div>

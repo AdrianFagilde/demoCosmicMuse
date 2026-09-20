@@ -128,6 +128,12 @@ const getNextLessonCountdown = (nextLesson) => {
   if (!nextLesson) return { text: 'Sin programar', isOverdue: false }
   const now = new Date()
   const lesson = new Date(nextLesson)
+
+  // Check if date is valid
+  if (isNaN(lesson.getTime())) {
+    return { text: 'Fecha inválida', isOverdue: false }
+  }
+
   const diff = lesson - now
 
   if (diff < 0) return { text: 'Pasada', isOverdue: true }
@@ -351,7 +357,7 @@ const Dashboard = () => {
                 >
                   {nextLessonCountdown.text}
                 </div>
-                {profile?.next_lesson && (
+                {profile?.next_lesson && !isNaN(new Date(profile.next_lesson).getTime()) && (
                   <div className="text-medium-emphasis small mt-1">
                     {new Date(profile.next_lesson).toLocaleString('es-ES', {
                       weekday: 'long',

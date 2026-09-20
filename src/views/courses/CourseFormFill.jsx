@@ -316,8 +316,8 @@ const CourseFormFill = () => {
           {form.due_date && (
             <small className="text-medium-emphasis">Fecha límite: {form.due_date}</small>
           )}
-          {savedAt && (
-            <CAlert color="info" className="py-2 mt-2 mb-0 small">
+          {savedAt && !isNaN(new Date(savedAt).getTime()) && (
+            <CAlert color="info" className="py-2 mt-2 small">
               Ya enviaste este cuestionario ({new Date(savedAt).toLocaleString()}). Puedes modificar
               tus respuestas y volver a enviarlo.
             </CAlert>

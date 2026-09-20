@@ -184,7 +184,7 @@ const Students = () => {
                   </CTableDataCell>
                   <CTableDataCell>{student.attendance}%</CTableDataCell>
                   <CTableDataCell>
-                    {student.next_lesson
+                    {student.next_lesson && !isNaN(new Date(student.next_lesson).getTime())
                       ? new Date(student.next_lesson).toLocaleString('es-ES', {
                           dateStyle: 'short',
                           timeStyle: 'short',
