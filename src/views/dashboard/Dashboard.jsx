@@ -370,8 +370,11 @@ const Dashboard = () => {
                   <div className="text-medium-emphasis small mt-1">
                     {new Date(profile.next_lesson).toLocaleString('es-ES', {
                       weekday: 'long',
-                      dateStyle: 'short',
-                      timeStyle: 'short',
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
                     })}
                   </div>
                 )}
