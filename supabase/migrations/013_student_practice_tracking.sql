@@ -211,7 +211,7 @@ BEGIN
   IF gamif IS NULL THEN
     INSERT INTO public.student_gamification (student_id, xp, level, total_practice_minutes)
     VALUES (NEW.student_id, 0, 1, 0);
-    gamif := ROW(NEW.student_id, 0, 1, 0, 0, 0)::public.student_gamification;
+    gamif := ROW(NEW.student_id, 0, 1, 0, 0, 0, now())::public.student_gamification;
   END IF;
   
   -- Calcular XP ganado
@@ -244,8 +244,14 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS trg_update_gamification ON public.practice_sessions;
+DROP TRIGGER IF EXISTS trg_update_gamification_ended ON public.practice_sessions;
 CREATE TRIGGER trg_update_gamification
-  AFTER INSERT OR UPDATE ON public.practice_sessions
+  AFTER INSERT ON public.practice_sessions
+  FOR EACH ROW
+  WHEN (NEW.ended_at IS NOT NULL)
+  EXECUTE FUNCTION public.update_student_gamification();
+CREATE TRIGGER trg_update_gamification_ended
+  AFTER UPDATE ON public.practice_sessions
   FOR EACH ROW
   WHEN (NEW.ended_at IS NOT NULL AND OLD.ended_at IS NULL)
   EXECUTE FUNCTION public.update_student_gamification();
