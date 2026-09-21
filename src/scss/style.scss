@@ -137,8 +137,20 @@ h6,
   letter-spacing: 0.01em;
 }
 
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.body > .container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
 .student-dashboard {
-  min-height: calc(100vh - 10rem);
+  flex: 1 1 auto;
 }
 
 .student-dashboard > .row {
