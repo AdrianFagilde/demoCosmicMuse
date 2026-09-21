@@ -42,9 +42,9 @@ $cosmic-magenta: #b42d75;
   --gradient-primary: linear-gradient(135deg, #{$cosmic-purple}, #{$cosmic-magenta});
   --gradient-accent: linear-gradient(135deg, #{$cosmic-cyan}, #{$cosmic-navy});
 
-  // Tipografía terminal-táctico
-  --font-display: 'Chakra Petch', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'Share Tech Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+  // Tipografía artística: serif de título + manuscrita de acento
+  --font-display: 'Cinzel', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-script: 'Caveat', 'Dancing Script', cursive;
 
   // Uniforme primario: sidebar + header
   --uniform-primary-bg: linear-gradient(180deg, #{$cosmic-navy} 0%, #{$cosmic-purple} 100%);
@@ -58,7 +58,7 @@ body {
 }
 
 // =============================================
-// Terminal Táctico - Typography
+// Artistic - Typography
 // =============================================
 
 h1,
@@ -78,7 +78,7 @@ h6,
 }
 
 .btn {
-  font-family: var(--font-display);
+  letter-spacing: 0.03em;
 }
 
 .sidebar-nav-title,
@@ -88,20 +88,34 @@ h6,
   font-family: var(--font-display);
 }
 
-.kpi-label,
-.kpi-subtext,
+.sidebar-nav-title,
+.header .nav-link {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .card-header,
 .badge,
-.table thead th,
-.sidebar-user-role,
-.toast small {
-  font-family: var(--font-mono);
+.table thead th {
+  font-family: var(--font-display);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+}
+
+.kpi-label,
+.kpi-subtext,
+.sidebar-user-info > div:first-child,
+.sidebar-user-role,
+.welcome-banner .welcome-text,
+.toast small,
+.card.text-white.bg-primary .card-body p {
+  font-family: var(--font-script);
+  text-transform: none;
+  letter-spacing: 0.02em;
 }
 
 // =============================================
-// HUD - esquinados sutiles (misma paleta)
+// Artistic - Ornamental fine frames (same palette)
 // =============================================
 
 .card:not(.welcome-banner):not(.streak-card):not(.xp-card):not(.practice-card):not(.tasks-card):not(.next-lesson-card),
@@ -112,31 +126,69 @@ h6,
   &::after {
     content: '';
     position: absolute;
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     pointer-events: none;
-    border: 2px solid rgba($cosmic-purple, 0.7);
+    border: 0 solid rgba($cosmic-purple, 0.65);
   }
 
   &::before {
-    top: 0;
-    left: 0;
-    border-right: 0;
-    border-bottom: 0;
+    top: -1px;
+    left: -1px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+    border-top-left-radius: 2px;
+    background: radial-gradient(
+      circle at 2px 2px,
+      rgba($cosmic-purple, 0.8) 0 1.5px,
+      rgba($cosmic-purple, 0.35) 1.5px 2.5px,
+      transparent 3px
+    );
   }
 
   &::after {
-    bottom: 0;
-    right: 0;
-    border-left: 0;
-    border-top: 0;
+    bottom: -1px;
+    right: -1px;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+    border-bottom-right-radius: 2px;
+    background: radial-gradient(
+      circle at 16px 16px,
+      rgba($cosmic-purple, 0.8) 0 1.5px,
+      rgba($cosmic-purple, 0.35) 1.5px 2.5px,
+      transparent 3px
+    );
   }
+}
+
+.modal-content {
+  box-shadow:
+    var(--cui-modal-box-shadow, 0 0.25rem 0.75rem rgba(0, 0, 0, 0.5)),
+    inset 0 0 0 1px rgba($cosmic-purple, 0.18);
 }
 
 .kpi-card {
   &::before,
   &::after {
     border-color: rgba(255, 255, 255, 0.7);
+  }
+
+  &::before {
+    background: radial-gradient(
+      circle at 2px 2px,
+      rgba(255, 255, 255, 0.85) 0 1.5px,
+      rgba(255, 255, 255, 0.35) 1.5px 2.5px,
+      transparent 3px
+    );
+  }
+
+  &::after {
+    background: radial-gradient(
+      circle at 16px 16px,
+      rgba(255, 255, 255, 0.85) 0 1.5px,
+      rgba(255, 255, 255, 0.35) 1.5px 2.5px,
+      transparent 3px
+    );
   }
 }
 
@@ -201,7 +253,9 @@ h6,
 // =============================================
 
 .card {
-  box-shadow: 0 0.125rem 0.375rem rgba($cosmic-navy, 0.08);
+  box-shadow:
+    0 0.125rem 0.375rem rgba($cosmic-navy, 0.08),
+    inset 0 0 0 1px rgba($cosmic-purple, 0.16);
 }
 
 .wrapper {
@@ -259,7 +313,9 @@ h6,
 .kpi-card {
   border: none;
   color: #ffffff;
-  box-shadow: 0 0.5rem 1rem rgba($cosmic-navy, 0.18);
+  box-shadow:
+    0 0.5rem 1rem rgba($cosmic-navy, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 
   .kpi-label {
     color: rgba(255, 255, 255, 0.8);
