@@ -41,6 +41,24 @@
   padding: 4px 2px 10px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.journey-path::before {
+  content: '';
+  position: absolute;
+  top: 26px;
+  left: 0;
+  right: 0;
+  height: 11px;
+  background: repeating-linear-gradient(to bottom, var(--cui-border-color) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.journey-path .journey-node {
+  position: relative;
+  z-index: 1;
 }
 
 .journey-path::-webkit-scrollbar {
@@ -60,23 +78,6 @@
   flex: 0 0 auto;
   width: 72px;
   scroll-snap-align: start;
-  position: relative;
-}
-
-.journey-node:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 30px;
-  right: -6px;
-  width: 12px;
-  height: 3px;
-  background: var(--cui-border-color);
-  border-radius: 2px;
-  z-index: 0;
-}
-
-.journey-node.completed::after {
-  background: linear-gradient(90deg, var(--node-color) 50%, var(--cui-border-color) 50%);
 }
 
 .journey-node-icon {
@@ -153,6 +154,17 @@
   color: white;
   border-radius: 16px;
   padding: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.daily-goal-note {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  z-index: 0;
+  opacity: 0.22;
+  pointer-events: none;
 }
 
 .daily-goal-ring {

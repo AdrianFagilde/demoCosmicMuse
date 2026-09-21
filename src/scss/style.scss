@@ -241,6 +241,167 @@ h6,
 }
 
 // =============================================
+// Artistic - Music motifs
+// =============================================
+
+.equalizer {
+  --eq-size: 16px;
+  --eq-color: var(--cui-primary);
+  display: inline-flex;
+  align-items: flex-end;
+  gap: calc(var(--eq-size) * 0.14);
+  height: var(--eq-size);
+
+  span {
+    width: calc(var(--eq-size) * 0.16);
+    height: 35%;
+    background: var(--eq-color);
+    border-radius: 999px;
+    animation: eq-bounce 1.1s ease-in-out infinite;
+  }
+
+  span:nth-child(2n) {
+    animation-delay: 0.18s;
+  }
+
+  span:nth-child(3n) {
+    animation-delay: 0.36s;
+  }
+}
+
+@keyframes eq-bounce {
+  0%,
+  100% {
+    height: 30%;
+  }
+
+  50% {
+    height: 100%;
+  }
+}
+
+.staff-divider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--cui-text-muted);
+}
+
+.staff-divider-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.staff-divider-lines {
+  flex: 1;
+  height: 11px;
+  background: repeating-linear-gradient(to bottom, currentColor 0 1px, transparent 1px 3px);
+  opacity: 0.45;
+}
+
+.staff-divider-notes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  color: var(--cui-primary);
+}
+
+.staff-divider .staff-note {
+  transform: translateY(2px);
+}
+
+.staff-divider .staff-note--lead {
+  transform: translateY(-6px);
+}
+
+.staff-caption {
+  font-family: var(--font-script);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--cui-text-muted);
+}
+
+.header .staff-divider {
+  padding-top: 6px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.header .staff-divider-notes {
+  color: #ffffff;
+}
+
+.music-watermark {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.treble-watermark {
+  opacity: 0.12;
+}
+
+.vinyl-watermark {
+  opacity: 0.16;
+}
+
+.login-side-panel {
+  position: relative;
+  overflow: hidden;
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .treble-watermark {
+    position: absolute;
+    right: -26px;
+    bottom: -36px;
+    z-index: 0;
+  }
+
+  .vinyl-watermark {
+    position: absolute;
+    top: -70px;
+    left: -70px;
+    z-index: 0;
+  }
+}
+
+.welcome-banner {
+  .welcome-note {
+    position: absolute;
+    right: 26px;
+    bottom: -16px;
+    z-index: 0;
+    opacity: 0.16;
+  }
+
+  .welcome-title,
+  .welcome-text {
+    position: relative;
+    z-index: 1;
+  }
+
+  .staff-divider {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .staff-divider-notes {
+    color: #ffffff;
+  }
+
+  .staff-caption {
+    color: rgba(255, 255, 255, 0.78);
+  }
+}
+
+// =============================================
 // Uniforme Primario - Sidebar y Header
 // =============================================
 

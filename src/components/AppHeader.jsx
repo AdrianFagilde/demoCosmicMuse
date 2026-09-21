@@ -19,6 +19,7 @@ import { cilContrast, cilList, cilMenu, cilMoon, cilSun } from '@coreui/icons'
 import { AppBreadcrumb } from './index'
 import { AppHeaderDropdown } from './header/index'
 import NotificationBell from './header/NotificationBell'
+import { StaffDivider } from './MusicDecor'
 import { useApp } from '../context/AppContext'
 
 const AppHeader = () => {
@@ -112,6 +113,7 @@ const AppHeader = () => {
       <CContainer className="px-4" fluid>
         <AppBreadcrumb />
       </CContainer>
+      <StaffDivider subtle className="mb-0" />
     </CHeader>
   )
 }

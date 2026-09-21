@@ -2,6 +2,7 @@ import React from 'react'
 import CIcon from '@coreui/icons-react'
 import { cilSpeedometer, cilCheck, cilFire } from '@coreui/icons'
 import ProgressRing from './ProgressRing'
+import { MusicNote } from '../MusicDecor'
 
 const DAILY_GOAL_MINUTES = 30
 
@@ -12,6 +13,7 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
 
   return (
     <div className="daily-goal-card dash-card" style={{ '--daily-color': '#6366f1' }}>
+      <MusicNote className="daily-goal-note" size={34} color="#fff" />
       <div className="d-flex align-items-center justify-content-between mb-3">
         <div className="d-flex align-items-center gap-3">
           <div

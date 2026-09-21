@@ -18,6 +18,7 @@ import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 
 import { useAuth } from '../../../context/AuthContext'
+import { Equalizer, StaffDivider, TrebleClef, Vinyl } from '../../../components/MusicDecor'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -52,6 +53,7 @@ const Login = () => {
                   <CForm onSubmit={handleSubmit}>
                     <h1>Login</h1>
                     <p className="text-body-secondary">Bienvenido a Cosmic Muse</p>
+                    <StaffDivider caption="empieza a componer" className="mt-2 mb-4" />
                     {error && <CAlert color="danger">{error}</CAlert>}
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
@@ -87,15 +89,26 @@ const Login = () => {
                       </CCol>
                       <CCol xs={6} className="text-end">
                         <CButton color="primary" className="px-4" type="submit" disabled={loading}>
-                          {loading ? 'Entrando...' : 'Entrar'}
+                          {loading ? (
+                            <span className="d-inline-flex align-items-center gap-2">
+                              <Equalizer color="#fff" size={14} /> Ingresando…
+                            </span>
+                          ) : (
+                            'Entrar'
+                          )}
                         </CButton>
                       </CCol>
                     </CRow>
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
+              <CCard
+                className="login-side-panel text-white bg-primary py-5"
+                style={{ width: '44%' }}
+              >
                 <CCardBody className="text-center">
+                  <TrebleClef size={210} color="#ffffff" className="treble-watermark" />
+                  <Vinyl size={180} color="#ffffff" className="vinyl-watermark" />
                   <div>
                     <h2>Cosmic Muse</h2>
                     <p className="text-start">

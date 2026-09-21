@@ -1,9 +1,10 @@
 import React, { Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { CButton, CContainer, CSpinner } from '@coreui/react'
+import { CButton, CContainer } from '@coreui/react'
 
 import { useAuth } from '../context/AuthContext'
 import { routes } from '../routes'
+import { Equalizer } from './MusicDecor'
 
 const AppContent = () => {
   const { profile, loading, isAuthenticated, authError, retry } = useAuth()
@@ -24,14 +25,14 @@ const AppContent = () => {
   if (loading || (isAuthenticated && !profile)) {
     return (
       <CContainer className="px-4 d-flex justify-content-center pt-4" lg>
-        <CSpinner color="primary" variant="grow" />
+        <Equalizer size={26} />
       </CContainer>
     )
   }
 
   return (
     <CContainer className="px-4" lg>
-      <Suspense fallback={<CSpinner color="primary" />}>
+      <Suspense fallback={<Equalizer size={26} className="d-block mx-auto" />}>
         <Routes>
           {routes.map((route, idx) => {
             if (!route.element) {

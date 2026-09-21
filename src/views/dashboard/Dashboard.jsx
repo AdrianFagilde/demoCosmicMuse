@@ -39,6 +39,7 @@ import ActionCard from '../../components/dashboard/ActionCard'
 import DailyGoalCard from '../../components/dashboard/DailyGoalCard'
 import WeeklyDots from '../../components/dashboard/WeeklyDots'
 import { getInstrumentColor } from '../../utils/colors'
+import { Equalizer, MusicNote, StaffDivider } from '../../components/MusicDecor'
 
 // Import compact styles
 import '../../components/dashboard/dashboard-styles.css'
@@ -232,8 +233,11 @@ const Dashboard = () => {
 
         {/* TOP BAR - Compact greeting */}
         <div className="dash-topbar px-2">
-          <div className="dash-greeting">
-            ¡Hola, {profile?.full_name?.split(' ')[0] || 'estudiante'}! 👋
+          <div className="d-flex align-items-center gap-3">
+            <div className="dash-greeting">
+              ¡Hola, {profile?.full_name?.split(' ')[0] || 'estudiante'}! 👋
+            </div>
+            <Equalizer />
           </div>
         </div>
 
@@ -445,6 +449,8 @@ const Dashboard = () => {
           <p className="welcome-text">
             Administra estudiantes, horarios y performance de la academia desde un solo lugar.
           </p>
+          <MusicNote className="welcome-note" size={72} color="#fff" />
+          <StaffDivider caption="una nota a la vez" className="mt-3" />
         </CCardBody>
       </CCard>
 
