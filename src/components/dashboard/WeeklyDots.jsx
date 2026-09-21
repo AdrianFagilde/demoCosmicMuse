@@ -65,7 +65,7 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
             <div
               className={`weekly-dot-bar ${d.isToday ? 'today' : ''} ${d.minutes > 0 ? 'active' : ''}`}
               style={{
-                height: `${Math.max(8, (d.minutes / maxMinutes) * 55)}px`,
+                height: `${Math.max(6, (d.minutes / maxMinutes) * 40)}px`,
                 background: d.isToday
                   ? 'var(--cui-primary)'
                   : d.minutes > 0

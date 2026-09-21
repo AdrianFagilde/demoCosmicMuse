@@ -230,28 +230,23 @@ const Dashboard = () => {
       <div className="student-dashboard d-flex flex-column">
         <div data-build-version={buildHash} style={{ display: 'none' }} />
 
-        {/* TOP BAR - Compact greeting + stats */}
+        {/* TOP BAR - Compact greeting */}
         <div className="dash-topbar px-2">
           <div className="dash-greeting">
             ¡Hola, {profile?.full_name?.split(' ')[0] || 'estudiante'}! 👋
           </div>
-          <div className="dash-stats-inline">
-            <div className="dash-stat-mini">
-              <CIcon icon={cilFire} className="icon text-danger" /> <span>{streakDays}</span>
-            </div>
-          </div>
         </div>
 
-        {/* DAILY GOAL CARD - Hero */}
-        <DailyGoalCard
-          practiceMinutesToday={practiceToday}
-          streak={streakDays}
-          onStartPractice={() => practice.startPractice({})}
-        />
-
-        {/* MAIN ROW: Journey Path + Urgent Actions */}
-        <CRow className="mb-4 g-3">
-          <CCol lg={7} className="mb-0">
+        {/* ROW 1: Daily Goal + Journey Path */}
+        <CRow className="mb-3 g-3">
+          <CCol lg={6} className="mb-0">
+            <DailyGoalCard
+              practiceMinutesToday={practiceToday}
+              streak={streakDays}
+              onStartPractice={() => practice.startPractice({})}
+            />
+          </CCol>
+          <CCol lg={6} className="mb-0">
             <JourneyPath
               courses={enrolledCourses}
               myProgressRows={myProgressRows}
@@ -263,7 +258,11 @@ const Dashboard = () => {
               }}
             />
           </CCol>
-          <CCol lg={5} className="mb-0">
+        </CRow>
+
+        {/* ROW 2: Urgent actions + Weekly */}
+        <CRow className="mb-3 g-3">
+          <CCol lg={6} className="mb-0">
             <div className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <span className="fw-semibold d-flex align-items-center gap-2">
@@ -294,10 +293,10 @@ const Dashboard = () => {
                     />
                   ))
                 ) : (
-                  <div className="text-center text-medium-emphasis py-4">
-                    <CIcon icon={cilMusicNote} size="xl" className="mb-2" />
+                  <div className="text-center text-medium-emphasis py-3">
+                    <CIcon icon={cilMusicNote} size="lg" className="mb-2" />
                     <div className="fw-semibold mb-1">¡Todo al día!</div>
-                    <div className="small mb-3">No tienes tareas urgentes</div>
+                    <div className="small mb-2">No tienes tareas urgentes</div>
                     <button
                       className="btn btn-primary btn-sm"
                       onClick={() => practice.startPractice({})}
@@ -310,68 +309,97 @@ const Dashboard = () => {
               </div>
             </div>
           </CCol>
-        </CRow>
-
-        {/* BOTTOM ROW: Weekly + Próxima clase */}
-        <CRow className="mb-4 g-3 flex-grow-1">
-          <CCol lg={hasNextLesson ? 8 : 12} className="mb-0">
+          <CCol lg={6} className="mb-0">
             <WeeklyDots
               weeklySummary={practice.weeklySummary}
               instrumentColor={instrumentColor}
               onStartPractice={() => practice.startPractice({})}
             />
           </CCol>
-          {hasNextLesson && (
-            <CCol lg={4} className="mb-0">
-              <div
-                className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center"
-                style={{
-                  background: 'linear-gradient(135deg, var(--cui-primary) 0%, #5c6bc0 100%)',
-                  color: 'white',
-                }}
-              >
-                <div className="d-flex align-items-center gap-3">
-                  <div
-                    className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                    style={{ width: 44, height: 44, background: 'rgba(255,255,255,0.2)' }}
-                  >
-                    <CIcon icon={cilCalendar} size="xl" color="white" />
-                  </div>
-                  <div className="flex-grow-1">
-                    <div className="fw-bold">Próxima clase</div>
-                    <div className="text-white-50 small">
-                      {new Date(profile.next_lesson).toLocaleString('es-ES', {
-                        weekday: 'long',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </div>
-                    {profile?.teacher && (
-                      <div className="text-white-50 small">Con {profile.teacher}</div>
-                    )}
-                  </div>
+        </CRow>
+
+        {/* ROW 3: Próxima clase + Racha */}
+        <CRow className="g-3 flex-grow-1">
+          <CCol lg={6} className="mb-0">
+            <div
+              className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center"
+              style={{
+                background: 'linear-gradient(135deg, var(--cui-primary) 0%, #5c6bc0 100%)',
+                color: 'white',
+              }}
+            >
+              <div className="d-flex align-items-center gap-3">
+                <div
+                  className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                  style={{ width: 44, height: 44, background: 'rgba(255,255,255,0.2)' }}
+                >
+                  <CIcon icon={cilCalendar} size="xl" color="white" />
                 </div>
-                <div className="d-flex align-items-center justify-content-between mt-3">
-                  <span
-                    className={`fw-bold ${nextLessonCountdown.isOverdue ? 'text-warning' : ''}`}
-                  >
-                    {nextLessonCountdown.text}
-                  </span>
-                  <button
-                    className="btn btn-outline-light btn-sm"
-                    onClick={() => {
-                      window.location.href = '/lessons'
-                    }}
-                    type="button"
-                  >
-                    Ver detalles
-                  </button>
+                <div className="flex-grow-1">
+                  {hasNextLesson ? (
+                    <>
+                      <div className="fw-bold">Próxima clase</div>
+                      <div className="text-white-50 small">
+                        {new Date(profile.next_lesson).toLocaleString('es-ES', {
+                          weekday: 'long',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                      {profile?.teacher && (
+                        <div className="text-white-50 small">Con {profile.teacher}</div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="fw-bold">Próxima clase</div>
+                      <div className="text-white-50 small">Aún no tenés clase programada</div>
+                    </>
+                  )}
                 </div>
               </div>
-            </CCol>
-          )}
+              <div className="d-flex align-items-center justify-content-between mt-3">
+                <span className={`fw-bold ${nextLessonCountdown.isOverdue ? 'text-warning' : ''}`}>
+                  {nextLessonCountdown.text}
+                </span>
+                <button
+                  className="btn btn-outline-light btn-sm"
+                  onClick={() => {
+                    window.location.href = '/lessons'
+                  }}
+                  type="button"
+                >
+                  Ver detalles
+                </button>
+              </div>
+            </div>
+          </CCol>
+          <CCol lg={6} className="mb-0">
+            <div className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="fw-semibold d-flex align-items-center gap-2">
+                  <CIcon icon={cilFire} className="text-danger" size="lg" />
+                  Racha
+                </span>
+                <div className="text-medium-emphasis small">{streakDays} días seguidos</div>
+              </div>
+              <div className="d-flex align-items-center gap-3">
+                <div className="action-icon" style={{ '--action-color': '#ef4444' }}>
+                  <CIcon icon={cilFire} size="xl" />
+                </div>
+                <div>
+                  <div className="fw-bold" style={{ fontSize: '1.25rem' }}>
+                    {streakDays} {streakDays === 1 ? 'día' : 'días'}
+                  </div>
+                  <div className="text-medium-emphasis small">
+                    Practicá a diario y mantené tu racha
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CCol>
         </CRow>
       </div>
     )

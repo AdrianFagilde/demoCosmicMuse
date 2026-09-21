@@ -19,11 +19,11 @@
 }
 
 .dash-card-compact {
-  padding: 12px;
+  padding: 10px;
 }
 
 .dash-card-compact .card-body {
-  padding: 12px;
+  padding: 10px;
 }
 
 /* Progress ring integration */
@@ -36,9 +36,9 @@
 /* Journey path styles */
 .journey-path {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding: 8px 4px 16px;
+  padding: 4px 2px 10px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 }
@@ -58,7 +58,7 @@
 
 .journey-node {
   flex: 0 0 auto;
-  width: 84px;
+  width: 72px;
   scroll-snap-align: start;
   position: relative;
 }
@@ -66,9 +66,9 @@
 .journey-node:not(:last-child)::after {
   content: '';
   position: absolute;
-  top: 36px;
-  right: -12px;
-  width: 24px;
+  top: 30px;
+  right: -6px;
+  width: 12px;
   height: 3px;
   background: var(--cui-border-color);
   border-radius: 2px;
@@ -80,13 +80,13 @@
 }
 
 .journey-node-icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 8px;
+  margin: 0 auto 6px;
   position: relative;
   z-index: 1;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -121,7 +121,7 @@
 }
 
 .journey-node-label {
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   font-weight: 600;
   text-align: center;
   color: var(--cui-text);
@@ -141,7 +141,7 @@
 }
 
 .journey-node-sub {
-  font-size: 0.6rem;
+  font-size: 0.56rem;
   text-align: center;
   color: var(--cui-text-muted);
   margin-top: 2px;
@@ -149,14 +149,10 @@
 
 /* Daily goal ring */
 .daily-goal-card {
-  background: linear-gradient(
-    135deg,
-    var(--daily-color) 0%,
-    color-mix(in srgb, var(--daily-color) 80%, black) 100%
-  );
+  background: linear-gradient(135deg, var(--daily-color) 0%, color-mix(in srgb, var(--daily-color) 80%, black) 100%);
   color: white;
   border-radius: 16px;
-  padding: 16px;
+  padding: 12px;
 }
 
 .daily-goal-ring {
@@ -253,13 +249,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0 12px;
+  padding: 2px 0 8px;
   gap: 12px;
   flex-wrap: wrap;
 }
 
 .dash-greeting {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--cui-text);
 }
@@ -290,7 +286,7 @@
   display: flex;
   gap: 6px;
   align-items: flex-end;
-  height: 60px;
+  height: 44px;
   justify-content: center;
 }
 

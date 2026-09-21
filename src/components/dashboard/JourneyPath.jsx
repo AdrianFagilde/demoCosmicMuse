@@ -26,7 +26,14 @@ const NODE_ICONS = {
 
 const JourneyPath = ({ courses, myProgressRows, onViewCourse, onViewAll }) => {
   const pathNodes = useMemo(() => {
-    if (!courses?.length) return []
+    if (!courses?.length)
+      return [
+        {
+          type: 'empty',
+          label: 'Sin cursos',
+          sub: 'Tu profesor te inscribirá',
+        },
+      ]
 
     const enrolled = courses.filter((c) => c.course_enrollments?.some((e) => e.student_id))
 

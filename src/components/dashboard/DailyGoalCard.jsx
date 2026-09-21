@@ -11,28 +11,28 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
   const isComplete = progress >= 100
 
   return (
-    <div className="daily-goal-card dash-card mb-4" style={{ '--daily-color': '#6366f1' }}>
+    <div className="daily-goal-card dash-card" style={{ '--daily-color': '#6366f1' }}>
       <div className="d-flex align-items-center justify-content-between mb-3">
         <div className="d-flex align-items-center gap-3">
           <div
             className="d-flex align-items-center justify-content-center rounded-circle"
             style={{
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
               background: 'rgba(255,255,255,0.2)',
             }}
           >
-            <CIcon icon={cilSpeedometer} size="xl" color="white" />
+            <CIcon icon={cilSpeedometer} size="lg" color="white" />
           </div>
           <div>
-            <div className="fw-bold" style={{ fontSize: '1.1rem' }}>
+            <div className="fw-bold" style={{ fontSize: '1rem' }}>
               Meta diaria
             </div>
             <div className="text-white-50 small">{DAILY_GOAL_MINUTES} min de práctica</div>
           </div>
         </div>
         <div className="text-end">
-          <div className="fw-bold" style={{ fontSize: '1.5rem' }}>
+          <div className="fw-bold" style={{ fontSize: '1.15rem' }}>
             {isComplete ? '✓ Completada' : `${remaining} min`}
           </div>
           <div className="text-white-50 small">
@@ -44,8 +44,8 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
       <div className="d-flex align-items-center justify-content-between">
         <ProgressRing
           progress={progress}
-          size={100}
-          strokeWidth={8}
+          size={76}
+          strokeWidth={6}
           color="#fff"
           backgroundColor="rgba(255,255,255,0.2)"
           showValue={true}
@@ -54,13 +54,13 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
           className="flex-shrink-0"
         />
 
-        <div className="d-flex flex-column gap-3 ms-4" style={{ minWidth: 140 }}>
+        <div className="d-flex flex-column gap-3 ms-3" style={{ minWidth: 120 }}>
           <button
             className={`btn ${isComplete ? 'btn-outline-light' : 'btn-light'} w-100`}
             onClick={onStartPractice}
             disabled={isComplete}
             type="button"
-            style={{ padding: '10px 16px', fontWeight: 600 }}
+            style={{ padding: '8px 12px', fontWeight: 600 }}
           >
             <CIcon icon={cilFire} className="me-2" />
             {isComplete ? '¡Meta lograda!' : 'Practicar ahora'}
