@@ -401,6 +401,28 @@ h6,
   }
 }
 
+.music-modal-clef {
+  position: absolute;
+  right: 10px;
+  bottom: -34px;
+  z-index: 0;
+  opacity: 0.1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.modal-content {
+  .treble-watermark,
+  .vinyl-watermark {
+    opacity: 0.1;
+    pointer-events: none;
+  }
+
+  .staff-caption {
+    color: var(--cui-primary);
+  }
+}
+
 // =============================================
 // Uniforme Primario - Sidebar y Header
 // =============================================

@@ -16,13 +16,23 @@ import {
   CRow,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilEnvelopeClosed, cilEducation, cilPhone } from '@coreui/icons'
+import {
+  cilLockLocked,
+  cilUser,
+  cilEnvelopeClosed,
+  cilEducation,
+  cilPhone,
+  cilStar,
+} from '@coreui/icons'
 import supabase from '../../../lib/supabase'
 import { INSTRUMENT_OPTIONS, normalizeUsername } from '../../../utils/students'
+import { StaffDivider, TrebleClef, Vinyl } from '../../../components/MusicDecor'
 
 const Register = () => {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [level, setLevel] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [instrument, setInstrument] = useState('')
@@ -83,6 +93,12 @@ const Register = () => {
       return
     }
 
+    if (!phone) {
+      setError('El teléfono es obligatorio')
+      setLoading(false)
+      return
+    }
+
     const username = normalizeUsername(fullName)
 
     const metaData = {
@@ -91,6 +107,8 @@ const Register = () => {
       role: 'student',
       instrument: instrument || undefined,
       birth_date: birthDate || undefined,
+      phone: phone || undefined,
+      level: level || undefined,
     }
 
     if (isMinor) {
@@ -127,6 +145,8 @@ const Register = () => {
         role: 'student',
         instrument: instrument || null,
         birth_date: birthDate || null,
+        phone: phone || null,
+        level: level || null,
         guardian_name: isMinor ? `${guardianFirstName} ${guardianLastName}` : null,
         guardian_phone: isMinor ? guardianPhone : null,
       }
@@ -137,6 +157,8 @@ const Register = () => {
         console.error('[Register] Upsert error:', upsertError.message)
       }
     }
+
+    sessionStorage.setItem(`cosmic_muse_welcome_pending_${email}`, '1')
 
     if (data.session) {
       navigate('/dashboard')
@@ -201,6 +223,19 @@ const Register = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
+                        <CIcon icon={cilPhone} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="tel"
+                        placeholder="Teléfono"
+                        autoComplete="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                      />
+                    </CInputGroup>
+                    <CInputGroup className="mb-3">
+                      <CInputGroupText>
                         <CIcon icon={cilLockLocked} />
                       </CInputGroupText>
                       <CFormInput
@@ -241,6 +276,17 @@ const Register = () => {
                             {option}
                           </option>
                         ))}
+                      </CFormSelect>
+                    </CInputGroup>
+                    <CInputGroup className="mb-4">
+                      <CInputGroupText>
+                        <CIcon icon={cilStar} />
+                      </CInputGroupText>
+                      <CFormSelect value={level} onChange={(e) => setLevel(e.target.value)}>
+                        <option value="">Nivel (opcional)</option>
+                        <option value="Principiante">Principiante</option>
+                        <option value="Intermedio">Intermedio</option>
+                        <option value="Avanzado">Avanzado</option>
                       </CFormSelect>
                     </CInputGroup>
 
@@ -306,9 +352,15 @@ const Register = () => {
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
+              <CCard
+                className="text-white bg-primary py-5 login-side-panel"
+                style={{ width: '44%' }}
+              >
                 <CCardBody className="text-center">
-                  <div>
+                  <TrebleClef size={210} color="#ffffff" className="treble-watermark" />
+                  <Vinyl size={180} color="#ffffff" className="vinyl-watermark" />
+                  <StaffDivider caption="tu música empieza acá" className="mt-2 mb-4" />
+                  <div className="position-relative">
                     <h2>Por que registrarte?</h2>
                     <p className="text-start">
                       Accede a tus tareas y lecciones

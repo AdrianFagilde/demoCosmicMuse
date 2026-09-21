@@ -22,6 +22,7 @@
 import React from 'react'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
 import NotificationToasts from '../components/NotificationToasts'
+import WelcomeModal from '../components/WelcomeModal'
 
 /**
  * DefaultLayout functional component
@@ -48,6 +49,7 @@ const DefaultLayout = () => {
         <AppFooter />
       </div>
       <NotificationToasts />
+      <WelcomeModal />
     </div>
   )
 }
