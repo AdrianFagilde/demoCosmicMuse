@@ -1,5 +1,12 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+
+import '@fontsource/chakra-petch/latin-400.css'
+import '@fontsource/chakra-petch/latin-500.css'
+import '@fontsource/chakra-petch/latin-600.css'
+import '@fontsource/chakra-petch/latin-700.css'
+import '@fontsource/share-tech-mono/latin-400.css'
+
 import { AppProvider } from './context/AppContext'
 
 import App from './App'

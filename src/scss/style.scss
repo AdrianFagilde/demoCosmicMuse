@@ -42,6 +42,10 @@ $cosmic-magenta: #b42d75;
   --gradient-primary: linear-gradient(135deg, #{$cosmic-purple}, #{$cosmic-magenta});
   --gradient-accent: linear-gradient(135deg, #{$cosmic-cyan}, #{$cosmic-navy});
 
+  // Tipografía terminal-táctico
+  --font-display: 'Chakra Petch', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Share Tech Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+
   // Uniforme primario: sidebar + header
   --uniform-primary-bg: linear-gradient(180deg, #{$cosmic-navy} 0%, #{$cosmic-purple} 100%);
   --uniform-primary-header-bg: #{$cosmic-purple};
@@ -51,6 +55,89 @@ $cosmic-magenta: #b42d75;
 
 body {
   background-color: var(--uniform-secondary-bg);
+}
+
+// =============================================
+// Terminal Táctico - Typography
+// =============================================
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.display-1,
+.display-2,
+.display-3,
+.display-4,
+.display-5,
+.display-6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.btn {
+  font-family: var(--font-display);
+}
+
+.sidebar-nav-title,
+.sidebar-nav-link,
+.breadcrumb,
+.header .nav-link {
+  font-family: var(--font-display);
+}
+
+.kpi-label,
+.kpi-subtext,
+.card-header,
+.badge,
+.table thead th,
+.sidebar-user-role,
+.toast small {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// =============================================
+// HUD - esquinados sutiles (misma paleta)
+// =============================================
+
+.card:not(.welcome-banner):not(.streak-card):not(.xp-card):not(.practice-card):not(.tasks-card):not(.next-lesson-card),
+.modal-content {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    pointer-events: none;
+    border: 2px solid rgba($cosmic-purple, 0.7);
+  }
+
+  &::before {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  &::after {
+    bottom: 0;
+    right: 0;
+    border-left: 0;
+    border-top: 0;
+  }
+}
+
+.kpi-card {
+  &::before,
+  &::after {
+    border-color: rgba(255, 255, 255, 0.7);
+  }
 }
 
 // =============================================
