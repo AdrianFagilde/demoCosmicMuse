@@ -8,7 +8,7 @@ Esta guía está destinada a los desarrolladores que trabajan en la aplicación 
 - npm 9+
 - Git
 - Un editor compatible con ESLint y Prettier (por ejemplo VS Code)
-- Variables de entorno en `.env`: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`
+- Variables de entorno en `.env`: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`; opcionalmente `VITE_VAPID_PUBLIC_KEY` (permite iniciar la suscripción a push) y `VITE_BUILD_VERSION`
 
 ## Iniciar el proyecto
 
@@ -45,10 +45,12 @@ Abre `http://localhost:3000`.
 - `src/routes.js` - definición de rutas y roles permitidos
 - `src/context/AuthContext.jsx` - sesión y perfil de Supabase (fuente única del rol)
 - `src/hooks/useSupabase*.js` - acceso a datos por dominio; exponen `{ data, loading, error }`
+- `src/hooks/useSupabaseQuery.js` - hook genérico reutilizado por los hooks simples; estandariza `{ data, setData, loading, error, refetch }`. El llamador debe memorizar `queryFn` con `useCallback` (el hook no recibe `deps`)
 - `src/utils/` - utilidades compartidas (`students.js`, `format.js`, `notifications.js`)
 - `src/views/` - vistas de páginas
 - `supabase/migrations/` - esquema y políticas RLS (aplicar en orden)
 - `supabase/functions/create-student/` - Edge Function para crear estudiantes como admin
+- `supabase/functions/send-push-notification/` - Edge Function de notificaciones web push (requiere secretos `VAPID_*` antes de desplegar)
 
 ## Añadir una nueva página
 

@@ -28,6 +28,7 @@ npm install
 ```bash
 VITE_SUPABASE_URL=https://<tu-proyecto>.supabase.co
 VITE_SUPABASE_ANON_KEY=<tu-anon-key>
+VITE_VAPID_PUBLIC_KEY=<opcional, para notificaciones web push>
 ```
 
 3. Aplica las migraciones de base de datos (carpeta `supabase/migrations/`) en tu proyecto de Supabase, en orden numérico.
@@ -70,7 +71,8 @@ src/
 ├── navigation.jsx     # Menú lateral configurado por roles
 └── routes.js          # Definición de rutas protegidas
 supabase/
-└── migrations/        # Esquema SQL, políticas RLS y triggers (idempotentes)
+├── migrations/        # Esquema SQL, políticas RLS y triggers (idempotentes)
+└── functions/         # Edge Functions (create-student, send-push-notification)
 ```
 
 ## Autenticación y roles
@@ -122,4 +124,4 @@ npm run build
 npm run serve   # verificación local del build
 ```
 
-Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` como variables de entorno en Vercel antes del deploy.
+Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` como variables de entorno en Vercel antes del deploy. Para notificaciones push, despliega también las Edge Functions y configura los secretos `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT` en Supabase (y `VITE_VAPID_PUBLIC_KEY` en el front).

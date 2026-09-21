@@ -2,12 +2,13 @@ import React from 'react'
 import CIcon from '@coreui/icons-react'
 import {
   cilSpeedometer,
-  cilSchool,
   cilUser,
   cilMediaPlay,
   cilGroup,
   cilBell,
   cilBook,
+  cilTask,
+  cilMoney,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -19,7 +20,7 @@ export const getNavigation = (profile) => {
             component: CNavItem,
             name: 'Mis tareas',
             to: '/tasks',
-            icon: <CIcon icon={cilSchool} customClassName="nav-icon" />,
+            icon: <CIcon icon={cilTask} customClassName="nav-icon" />,
           },
           {
             component: CNavItem,
@@ -49,7 +50,7 @@ export const getNavigation = (profile) => {
             component: CNavItem,
             name: 'Perfiles',
             to: '/students',
-            icon: <CIcon icon={cilSchool} customClassName="nav-icon" />,
+            icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
           },
           {
             component: CNavItem,
@@ -61,7 +62,7 @@ export const getNavigation = (profile) => {
             component: CNavItem,
             name: 'Tareas',
             to: '/tasks',
-            icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+            icon: <CIcon icon={cilTask} customClassName="nav-icon" />,
           },
           {
             component: CNavItem,
@@ -73,7 +74,7 @@ export const getNavigation = (profile) => {
             component: CNavItem,
             name: 'Pagos',
             to: '/payments',
-            icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+            icon: <CIcon icon={cilMoney} customClassName="nav-icon" />,
             roles: ['admin'],
           },
           {

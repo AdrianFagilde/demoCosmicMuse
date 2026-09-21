@@ -43,142 +43,26 @@ import {
   SortableContext,
   arrayMove,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import CIcon from '@coreui/icons-react'
-import { cilArrowLeft, cilMenu, cilPencil, cilPlus, cilTrash } from '@coreui/icons'
+import { cilArrowLeft, cilPencil, cilPlus } from '@coreui/icons'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
 import useSupabaseForms from '../../hooks/useSupabaseForms'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
-import ChecklistBuilder from '../../components/ChecklistBuilder'
+import {
+  SortableFormRow,
+  SortableTaskRow,
+  StudentSortableChecklistItem,
+} from '../../components/CourseSortableRows'
 import FormEditorModal from '../../components/FormEditorModal'
 import FormResponsesModal from '../../components/FormResponsesModal'
 import MaterialList from '../../components/MaterialList'
+import TaskEditorModal from '../../components/TaskEditorModal'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 import { FILE_ACCEPT, validateCourseFile } from '../../utils/forms'
-
-const computeStats = (tasks, progressRows = [], studentId = null) => {
-  const items = tasks.flatMap((task) => task.task_checklist_items || [])
-  const relevant =
-    studentId === null ? progressRows : progressRows.filter((row) => row.student_id === studentId)
-  const doneIds = new Set(relevant.map((row) => row.item_id))
-  const done = items.filter((item) => doneIds.has(item.id)).length
-  return {
-    totalItems: items.length,
-    doneItems: done,
-    percent: items.length > 0 ? Math.round((done / items.length) * 100) : 0,
-    doneByTask: Object.fromEntries(
-      tasks.map((task) => [
-        task.id,
-        (task.task_checklist_items || []).filter((item) => doneIds.has(item.id)).length,
-      ]),
-    ),
-  }
-}
-
-const SortableTaskRow = ({
-  task,
-  attachedForm,
-  onEdit,
-  onAddForm,
-  onEditForm,
-  onViewFormResponses,
-  onDelete,
-}) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: task.id,
-  })
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.6 : 1,
-  }
-  return (
-    <CCard ref={setNodeRef} style={style} className="mb-2">
-      <CCardBody className="d-flex align-items-center gap-2 py-2">
-        <span
-          {...attributes}
-          {...listeners}
-          className="text-medium-emphasis"
-          style={{ cursor: 'grab', touchAction: 'none' }}
-        >
-          <CIcon icon={cilMenu} />
-        </span>
-        <div className="flex-grow-1">
-          <div className="fw-semibold">{task.title}</div>
-          {task.description && <small className="text-medium-emphasis">{task.description}</small>}
-        </div>
-        <CBadge color="info">{(task.task_checklist_items || []).length} checks</CBadge>
-        {attachedForm ? (
-          <>
-            <CBadge color="success">{(attachedForm.form_questions || []).length} preguntas</CBadge>
-            <CButton size="sm" color="primary" variant="outline" onClick={onEditForm}>
-              Formulario
-            </CButton>
-            <CButton size="sm" color="primary" variant="outline" onClick={onViewFormResponses}>
-              Respuestas
-            </CButton>
-          </>
-        ) : (
-          <CButton size="sm" color="primary" variant="outline" onClick={onAddForm}>
-            <CIcon icon={cilPlus} className="me-1" /> Formulario
-          </CButton>
-        )}
-        {task.due_date && <CBadge color="warning text-dark">Entrega: {task.due_date}</CBadge>}
-        <CButton size="sm" color="primary" variant="outline" onClick={() => onEdit(task)}>
-          <CIcon icon={cilPencil} />
-        </CButton>
-        <CButton size="sm" color="danger" variant="outline" onClick={() => onDelete(task.id)}>
-          <CIcon icon={cilTrash} />
-        </CButton>
-      </CCardBody>
-    </CCard>
-  )
-}
-
-const SortableFormRow = ({ form, taskLabel, onEdit, onViewResponses, onDelete }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: form.id,
-  })
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.6 : 1,
-  }
-  return (
-    <CCard ref={setNodeRef} style={style} className="mb-2">
-      <CCardBody className="d-flex align-items-center gap-3 py-2">
-        <span
-          {...attributes}
-          {...listeners}
-          className="text-medium-emphasis"
-          style={{ cursor: 'grab', touchAction: 'none' }}
-        >
-          <CIcon icon={cilMenu} />
-        </span>
-        <div className="flex-grow-1">
-          <div className="fw-semibold">{form.title}</div>
-          {form.description && <small className="text-medium-emphasis">{form.description}</small>}
-        </div>
-        <CBadge color="info">{(form.form_questions || []).length} preguntas</CBadge>
-        {taskLabel && <CBadge color="dark">Tarea: {taskLabel}</CBadge>}
-        {form.due_date && <CBadge color="warning text-dark">Límite: {form.due_date}</CBadge>}
-        <CButton size="sm" color="primary" variant="outline" onClick={onViewResponses}>
-          Respuestas
-        </CButton>
-        <CButton size="sm" color="primary" variant="outline" onClick={onEdit}>
-          <CIcon icon={cilPencil} />
-        </CButton>
-        <CButton size="sm" color="danger" variant="outline" onClick={onDelete}>
-          <CIcon icon={cilTrash} />
-        </CButton>
-      </CCardBody>
-    </CCard>
-  )
-}
+import { computeStats } from '../../utils/courses'
 
 const CourseDetail = () => {
   const { id } = useParams()
@@ -1080,155 +964,6 @@ const CourseDetail = () => {
         })
       )}
     </>
-  )
-}
-
-const StudentSortableChecklistItem = ({ item, checked, onChange }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: item.id,
-  })
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.6 : 1,
-  }
-  return (
-    <div ref={setNodeRef} style={style} className="mb-2">
-      <div
-        {...attributes}
-        {...listeners}
-        className="text-medium-emphasis d-flex align-items-center gap-2"
-        style={{ cursor: 'grab', touchAction: 'none', padding: '4px 8px', borderRadius: '4px' }}
-      >
-        <CIcon icon={cilMenu} />
-        <CFormCheck
-          id={`check-${item.id}`}
-          label={item.label}
-          checked={checked}
-          onChange={(event) => onChange(event.target.checked)}
-          className="flex-grow-1 mb-0"
-        />
-      </div>
-    </div>
-  )
-}
-
-const TaskEditorModal = ({
-  task,
-  onClose,
-  onUpdateTask,
-  onAddItem,
-  onDeleteItem,
-  onReorderItems,
-  onSaved,
-}) => {
-  const original = useMemo(() => task.task_checklist_items || [], [task])
-  const [form, setForm] = useState({
-    title: task.title,
-    description: task.description || '',
-    dueDate: task.due_date || '',
-  })
-  const [items, setItems] = useState([...original])
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSave = async () => {
-    if (!form.title.trim()) {
-      setError('La tarea necesita un título.')
-      return
-    }
-    setSaving(true)
-    let ok = await onUpdateTask(task.id, {
-      title: form.title.trim(),
-      description: form.description.trim(),
-      due_date: form.dueDate || null,
-    })
-    if (!ok) {
-      setSaving(false)
-      setError('No se pudo guardar la tarea.')
-      return
-    }
-    const currentIds = new Set(original.map((item) => item.id))
-    const nextIds = new Set(items.map((item) => item.id))
-
-    for (const removed of original.filter((item) => !nextIds.has(item.id))) {
-      ok = (await onDeleteItem(removed.id)) && ok
-    }
-    for (const added of items.filter((item) => !currentIds.has(item.id))) {
-      const position = items.indexOf(added)
-      const created = await onAddItem(task.id, added.label, position)
-      if (!created) ok = false
-    }
-    // Detect reorder by comparing sequence of existing item IDs
-    const originalExistingIds = original
-      .filter((item) => nextIds.has(item.id))
-      .map((item) => item.id)
-    const currentExistingIds = items
-      .filter((item) => currentIds.has(item.id))
-      .map((item) => item.id)
-    const orderChanged = originalExistingIds.join(',') !== currentExistingIds.join(',')
-    if (orderChanged) {
-      ok = (await onReorderItems(items)) && ok
-    }
-    setSaving(false)
-    if (!ok) {
-      setError('Hubo un problema guardando algunos cambios. Revisa y vuelve a intentar.')
-      return
-    }
-    onClose()
-    await onSaved()
-  }
-
-  return (
-    <CModal visible onClose={onClose} backdrop="static" size="lg" scrollable>
-      <CForm
-        onSubmit={(event) => {
-          event.preventDefault()
-          handleSave()
-        }}
-      >
-        <CModalHeader closeButton>
-          <CModalTitle>Editar tarea</CModalTitle>
-        </CModalHeader>
-        <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-          <div className="mb-3">
-            <CFormLabel>Título *</CFormLabel>
-            <CFormInput
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-            />
-          </div>
-          <div className="mb-3">
-            <CFormLabel>Descripción</CFormLabel>
-            <CFormTextarea
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-            />
-          </div>
-          <div className="mb-3">
-            <CFormLabel>Fecha de entrega (opcional)</CFormLabel>
-            <CFormInput
-              type="date"
-              value={form.dueDate}
-              onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
-            />
-          </div>
-          <hr />
-          <CFormLabel className="fw-semibold">Checklist (arrastra para ordenar)</CFormLabel>
-          <ChecklistBuilder items={items} onChange={setItems} />
-          {error && <div className="text-danger mt-3">{error}</div>}
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" variant="outline" onClick={onClose}>
-            Cancelar
-          </CButton>
-          <CButton type="submit" color="primary" disabled={saving}>
-            {saving ? <CSpinner size="sm" /> : 'Guardar tarea'}
-          </CButton>
-        </CModalFooter>
-      </CForm>
-    </CModal>
   )
 }
 

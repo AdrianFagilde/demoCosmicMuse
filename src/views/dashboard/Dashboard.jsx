@@ -87,7 +87,7 @@ const getNextLessonCountdown = (nextLesson) => {
   return { text: `${minutes}m`, isOverdue: false }
 }
 
-const BUILD_VERSION = '2026.09.20.2'
+import { buildHash } from '../../utils/version'
 
 const Dashboard = () => {
   const { user, profile } = useAuth()
@@ -104,9 +104,6 @@ const Dashboard = () => {
   })
   const [paymentsByMonth, setPaymentsByMonth] = useState([])
   const [myProgressRows, setMyProgressRows] = useState([])
-
-  const buildVersion = BUILD_VERSION
-  const buildHash = `v${BUILD_VERSION}`
 
   const instrumentData = useMemo(() => {
     const counts = {}

@@ -1,36 +1,31 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import supabase from '../lib/supabase'
 import { notifyInApp } from '../utils/notifications'
 import { computeStudentBalances } from '../utils/students'
+import useSupabaseQuery from './useSupabaseQuery'
 
 const useSupabaseReminders = (userId) => {
-  const [reminders, setReminders] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
   const fetchReminders = useCallback(async () => {
-    setLoading(true)
-    const { data, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from('payment_reminders')
       .select(
         '*, profiles!payment_reminders_student_id_fkey(full_name), creator:profiles!payment_reminders_created_by_fkey(full_name)',
       )
       .order('schedule_at', { ascending: true })
-    if (fetchError) {
-      setError(fetchError)
-      console.error('[Reminders] Error:', fetchError.message, fetchError)
-    } else {
-      setError(null)
-      setReminders(data || [])
+    if (error) {
+      console.error('[Reminders] Error:', error.message, error)
+      throw error
     }
-    setLoading(false)
+    return data || []
   }, [])
 
-  useEffect(() => {
-    ;(async () => {
-      await fetchReminders()
-    })()
-  }, [fetchReminders])
+  const {
+    data: reminders,
+    setData: setReminders,
+    loading,
+    error,
+    refetch,
+  } = useSupabaseQuery(fetchReminders)
 
   const addReminder = useCallback(
     async (reminderData) => {
@@ -46,32 +41,41 @@ const useSupabaseReminders = (userId) => {
         created_by: userId,
       })
       if (!error) {
-        await fetchReminders()
+        await refetch()
       }
       return !error
     },
-    [fetchReminders, userId],
+    [userId, refetch],
   )
 
-  const updateReminder = useCallback(async (reminderId, updates) => {
-    const { error } = await supabase.from('payment_reminders').update(updates).eq('id', reminderId)
-    if (error) {
-      console.error('[Reminders] Error al actualizar:', error.message, error)
-    } else {
-      setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, ...updates } : r)))
-    }
-    return !error
-  }, [])
+  const updateReminder = useCallback(
+    async (reminderId, updates) => {
+      const { error } = await supabase
+        .from('payment_reminders')
+        .update(updates)
+        .eq('id', reminderId)
+      if (error) {
+        console.error('[Reminders] Error al actualizar:', error.message, error)
+      } else {
+        setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, ...updates } : r)))
+      }
+      return !error
+    },
+    [setReminders],
+  )
 
-  const deleteReminder = useCallback(async (reminderId) => {
-    const { error } = await supabase.from('payment_reminders').delete().eq('id', reminderId)
-    if (error) {
-      console.error('[Reminders] Error al eliminar:', error.message, error)
-    } else {
-      setReminders((prev) => prev.filter((r) => r.id !== reminderId))
-    }
-    return !error
-  }, [])
+  const deleteReminder = useCallback(
+    async (reminderId) => {
+      const { error } = await supabase.from('payment_reminders').delete().eq('id', reminderId)
+      if (error) {
+        console.error('[Reminders] Error al eliminar:', error.message, error)
+      } else {
+        setReminders((prev) => prev.filter((r) => r.id !== reminderId))
+      }
+      return !error
+    },
+    [setReminders],
+  )
 
   const fetchRecipientsFromDB = useCallback(async (reminder) => {
     const { data: students } = await supabase
@@ -191,7 +195,7 @@ const useSupabaseReminders = (userId) => {
     updateReminder,
     deleteReminder,
     sendReminder,
-    refetch: fetchReminders,
+    refetch,
   }
 }
 

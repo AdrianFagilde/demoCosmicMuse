@@ -1,58 +1,57 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import supabase from '../lib/supabase'
+import useSupabaseQuery from './useSupabaseQuery'
 
 const useSupabaseStudents = () => {
-  const [students, setStudents] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
   const fetchStudents = useCallback(async () => {
-    const { data, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('role', 'student')
       .order('full_name')
-    if (fetchError) {
-      setError(fetchError)
-      console.error('[Students] Error:', fetchError.message, fetchError)
-    } else {
-      setError(null)
-      setStudents(data || [])
+    if (error) {
+      console.error('[Students] Error:', error.message, error)
+      throw error
     }
-    setLoading(false)
+    return data || []
   }, [])
 
-  useEffect(() => {
-    ;(async () => {
-      await fetchStudents()
-    })()
-  }, [fetchStudents])
+  const {
+    data: students,
+    setData: setStudents,
+    loading,
+    error,
+    refetch,
+  } = useSupabaseQuery(fetchStudents)
 
   const getStudent = useCallback(
     (id) => students.find((s) => String(s.id) === String(id)),
     [students],
   )
 
-  const updateStudentMetrics = useCallback(async (id, progress, attendance) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        progress: Number(progress),
-        attendance: Number(attendance),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-    if (!error) {
-      setStudents((prev) =>
-        prev.map((s) =>
-          String(s.id) === String(id)
-            ? { ...s, progress: Number(progress), attendance: Number(attendance) }
-            : s,
-        ),
-      )
-    }
-    return !error
-  }, [])
+  const updateStudentMetrics = useCallback(
+    async (id, progress, attendance) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          progress: Number(progress),
+          attendance: Number(attendance),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+      if (!error) {
+        setStudents((prev) =>
+          prev.map((s) =>
+            String(s.id) === String(id)
+              ? { ...s, progress: Number(progress), attendance: Number(attendance) }
+              : s,
+          ),
+        )
+      }
+      return !error
+    },
+    [setStudents],
+  )
 
   const getSummary = useCallback(async () => {
     const { count: activeStudents } = await supabase
@@ -95,7 +94,7 @@ const useSupabaseStudents = () => {
     getStudent,
     updateStudentMetrics,
     getSummary,
-    refetch: fetchStudents,
+    refetch,
   }
 }
 

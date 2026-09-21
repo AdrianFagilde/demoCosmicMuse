@@ -59,9 +59,16 @@ Cosmic Muse Academy es una SPA construida con React 19, Vite y CoreUI React, con
 ### Acceso a datos
 
 - `src/hooks/useSupabase*.js`
-  - Un hook por dominio: students, lessons, tasks, payments, reminders, notifications, userNotifications, courses
+  - Un hook por dominio: students, lessons, tasks, payments, reminders, notifications, userNotifications, courses, messaging, forms, practice
   - Encapsulan queries, mutaciones y estado de carga; exponen `refetch`
   - Las vistas nunca hablan con Supabase directamente salvo casos puntuales (registro, subida de avatar)
+- `src/hooks/useSupabaseQuery.js`
+  - Hook genérico (`useSupabaseQuery(queryFn, autoFetch = true)`) que estandariza `{ data, setData, loading, error, refetch }` y protege el orden de las respuestas contra carreras
+  - Lo usan los hooks más simples (Tasks, Students, Lessons, Reminders, Notifications, UserNotifications, Practice); los de lógica compleja (Courses, Forms, Messaging, Payments, PushNotifications) mantienen su estructura propia
+- `src/utils/courses.js`
+  - Lógica compartida de cursos, p. ej. `computeStats` (porcentaje de avance por tarea/estudiante)
+- `src/utils/version.js`
+  - Fuente única de `BUILD_VERSION` y `buildHash` (usa `VITE_BUILD_VERSION` o un valor por defecto); evita el desfase de versiones entre vistas
 
 ## Modelo de datos (Supabase)
 
@@ -90,6 +97,7 @@ Buckets de Storage: `avatars` (público) y `payment-proofs` (privado, solo admin
 La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007_security_hardening.sql`):
 
 - La función `public.is_admin()` (SECURITY DEFINER, STABLE) lee el rol desde la tabla `profiles`, nunca desde metadatos editables del JWT. Todas las políticas de administración pasan por ella.
+- La migración `016_security_fixes.sql` endurece: los RPC de mensajería (014) y `get_weekly_practice_summary`/`get_next_badges` (013/015) verifican `auth.uid()` y revocan permisos de `PUBLIC`; se bloquea el auto-reporte de streak de práctica (trigger `trg_block_practice_tampering`) y se limita el XP a 120 min por sesión (`LEAST`); `submit_form` valida la pregunta y limpia respuestas huérfanas; las notificaciones solo se insertan enviadas por uno mismo o por un admin (anti-spam); `is_admin()` deja de ser ejecutable por `PUBLIC`.
 - Los estudiantes solo pueden leer/actualizar sus propias filas (`id = auth.uid()` / `student_id = auth.uid()`) y leer los perfiles de staff (`role = 'admin'`) necesarios para mostrar profesores.
 - El campo `profiles.role` está protegido por el trigger `trg_protect_profiles_role`: solo un admin puede modificarlo (con bypass para service_role y contextos sin HTTP).
 - El trigger `handle_new_user` crea el perfil tras el registro forzando siempre `role = 'student'`.
@@ -101,9 +109,14 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 
 - `supabase/functions/create-student/index.ts`: Edge Function que verifica que el llamador sea admin vía `profiles` y crea el usuario con `auth.admin.createUser` usando la service role key. El cliente nunca invoca signUp con privilegios de staff.
 
+### Notificaciones push
+
+- `supabase/functions/send-push-notification/index.ts`: Edge Function que envía notificaciones web push con `web-push`. Solo un admin, o el propio destinatario, puede enviarse push; limpia suscripciones inválidas (404/410). Requiere los secretos `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`.
+
 ## Vistas principales
 
 - `src/views/dashboard/Dashboard.jsx` - Métricas y gráficos (ingresos por mes, estudiantes por instrumento, progreso)
+- `src/views/courses/` - Cursos: `Courses.jsx`, `CourseDetail.jsx` (admin/estudiante) y `CourseFormFill.jsx`, apoyados en `src/components/` (FormEditorModal, FormResponsesModal, ChecklistBuilder, MaterialList, CourseSortableRows, TaskEditorModal)
 - `src/views/academy/Students.jsx` + `StudentDetail.jsx` - CRUD y métricas de estudiantes
 - `src/views/academy/Lessons.jsx` - Programación de clases (admin)
 - `src/views/academy/Payments.jsx` - Pagos y recordatorios (admin), con subcomponentes en `payments/`
@@ -115,7 +128,8 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 
 - `npm run build` genera el bundle en `build/`
 - Deploy en **Vercel**: `vercel.json` define rewrites SPA y cacheo immutable de assets
-- Variables de entorno requeridas en el host: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- Variables de entorno requeridas en el host: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`; opcional: `VITE_VAPID_PUBLIC_KEY` (notificaciones push) y `VITE_BUILD_VERSION`
+- Secretos de Edge Functions en Supabase: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, y la service role key si se usa el flujo local
 
 ## Tareas de mantenimiento
 

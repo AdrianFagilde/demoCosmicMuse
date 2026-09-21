@@ -29,24 +29,18 @@ const emptyForm = (studentId = '') => ({
 
 const PaymentForm = ({ studentOptions, onSubmit }) => {
   const [form, setForm] = useState(() => emptyForm(studentOptions[0]?.value || ''))
-  const [usersLoaded, setUsersLoaded] = useState(false)
   const [proofFile, setProofFile] = useState(null)
   const [submitError, setSubmitError] = useState('')
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef(null)
 
-  // Las opciones llegan asíncronas: ajusta el estado durante el render
-  // cuando estén disponibles la primera vez (patrón recomendado por React).
-  if (!usersLoaded && studentOptions.length > 0) {
-    setUsersLoaded(true)
-    setForm((prev) => (prev.studentId ? prev : { ...prev, studentId: studentOptions[0].value }))
-  }
+  const effectiveStudentId = form.studentId || studentOptions[0]?.value || ''
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setSubmitError('')
 
-    if (!form.studentId) {
+    if (!effectiveStudentId) {
       setSubmitError('Selecciona un estudiante.')
       return
     }
@@ -91,7 +85,7 @@ const PaymentForm = ({ studentOptions, onSubmit }) => {
         <CCol md={6}>
           <CFormSelect
             label="Estudiante"
-            value={form.studentId}
+            value={effectiveStudentId}
             onChange={(event) => setForm({ ...form, studentId: event.target.value })}
           >
             {studentOptions.map((option) => (

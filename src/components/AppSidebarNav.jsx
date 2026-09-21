@@ -97,6 +97,22 @@ export const AppSidebarNav = ({ items }) => {
   )
 }
 
+const navItemShape = {
+  component: PropTypes.elementType,
+  name: PropTypes.string,
+  to: PropTypes.string,
+  href: PropTypes.string,
+  icon: PropTypes.node,
+  badge: PropTypes.shape({ color: PropTypes.string, text: PropTypes.node }),
+  roles: PropTypes.arrayOf(PropTypes.string),
+}
+
+const navItem = PropTypes.shape(navItemShape)
+const navGroup = PropTypes.shape({
+  ...navItemShape,
+  items: PropTypes.arrayOf(PropTypes.oneOfType([navItem, PropTypes.object])),
+})
+
 AppSidebarNav.propTypes = {
-  items: PropTypes.arrayOf(PropTypes.any).isRequired,
+  items: PropTypes.arrayOf(PropTypes.oneOfType([navItem, navGroup])).isRequired,
 }

@@ -40,15 +40,9 @@ const ReminderPanel = ({
   userName,
 }) => {
   const [form, setForm] = useState(() => emptyForm(studentOptions[0]?.value || ''))
-  const [usersLoaded, setUsersLoaded] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  // Las opciones llegan asíncronas: ajusta el estado durante el render
-  // cuando estén disponibles la primera vez (patrón recomendado por React).
-  if (!usersLoaded && studentOptions.length > 0) {
-    setUsersLoaded(true)
-    setForm((prev) => (prev.studentId ? prev : { ...prev, studentId: studentOptions[0].value }))
-  }
+  const effectiveStudentId = form.studentId || studentOptions[0]?.value || ''
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -62,7 +56,7 @@ const ReminderPanel = ({
       setSubmitError('El mensaje del recordatorio no puede estar vacío.')
       return
     }
-    if (form.targetGroup === 'Individual' && !form.studentId) {
+    if (form.targetGroup === 'Individual' && !effectiveStudentId) {
       setSubmitError('Selecciona el estudiante destinatario.')
       return
     }
@@ -73,7 +67,7 @@ const ReminderPanel = ({
       return
     }
 
-    const ok = await onAddReminder(form)
+    const ok = await onAddReminder({ ...form, studentId: effectiveStudentId })
     if (!ok) {
       setSubmitError('No se pudo crear el recordatorio. Intenta de nuevo.')
       return
@@ -96,7 +90,7 @@ const ReminderPanel = ({
                       <CCol md={12}>
                         <CFormSelect
                           label="Estudiante"
-                          value={form.studentId}
+                          value={effectiveStudentId}
                           onChange={(event) => setForm({ ...form, studentId: event.target.value })}
                         >
                           {studentOptions.map((option) => (

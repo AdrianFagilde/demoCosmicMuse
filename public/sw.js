@@ -16,9 +16,6 @@ const STATIC_ASSETS = [
   '/site.webmanifest',
 ]
 
-// API routes that should be cached for offline use
-const API_CACHE_PATTERNS = [/^\/api\//, /^\/rest\//]
-
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -55,12 +52,6 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) {
-    return
-  }
-
-  // Handle API requests - network first, then cache
-  if (API_CACHE_PATTERNS.some((pattern) => pattern.test(url.pathname))) {
-    event.respondWith(networkFirstStrategy(request))
     return
   }
 
@@ -129,7 +120,7 @@ function isStaticAsset(pathname) {
   return (
     pathname.startsWith('/assets/') ||
     pathname.startsWith('/static/') ||
-    pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico|png)$/i)
+    pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)$/i)
   )
 }
 

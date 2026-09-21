@@ -1,34 +1,30 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import supabase from '../lib/supabase'
+import useSupabaseQuery from './useSupabaseQuery'
 
 const useSupabaseUserNotifications = (userId) => {
-  const [notifications, setNotifications] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
   const fetchNotifications = useCallback(async () => {
-    if (!userId) return
-    const { data, error: fetchError } = await supabase
+    if (!userId) return []
+    const { data, error } = await supabase
       .from('notifications')
       .select('*, sender:profiles!notifications_sender_id_fkey(full_name)')
       .eq('recipient_id', userId)
       .order('created_at', { ascending: false })
       .limit(50)
-    if (fetchError) {
-      setError(fetchError)
-      console.error('[Notifications] Error:', fetchError.message, fetchError)
-    } else {
-      setError(null)
-      setNotifications(data || [])
+    if (error) {
+      console.error('[Notifications] Error:', error.message, error)
+      throw error
     }
-    setLoading(false)
+    return data || []
   }, [userId])
 
-  useEffect(() => {
-    ;(async () => {
-      await fetchNotifications()
-    })()
-  }, [fetchNotifications])
+  const {
+    data: notifications,
+    setData: setNotifications,
+    loading,
+    error,
+    refetch,
+  } = useSupabaseQuery(fetchNotifications)
 
   useEffect(() => {
     if (!userId) return
@@ -45,7 +41,7 @@ const useSupabaseUserNotifications = (userId) => {
           filter: `recipient_id=eq.${userId}`,
         },
         () => {
-          fetchNotifications()
+          refetch()
         },
       )
       .subscribe()
@@ -53,20 +49,23 @@ const useSupabaseUserNotifications = (userId) => {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, fetchNotifications])
+  }, [userId, refetch])
 
-  const markAsRead = useCallback(async (notificationId) => {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', notificationId)
-    if (!error) {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
-      )
-    }
-    return !error
-  }, [])
+  const markAsRead = useCallback(
+    async (notificationId) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId)
+      if (!error) {
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
+        )
+      }
+      return !error
+    },
+    [setNotifications],
+  )
 
   const markAllAsRead = useCallback(async () => {
     if (!userId) return
@@ -79,7 +78,7 @@ const useSupabaseUserNotifications = (userId) => {
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
     }
     return !error
-  }, [userId])
+  }, [userId, setNotifications])
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -90,7 +89,7 @@ const useSupabaseUserNotifications = (userId) => {
     error,
     markAsRead,
     markAllAsRead,
-    refetch: fetchNotifications,
+    refetch,
   }
 }
 

@@ -1,34 +1,24 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import supabase from '../lib/supabase'
 import { notifyInApp } from '../utils/notifications'
+import useSupabaseQuery from './useSupabaseQuery'
 
 const useSupabaseTasks = () => {
-  const [tasks, setTasks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
   const fetchTasks = useCallback(async () => {
-    const { data, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .select(
         '*, profiles!tasks_student_id_fkey(full_name), assigned_by_profile:profiles!tasks_assigned_by_fkey(full_name)',
       )
       .order('created_at', { ascending: false })
-    if (fetchError) {
-      setError(fetchError)
-      console.error('[Tasks] Error:', fetchError.message, fetchError)
-    } else {
-      setError(null)
-      setTasks(data || [])
+    if (error) {
+      console.error('[Tasks] Error:', error.message, error)
+      throw error
     }
-    setLoading(false)
+    return data || []
   }, [])
 
-  useEffect(() => {
-    ;(async () => {
-      await fetchTasks()
-    })()
-  }, [fetchTasks])
+  const { data: tasks, setData: setTasks, loading, error, refetch } = useSupabaseQuery(fetchTasks)
 
   const addTask = useCallback(
     async (taskData) => {
@@ -48,11 +38,11 @@ const useSupabaseTasks = () => {
           title: 'Nueva tarea asignada',
           message: `Se te asignó la tarea: ${taskData.title}`,
         })
-        await fetchTasks()
+        await refetch()
       }
       return !error
     },
-    [fetchTasks],
+    [refetch],
   )
 
   const cleanUpdates = (updates) => {
@@ -63,25 +53,31 @@ const useSupabaseTasks = () => {
     return cleaned
   }
 
-  const updateTask = useCallback(async (taskId, updates) => {
-    const cleaned = cleanUpdates(updates)
-    const { error } = await supabase
-      .from('tasks')
-      .update({ ...cleaned, updated_at: new Date().toISOString() })
-      .eq('id', taskId)
-    if (!error) {
-      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...cleaned } : t)))
-    }
-    return !error
-  }, [])
+  const updateTask = useCallback(
+    async (taskId, updates) => {
+      const cleaned = cleanUpdates(updates)
+      const { error } = await supabase
+        .from('tasks')
+        .update({ ...cleaned, updated_at: new Date().toISOString() })
+        .eq('id', taskId)
+      if (!error) {
+        setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...cleaned } : t)))
+      }
+      return !error
+    },
+    [setTasks],
+  )
 
-  const deleteTask = useCallback(async (taskId) => {
-    const { error } = await supabase.from('tasks').delete().eq('id', taskId)
-    if (!error) {
-      setTasks((prev) => prev.filter((t) => t.id !== taskId))
-    }
-    return !error
-  }, [])
+  const deleteTask = useCallback(
+    async (taskId) => {
+      const { error } = await supabase.from('tasks').delete().eq('id', taskId)
+      if (!error) {
+        setTasks((prev) => prev.filter((t) => t.id !== taskId))
+      }
+      return !error
+    },
+    [setTasks],
+  )
 
   const changeTaskStatus = useCallback(
     async (taskId, status) => {
@@ -115,7 +111,7 @@ const useSupabaseTasks = () => {
     deleteTask,
     changeTaskStatus,
     changeTaskProgress,
-    refetch: fetchTasks,
+    refetch,
   }
 }
 

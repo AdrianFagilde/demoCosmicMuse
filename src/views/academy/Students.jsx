@@ -29,9 +29,7 @@ import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
-
-// Build version to force cache busting
-const BUILD_VERSION = '2026.09.19.5'
+import { buildHash } from '../../utils/version'
 
 const emptyForm = {
   fullName: '',
@@ -42,9 +40,6 @@ const emptyForm = {
 }
 
 const Students = () => {
-  // Force build hash update - build version reference
-  const buildHash = `v2026.09.19.5`
-
   const { profile } = useAuth()
   const { students, loading, refetch } = useSupabaseStudents()
   const [search, setSearch] = useState('')

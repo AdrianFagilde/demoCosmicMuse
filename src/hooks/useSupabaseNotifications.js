@@ -1,32 +1,22 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import supabase from '../lib/supabase'
+import useSupabaseQuery from './useSupabaseQuery'
 
 const useSupabaseNotifications = () => {
-  const [entries, setEntries] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
   const fetchEntries = useCallback(async () => {
-    const { data, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from('notification_log')
       .select('*')
       .order('sent_at', { ascending: false })
       .limit(100)
-    if (fetchError) {
-      setError(fetchError)
-      console.error('[NotificationLog] Error:', fetchError.message, fetchError)
-    } else {
-      setError(null)
-      setEntries(data || [])
+    if (error) {
+      console.error('[NotificationLog] Error:', error.message, error)
+      throw error
     }
-    setLoading(false)
+    return data || []
   }, [])
 
-  useEffect(() => {
-    ;(async () => {
-      await fetchEntries()
-    })()
-  }, [fetchEntries])
+  const { data: entries, loading, error, refetch } = useSupabaseQuery(fetchEntries)
 
   const addEntries = useCallback(
     async (newEntries) => {
@@ -41,11 +31,11 @@ const useSupabaseNotifications = () => {
       }))
       const { error } = await supabase.from('notification_log').insert(rows)
       if (!error) {
-        await fetchEntries()
+        await refetch()
       }
       return !error
     },
-    [fetchEntries],
+    [refetch],
   )
 
   const notifyBrowser = useCallback((title, body) => {
@@ -63,7 +53,7 @@ const useSupabaseNotifications = () => {
     }
   }, [])
 
-  return { entries, loading, error, addEntries, notifyBrowser, refetch: fetchEntries }
+  return { entries, loading, error, addEntries, notifyBrowser, refetch }
 }
 
 export default useSupabaseNotifications
