@@ -349,6 +349,7 @@ AS $$
 DECLARE
   conv_id UUID;
   existing_conv UUID;
+  participant_id UUID;
 BEGIN
   -- Verificar si ya existe conversación 1-a-1
   IF array_length(p_participant_ids, 1) = 1 THEN

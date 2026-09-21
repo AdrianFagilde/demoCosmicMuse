@@ -190,6 +190,7 @@ AS $$
 DECLARE
   conv_id UUID;
   existing_conv UUID;
+  participant_id UUID;
 BEGIN
   IF p_created_by IS DISTINCT FROM auth.uid() THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE = '42501';
