@@ -36,6 +36,7 @@ const AppSidebar = () => {
       className="border-end"
       colorScheme="dark"
       position="fixed"
+      size="lg"
       unfoldable={sidebarUnfoldable}
       visible={sidebarShow}
     >

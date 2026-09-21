@@ -24,6 +24,8 @@ $cosmic-magenta: #b42d75;
   $sidebar-bg: $cosmic-navy,
   $sidebar-color: #ffffff,
   $sidebar-brand-bg: rgba($cosmic-purple, 0.15),
+  // lg mantiene el ancho base (16rem = 256px) para que el occupy responda
+  $sidebar-widths: (sm: 12rem, lg: 16rem, xl: 24rem),
   // Header
   $header-bg: $cosmic-purple,
   $header-color: #ffffff,
