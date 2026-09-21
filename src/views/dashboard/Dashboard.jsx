@@ -227,7 +227,7 @@ const Dashboard = () => {
 
   if (isStudent) {
     return (
-      <>
+      <div className="student-dashboard d-flex flex-column">
         <div data-build-version={buildHash} style={{ display: 'none' }} />
 
         {/* TOP BAR - Compact greeting + stats */}
@@ -313,7 +313,7 @@ const Dashboard = () => {
         </CRow>
 
         {/* BOTTOM ROW: Weekly + Próxima clase */}
-        <CRow className="mb-4 g-3">
+        <CRow className="mb-4 g-3 flex-grow-1">
           <CCol lg={hasNextLesson ? 8 : 12} className="mb-0">
             <WeeklyDots
               weeklySummary={practice.weeklySummary}
@@ -373,7 +373,7 @@ const Dashboard = () => {
             </CCol>
           )}
         </CRow>
-      </>
+      </div>
     )
   }
 

@@ -81,6 +81,18 @@ h6,
   letter-spacing: 0.03em;
 }
 
+.card-title,
+.modal-title,
+.toast-header strong {
+  font-family: var(--font-display);
+}
+
+.card-title,
+.modal-title {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .sidebar-nav-title,
 .sidebar-nav-link,
 .breadcrumb,
@@ -112,6 +124,30 @@ h6,
   font-family: var(--font-script);
   text-transform: none;
   letter-spacing: 0.02em;
+}
+
+.dash-greeting,
+.journey-node-label,
+.daily-goal-card .fw-bold {
+  font-family: var(--font-display);
+}
+
+.dash-stat-mini {
+  font-family: var(--font-script);
+  letter-spacing: 0.01em;
+}
+
+.student-dashboard {
+  min-height: calc(100vh - 10rem);
+}
+
+.student-dashboard > .row {
+  align-items: stretch;
+  align-content: stretch;
+}
+
+.student-dashboard .row > [class*='col'] {
+  margin-bottom: 0;
 }
 
 // =============================================
