@@ -503,6 +503,8 @@ h6,
 
 .sidebar-brand-full {
   margin-left: 3px;
+  max-width: 100%;
+  height: auto;
 }
 
 .sidebar-header {
@@ -520,6 +522,14 @@ h6,
 
 .sidebar-toggler {
   margin-inline-start: auto;
+  padding: 0.375rem;
+}
+
+// El ícono/chevron interno no debe interceptar el clic: pasa directo al <button>
+.header-toggler svg,
+.header-toggler-icon,
+.sidebar-toggler::before {
+  pointer-events: none;
 }
 
 .sidebar-narrow,
