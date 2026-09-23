@@ -29,7 +29,19 @@ $cosmic-magenta: #b42d75;
   // Header
   $header-bg: $cosmic-purple,
   $header-color: #ffffff,
-  $header-border-color: rgba(255, 255, 255, 0.12)
+  $header-border-color: rgba(255, 255, 255, 0.12),
+
+  // Tipografía
+  $font-family-sans-serif: (
+    'Lexend Variable',
+    'Lexend',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial,
+    sans-serif
+  )
 );
 
 @use 'vendors/simplebar';
@@ -42,9 +54,9 @@ $cosmic-magenta: #b42d75;
   --gradient-primary: linear-gradient(135deg, #{$cosmic-purple}, #{$cosmic-magenta});
   --gradient-accent: linear-gradient(135deg, #{$cosmic-cyan}, #{$cosmic-navy});
 
-  // Tipografía artística: serif de título + manuscrita de acento
-  --font-display: 'Cinzel', 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --font-script: 'Caveat', 'Dancing Script', cursive;
+  // Tipografía artística: Lexend en toda la app (títulos + acentos)
+  --font-display: 'Lexend Variable', 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-script: 'Lexend Variable', 'Lexend', 'Dancing Script', cursive;
 
   // Uniforme primario: sidebar + header
   --uniform-primary-bg: linear-gradient(180deg, #{$cosmic-navy} 0%, #{$cosmic-purple} 100%);

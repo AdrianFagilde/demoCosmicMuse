@@ -1,9 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 
-import '@fontsource/cinzel/latin-600.css'
-import '@fontsource/cinzel/latin-700.css'
-import '@fontsource/caveat/latin-600.css'
+import '@fontsource-variable/lexend/wght.css'
 
 import { AppProvider } from './context/AppContext'
 
