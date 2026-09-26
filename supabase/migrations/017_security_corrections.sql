@@ -437,59 +437,89 @@ BEGIN
 END;
 $$;
 
--- 5.4 get_next_badges (016) arrastra el mismo error de GROUP BY en escalar
--- para el conteo de cursos completados.
-CREATE OR REPLACE FUNCTION public.get_next_badges(p_student_id uuid)
-RETURNS jsonb
+-- 5.4 get_next_badges (016): el calculo de `first_course` es un subquery
+-- escalar con GROUP BY y sin agregado en la lista de seleccion. Eso hace
+-- que devuelva una fila por curso, de modo que (a) con dos o mas cursos
+-- agrupados PostgreSQL aborta con "more than one row returned for a
+-- subquery used as an expression" y (b) el HAVING era
+-- `COUNT(tci.id) = COUNT(cp.item_id)` sobre un INNER JOIN, donde
+-- cp.item_id nunca es NULL: la condicion era siempre cierta, asi que
+-- cualquier curso con al menos un item de checklist contaba como completado.
+--
+-- Fix: mismo patron que usa check_course_completion_badges mas arriba. El
+-- GROUP BY va dentro de una subconsulta para que el COUNT externo vea una
+-- fila por curso.
+--
+-- NOTA: aqui se mantiene RETURNS TABLE, el contrato que fijo la 016. Una
+-- version anterior de este archivo devolvia jsonb, lo que obliga a hacer
+-- DROP FUNCTION porque PostgreSQL no permite cambiar el tipo de retorno con
+-- CREATE OR REPLACE (error 42P13). Ademas esa version no devolvia las
+-- siguientes insignias sino un resumen de gamificacion, con lo que el
+-- nombre de la funcion dejaba de describir lo que hacia.
+CREATE OR REPLACE FUNCTION public.get_next_badges(p_student_id UUID)
+RETURNS TABLE (
+  badge_key TEXT,
+  badge_name TEXT,
+  badge_description TEXT,
+  progress INTEGER,
+  target INTEGER
+)
 LANGUAGE plpgsql
+STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE
-  gamif RECORD;
-  completed_courses INTEGER;
-  result JSONB;
 BEGIN
-  IF auth.uid() IS DISTINCT FROM p_student_id AND NOT public.is_admin() THEN
+  IF p_student_id IS DISTINCT FROM auth.uid() AND NOT public.is_admin() THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE = '42501';
   END IF;
 
-  SELECT * INTO gamif
-  FROM public.student_gamification
-  WHERE student_id = p_student_id;
-
-  IF gamif IS NULL THEN
-    RETURN jsonb_build_object('xp', 0, 'level', 1, 'badges', '[]'::jsonb);
-  END IF;
-
-  SELECT COUNT(*) INTO completed_courses
-  FROM (
-    SELECT ct.course_id
-    FROM public.course_tasks ct
-    JOIN public.task_checklist_items tci ON tci.task_id = ct.id
-    LEFT JOIN public.checklist_progress cp
-           ON cp.item_id = tci.id
-          AND cp.student_id = p_student_id
-    GROUP BY ct.course_id
-    HAVING COUNT(*) FILTER (WHERE cp.item_id IS NOT NULL) = COUNT(*)
-  ) AS done;
-
-  result := jsonb_build_object(
-    'xp', gamif.xp,
-    'level', gamif.level,
-    'practice_minutes', gamif.total_practice_minutes,
-    'tasks_completed', gamif.tasks_completed,
-    'courses_completed', completed_courses,
-    'badges', COALESCE((
-      SELECT jsonb_agg(jsonb_build_object('key', sb.badge_key, 'earned_at', sb.earned_at))
-      FROM public.student_badges sb
-      WHERE sb.student_id = p_student_id
-    ), '[]'::jsonb)
-  );
-
-  RETURN result;
+  RETURN QUERY
+  SELECT * FROM (
+    VALUES
+      ('first_task', 'Primera Tarea', 'Completa tu primera tarea',
+       (SELECT COUNT(*) FROM public.tasks WHERE student_id = p_student_id AND status = 'Completado'), 1),
+      ('tasks_10', '10 Tareas', 'Completa 10 tareas',
+       (SELECT COUNT(*) FROM public.tasks WHERE student_id = p_student_id AND status = 'Completado'), 10),
+      ('tasks_50', '50 Tareas', 'Completa 50 tareas',
+       (SELECT COUNT(*) FROM public.tasks WHERE student_id = p_student_id AND status = 'Completado'), 50),
+      ('tasks_100', '100 Tareas', 'Completa 100 tareas',
+       (SELECT COUNT(*) FROM public.tasks WHERE student_id = p_student_id AND status = 'Completado'), 100),
+      ('first_course', 'Primer Curso', 'Completa tu primer curso',
+       (SELECT COUNT(*) FROM (
+          SELECT ct3.course_id
+          FROM public.course_tasks ct3
+          JOIN public.task_checklist_items tci3 ON tci3.task_id = ct3.id
+          LEFT JOIN public.checklist_progress cp3
+                 ON cp3.item_id = tci3.id
+                AND cp3.student_id = p_student_id
+          GROUP BY ct3.course_id
+          HAVING COUNT(*) FILTER (WHERE cp3.item_id IS NOT NULL) = COUNT(*)
+        ) AS completed_courses), 1),
+      ('week_streak', 'Racha de 7 Dias', 'Practica 7 dias seguidos',
+       COALESCE((SELECT current_streak FROM public.practice_streaks WHERE student_id = p_student_id), 0), 7),
+      ('month_streak', 'Racha de 30 Dias', 'Practica 30 dias seguidos',
+       COALESCE((SELECT current_streak FROM public.practice_streaks WHERE student_id = p_student_id), 0), 30)
+  ) AS b(badge_key, badge_name, badge_description, progress, target)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.student_badges sb
+    WHERE sb.student_id = p_student_id AND sb.badge_key = b.badge_key
+  )
+  ORDER BY
+    CASE b.badge_key
+      WHEN 'first_task' THEN 1
+      WHEN 'week_streak' THEN 2
+      WHEN 'tasks_10' THEN 3
+      WHEN 'first_course' THEN 4
+      WHEN 'month_streak' THEN 5
+      WHEN 'tasks_50' THEN 6
+      WHEN 'tasks_100' THEN 7
+      WHEN 'century_streak' THEN 8
+      ELSE 99
+    END
+  LIMIT 3;
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.get_next_badges(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.get_next_badges(uuid) TO authenticated;
+REVOKE ALL ON FUNCTION public.get_next_badges(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_next_badges(UUID) TO authenticated;
