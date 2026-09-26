@@ -20,29 +20,42 @@ const useSupabaseTasks = () => {
 
   const { data: tasks, setData: setTasks, loading, error, refetch } = useSupabaseQuery(fetchTasks)
 
-  const addTask = useCallback(
+  const addTasks = useCallback(
     async (taskData) => {
-      const { error } = await supabase.from('tasks').insert({
-        title: taskData.title,
-        description: taskData.description || '',
-        student_id: taskData.studentId,
-        assigned_by: taskData.assignedBy,
-        due_date: taskData.dueDate,
-        status: taskData.status || 'Pendiente',
-        progress: taskData.progress || 0,
-      })
-      if (!error) {
-        await notifyInApp({
-          senderId: taskData.assignedBy || null,
-          recipients: [{ id: taskData.studentId }],
-          title: 'Nueva tarea asignada',
-          message: `Se te asignó la tarea: ${taskData.title}`,
-        })
-        await refetch()
+      const studentIds = (taskData.studentIds || []).filter(Boolean)
+      if (!studentIds.length) return false
+
+      const { error } = await supabase.from('tasks').insert(
+        studentIds.map((studentId) => ({
+          title: taskData.title,
+          description: taskData.description || '',
+          student_id: studentId,
+          assigned_by: taskData.assignedBy,
+          due_date: taskData.dueDate,
+          status: taskData.status || 'Pendiente',
+          progress: taskData.progress || 0,
+        })),
+      )
+      if (error) {
+        console.error('[Tasks] Error:', error.message, error)
+        return false
       }
-      return !error
+
+      await notifyInApp({
+        senderId: taskData.assignedBy || null,
+        recipients: studentIds.map((id) => ({ id })),
+        title: 'Nueva tarea asignada',
+        message: `Se te asignó la tarea: ${taskData.title}`,
+      })
+      await refetch()
+      return true
     },
     [refetch],
+  )
+
+  const addTask = useCallback(
+    async (taskData) => addTasks({ ...taskData, studentIds: [taskData.studentId] }),
+    [addTasks],
   )
 
   const cleanUpdates = (updates) => {
@@ -107,6 +120,7 @@ const useSupabaseTasks = () => {
     loading,
     error,
     addTask,
+    addTasks,
     updateTask,
     deleteTask,
     changeTaskStatus,

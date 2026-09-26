@@ -4,6 +4,52 @@ export const INSTRUMENT_OPTIONS = ['Piano', 'Guitarra', 'Violín', 'Saxofón', '
 
 export const LEVEL_OPTIONS = ['Principiante', 'Intermedio', 'Avanzado']
 
+export const UNASSIGNED_INSTRUMENT_LABEL = 'Sin instrumento'
+
+const INSTRUMENT_RANK = new Map(INSTRUMENT_OPTIONS.map((name, index) => [name, index]))
+
+const normalizedText = (value) =>
+  (value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+
+const CANONICAL_INSTRUMENT = new Map(INSTRUMENT_OPTIONS.map((name) => [normalizedText(name), name]))
+
+const instrumentRank = (name) => {
+  if (name === UNASSIGNED_INSTRUMENT_LABEL) return Number.MAX_SAFE_INTEGER
+  return INSTRUMENT_RANK.get(name) ?? INSTRUMENT_OPTIONS.length
+}
+
+export const isActiveStudent = (student) => normalizedText(student?.status) === 'activo'
+
+export const byFullName = (a, b) =>
+  (a?.full_name || '').localeCompare(b?.full_name || '', 'es', { sensitivity: 'base' })
+
+export const buildAssignmentGroups = (students) => {
+  const list = (Array.isArray(students) ? students : []).filter(Boolean)
+  const buckets = new Map()
+
+  INSTRUMENT_OPTIONS.forEach((name) => buckets.set(name, []))
+  list.forEach((student) => {
+    const raw = normalizedText(student?.instrument)
+    const key =
+      CANONICAL_INSTRUMENT.get(raw) || student?.instrument?.trim() || UNASSIGNED_INSTRUMENT_LABEL
+    if (!buckets.has(key)) buckets.set(key, [])
+    buckets.get(key).push(student)
+  })
+
+  return [...buckets.entries()]
+    .map(([instrument, members]) => ({ instrument, members: [...members].sort(byFullName) }))
+    .filter((group) => group.members.length > 0)
+    .sort(
+      (a, b) =>
+        instrumentRank(a.instrument) - instrumentRank(b.instrument) ||
+        a.instrument.localeCompare(b.instrument, 'es', { sensitivity: 'base' }),
+    )
+}
+
 export const normalizeUsername = (fullName) =>
   fullName
     .toLowerCase()

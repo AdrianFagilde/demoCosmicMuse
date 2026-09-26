@@ -35,6 +35,7 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import { isOverdue } from '../../utils/dates'
+import { buildAssignmentGroups, byFullName, isActiveStudent } from '../../utils/students'
 
 const statusColors = {
   Pendiente: 'warning',
@@ -52,6 +53,19 @@ const sortOptions = [
 ]
 
 const statusOptions = ['Todos', 'Pendiente', 'En progreso', 'Completado']
+
+const ALL_STUDENTS_VALUE = '__all__'
+const INSTRUMENT_VALUE_PREFIX = '__instrument__:'
+const ALL_STUDENTS_FILTER = '__all__'
+
+const emptyNewTask = {
+  title: '',
+  description: '',
+  studentId: '',
+  dueDate: '',
+  status: 'Pendiente',
+  progress: 0,
+}
 
 const TaskProgressInput = ({ value, onCommit }) => {
   const [draft, setDraft] = useState(() => String(value))
@@ -95,22 +109,47 @@ const Tasks = () => {
   const { user, profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const { students } = useSupabaseStudents()
-  const { tasks, loading, addTask, deleteTask, changeTaskStatus, changeTaskProgress } =
+  const { tasks, loading, addTasks, deleteTask, changeTaskStatus, changeTaskProgress } =
     useSupabaseTasks()
-  const [newTask, setNewTask] = useState({
-    title: '',
-    description: '',
-    studentId: '',
-    dueDate: '',
-    status: 'Pendiente',
-    progress: 0,
-  })
+  const [newTask, setNewTask] = useState(emptyNewTask)
   const [formError, setFormError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   // Student filter/sort state
   const [statusFilter, setStatusFilter] = useState('Todos')
+  const [studentFilter, setStudentFilter] = useState(ALL_STUDENTS_FILTER)
   const [sortBy, setSortBy] = useState('due_date_asc')
   const [searchText, setSearchText] = useState('')
+
+  const sortedStudents = useMemo(() => [...(students || [])].sort(byFullName), [students])
+  const instrumentGroups = useMemo(() => buildAssignmentGroups(students), [students])
+  const activeStudents = useMemo(() => (students || []).filter(isActiveStudent), [students])
+
+  const assignmentTargets = useMemo(() => {
+    const selected = newTask.studentId
+    if (!selected) return []
+    if (selected === ALL_STUDENTS_VALUE) return activeStudents
+    if (selected.startsWith(INSTRUMENT_VALUE_PREFIX)) {
+      const instrument = selected.slice(INSTRUMENT_VALUE_PREFIX.length)
+      const group = instrumentGroups.find((item) => item.instrument === instrument)
+      return group ? group.members.filter(isActiveStudent) : []
+    }
+    const student = sortedStudents.find((item) => item.id === selected)
+    return student ? [student] : []
+  }, [newTask.studentId, activeStudents, instrumentGroups, sortedStudents])
+
+  const duplicateTargets = useMemo(() => {
+    const title = (newTask.title || '').trim().toLowerCase()
+    if (!title) return []
+    return assignmentTargets.filter((student) =>
+      tasks.some(
+        (task) =>
+          String(task.student_id) === String(student.id) &&
+          (task.title || '').trim().toLowerCase() === title &&
+          task.status !== 'Completado',
+      ),
+    )
+  }, [assignmentTargets, newTask.title, tasks])
 
   const studentTasks = tasks.filter((task) => task.student_id === user?.id)
   const visibleTasks = isAdmin ? tasks : studentTasks
@@ -132,6 +171,11 @@ const Tasks = () => {
     // Status filter
     if (statusFilter !== 'Todos') {
       result = result.filter((task) => task.status === statusFilter)
+    }
+
+    // Student filter (admin only, to navigate bulk-created rows)
+    if (isAdmin && studentFilter !== ALL_STUDENTS_FILTER) {
+      result = result.filter((task) => String(task.student_id) === studentFilter)
     }
 
     // Sort
@@ -156,40 +200,50 @@ const Tasks = () => {
     })
 
     return result
-  }, [visibleTasks, searchText, statusFilter, sortBy])
+  }, [visibleTasks, searchText, statusFilter, studentFilter, isAdmin, sortBy])
 
   const handleAddTask = async (event) => {
     event.preventDefault()
+    if (saving) return
     if (!newTask.title || !newTask.description || !newTask.dueDate) {
       setFormError('Completa título, descripción y fecha de entrega.')
       return
     }
-    if (!newTask.studentId) {
-      setFormError('Selecciona un estudiante para asignar la tarea.')
+    if (!assignmentTargets.length) {
+      setFormError('Selecciona un alumno, un instrumento o "Todos los alumnos".')
       return
     }
+
+    if (assignmentTargets.length > 1) {
+      const duplicateNote = duplicateTargets.length
+        ? `\n\n${duplicateTargets.length} ya tienen una tarea activa con el mismo título. Se asignará igualmente.`
+        : ''
+      const confirmed = window.confirm(
+        `Se crearán ${assignmentTargets.length} tareas, una por alumno.${duplicateNote}\n\n¿Continuar?`,
+      )
+      if (!confirmed) return
+    }
+
     setFormError('')
-    const ok = await addTask({
-      title: newTask.title,
-      description: newTask.description,
-      studentId: newTask.studentId,
-      assignedBy: profile.id,
-      dueDate: newTask.dueDate,
-      status: newTask.status,
-      progress: newTask.progress,
-    })
-    if (!ok) {
-      setFormError('No se pudo guardar la tarea. Intenta de nuevo.')
-      return
+    setSaving(true)
+    try {
+      const ok = await addTasks({
+        title: newTask.title,
+        description: newTask.description,
+        studentIds: assignmentTargets.map((student) => student.id),
+        assignedBy: profile.id,
+        dueDate: newTask.dueDate,
+        status: newTask.status,
+        progress: newTask.progress,
+      })
+      if (!ok) {
+        setFormError('No se pudo guardar la tarea. Intenta de nuevo.')
+        return
+      }
+      setNewTask(emptyNewTask)
+    } finally {
+      setSaving(false)
     }
-    setNewTask({
-      title: '',
-      description: '',
-      studentId: '',
-      dueDate: '',
-      status: 'Pendiente',
-      progress: 0,
-    })
   }
 
   const handleDelete = async (taskId) => {
@@ -261,16 +315,52 @@ const Tasks = () => {
                       <CFormSelect
                         label="Asignar a"
                         value={newTask.studentId}
+                        disabled={saving}
                         onChange={(event) =>
                           setNewTask({ ...newTask, studentId: event.target.value })
                         }
                       >
-                        {students.map((student) => (
-                          <option key={student.id} value={student.id}>
-                            {student.full_name}
-                          </option>
-                        ))}
+                        <option value="">Selecciona…</option>
+                        <option value={ALL_STUDENTS_VALUE} disabled={!activeStudents.length}>
+                          Todos los alumnos ({activeStudents.length})
+                        </option>
+                        {instrumentGroups.length > 0 && (
+                          <optgroup label="Por instrumento (solo activos)">
+                            {instrumentGroups.map((group) => (
+                              <option
+                                key={group.instrument}
+                                value={`${INSTRUMENT_VALUE_PREFIX}${group.instrument}`}
+                                disabled={!group.members.some(isActiveStudent)}
+                              >
+                                {group.instrument} ({group.members.filter(isActiveStudent).length})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {sortedStudents.length > 0 && (
+                          <optgroup label="Alumnos">
+                            {sortedStudents.map((student) => (
+                              <option key={student.id} value={student.id}>
+                                {student.full_name}
+                                {isActiveStudent(student) ? '' : ' (inactivo)'}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
                       </CFormSelect>
+                      {assignmentTargets.length > 0 && (
+                        <div className="small text-muted mt-1">
+                          {assignmentTargets.length === 1
+                            ? `Se creará 1 tarea para ${assignmentTargets[0].full_name}.`
+                            : `Se crearán ${assignmentTargets.length} tareas, una por alumno.`}
+                        </div>
+                      )}
+                      {duplicateTargets.length > 0 && (
+                        <div className="alert alert-warning py-2 px-3 mt-2 mb-0 small">
+                          {duplicateTargets.length} de los alumnos seleccionados ya tienen una tarea
+                          activa con el mismo título. Se asignará igualmente.
+                        </div>
+                      )}
                     </CCol>
                     <CCol md={6}>
                       <CFormInput
@@ -305,8 +395,8 @@ const Tasks = () => {
                       />
                     </CCol>
                     <CCol md={12} className="text-end">
-                      <CButton type="submit" color="primary">
-                        Guardar tarea
+                      <CButton type="submit" color="primary" disabled={saving}>
+                        {saving ? 'Guardando...' : 'Guardar tarea'}
                       </CButton>
                     </CCol>
                   </CRow>
@@ -382,6 +472,20 @@ const Tasks = () => {
                 </option>
               ))}
             </CFormSelect>
+            {isAdmin && sortedStudents.length > 0 && (
+              <CFormSelect
+                value={studentFilter}
+                onChange={(e) => setStudentFilter(e.target.value)}
+                style={{ minWidth: 200 }}
+              >
+                <option value={ALL_STUDENTS_FILTER}>Todos los alumnos</option>
+                {sortedStudents.map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.full_name}
+                  </option>
+                ))}
+              </CFormSelect>
+            )}
             <CFormSelect
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
