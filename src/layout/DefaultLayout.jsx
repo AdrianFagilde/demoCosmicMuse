@@ -23,6 +23,7 @@ import React from 'react'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
 import NotificationToasts from '../components/NotificationToasts'
 import WelcomeModal from '../components/WelcomeModal'
+import { NotificationProvider } from '../context/NotificationContext'
 
 /**
  * DefaultLayout functional component
@@ -39,18 +40,20 @@ import WelcomeModal from '../components/WelcomeModal'
  */
 const DefaultLayout = () => {
   return (
-    <div>
-      <AppSidebar />
-      <div className="wrapper d-flex flex-column min-vh-100">
-        <AppHeader />
-        <div className="body flex-grow-1">
-          <AppContent />
+    <NotificationProvider>
+      <div>
+        <AppSidebar />
+        <div className="wrapper d-flex flex-column min-vh-100">
+          <AppHeader />
+          <div className="body flex-grow-1">
+            <AppContent />
+          </div>
+          <AppFooter />
         </div>
-        <AppFooter />
+        <NotificationToasts />
+        <WelcomeModal />
       </div>
-      <NotificationToasts />
-      <WelcomeModal />
-    </div>
+    </NotificationProvider>
   )
 }
 

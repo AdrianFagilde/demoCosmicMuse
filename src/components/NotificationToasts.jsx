@@ -4,7 +4,7 @@ import { cilBell } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import useSupabaseUserNotifications from '../hooks/useSupabaseUserNotifications'
+import { useNotifications } from '../context/NotificationContext'
 
 const MAX_INITIAL_SNIPPETS = 3
 const SNIPPET_LENGTH = 80
@@ -32,9 +32,9 @@ const buildMeta = (notification) =>
     .join(' · ')
 
 const NotificationToasts = () => {
-  const { user, profile } = useAuth()
+  const { profile } = useAuth()
   const navigate = useNavigate()
-  const { notifications, unreadCount, loading } = useSupabaseUserNotifications(user?.id)
+  const { notifications, unreadCount, loading } = useNotifications()
 
   const [toasts, setToasts] = useState([])
   const initializedRef = useRef(false)
@@ -91,7 +91,7 @@ const NotificationToasts = () => {
     }
 
     setToasts((prev) => [...prev, ...created].slice(-MAX_VISIBLE_TOASTS))
-  }, [loading, user, notifications, unreadCount])
+  }, [loading, notifications, unreadCount])
 
   return (
     <CToaster placement="top-end">

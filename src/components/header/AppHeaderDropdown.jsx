@@ -29,9 +29,17 @@ const AppHeaderDropdown = () => {
       .toUpperCase() || 'U'
   const avatarUrl = profile?.avatar_url
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (err) {
+      // El estado local ya se limpia en el finally de logout(), pero
+      // signOut pudo fallar por red. Sin este catch la promesa rechazada
+      // quedaba sin manejar en consola.
+      console.error('[Auth] Error cerrando sesión:', err?.message || err)
+    } finally {
+      navigate('/login')
+    }
   }
 
   return (

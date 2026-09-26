@@ -65,7 +65,13 @@ export const AuthProvider = ({ children }) => {
       if (cancelled) return
       if (session?.user) {
         setUser(session.user)
-        void loadProfile(session.user.id)
+        // supabase-js advierte de no llamar a otras APIs de Supabase de forma
+        // sincrona dentro de onAuthStateChange: el cliente de auth mantiene un
+        // candado interno y getProfile() puede deadlockear. Se difiere un
+        // turno de macrotarea para salir del callback.
+        setTimeout(() => {
+          if (!cancelled) void loadProfile(session.user.id)
+        }, 0)
       } else {
         requestSeq.current += 1 // invalida cargas de perfil en curso
         setUser(null)
@@ -86,10 +92,16 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const logout = useCallback(async () => {
-    await logoutWithSupabase()
-    setUser(null)
-    setProfile(null)
-    setAuthError(null)
+    try {
+      await logoutWithSupabase()
+    } finally {
+      // El estado local se limpia SIEMPRE, incluso si signOut falla por
+      // red. Antes se limpiaba despues del await, asi que un fallo dejaba la
+      // sesion viva y visible en la interfaz.
+      setUser(null)
+      setProfile(null)
+      setAuthError(null)
+    }
   }, [])
 
   const refreshProfile = useCallback(async () => {

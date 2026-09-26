@@ -7,7 +7,8 @@ const login = async (email, password) => {
 }
 
 const logout = async () => {
-  await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
 }
 
 const getCurrentSession = async () => {

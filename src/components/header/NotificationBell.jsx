@@ -12,7 +12,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilBell } from '@coreui/icons'
 import { useAuth } from '../../context/AuthContext'
-import useSupabaseUserNotifications from '../../hooks/useSupabaseUserNotifications'
+import { useNotifications } from '../../context/NotificationContext'
 
 const formatRelativeTime = (dateStr) => {
   const now = new Date()
@@ -29,11 +29,9 @@ const formatRelativeTime = (dateStr) => {
 
 const NotificationBell = () => {
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { profile } = useAuth()
   const isInboxAvailable = profile?.role === 'student'
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useSupabaseUserNotifications(
-    user?.id,
-  )
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
 
   const recent = notifications.slice(0, 8)
 

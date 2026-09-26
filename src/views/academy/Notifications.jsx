@@ -2,18 +2,12 @@ import React from 'react'
 import { CBadge, CButton, CCard, CCardBody, CCardHeader, CSpinner } from '@coreui/react'
 import { cilCheckAlt } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
-import { useAuth } from '../../context/AuthContext'
-import useSupabaseUserNotifications from '../../hooks/useSupabaseUserNotifications'
+import { useNotifications } from '../../context/NotificationContext'
 import { formatDateTime } from '../../utils/format'
 
 const Notifications = () => {
-  const { user } = useAuth()
-  return <StudentInbox userId={user?.id} />
-}
-
-const StudentInbox = ({ userId }) => {
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } =
-    useSupabaseUserNotifications(userId)
+  const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead } =
+    useNotifications()
 
   if (loading) {
     return (
@@ -37,7 +31,13 @@ const StudentInbox = ({ userId }) => {
         </div>
       </CCardHeader>
       <CCardBody>
-        {notifications.length === 0 ? (
+        {error ? (
+          // Sin esto, un fallo de red o de RLS se leería al alumno como
+          // "no tienes notificaciones", indistinguible del estado real.
+          <div className="alert alert-warning mb-0">
+            No se pudieron cargar tus notificaciones. Comprueba tu conexión e inténtalo de nuevo.
+          </div>
+        ) : notifications.length === 0 ? (
           <div className="text-center text-medium-emphasis py-4">No tienes notificaciones.</div>
         ) : (
           <div className="list-group">
