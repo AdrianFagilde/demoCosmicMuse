@@ -1,4 +1,15 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+
+/**
+ * Respeta la preferencia del sistema "reducir movimiento". La transicion se
+ * aplica desde JS (stroke-dashoffset), asi que una media query en CSS no la
+ * cubre: hay que consultarla aqui. Con movimiento reducido el anillo se dibuja
+ * ya en su posicion final, sin interpolacion.
+ */
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false
 
 const ProgressRing = ({
   progress = 0,
@@ -13,6 +24,17 @@ const ProgressRing = ({
   animate = true,
   animationDuration = 800,
 }) => {
+  const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion)
+
+  useEffect(() => {
+    if (!window.matchMedia) return
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = (event) => setReducedMotion(event.matches)
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+
+  const shouldAnimate = animate && !reducedMotion
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const clampedProgress = Math.max(0, Math.min(100, progress))
@@ -20,8 +42,14 @@ const ProgressRing = ({
 
   const ringStyle = {
     strokeDasharray: circumference,
-    strokeDashoffset: animate ? offset : circumference,
-    transition: animate ? `stroke-dashoffset ${animationDuration}ms ease-out` : 'none',
+    // Siempre el offset FINAL del progreso. Antes se escribia `circumference`
+    // cuando no habia animacion, que deja el trazo completamente vacio: con
+    // "reducir movimiento" activado los anillos aparecerian a 0% en vez de
+    // mostrar el progreso real. La transicion sigue produciendose porque el
+    // navegador interpola entre el valor anterior y el nuevo cuando cambia el
+    // progreso.
+    strokeDashoffset: offset,
+    transition: shouldAnimate ? `stroke-dashoffset ${animationDuration}ms ease-out` : 'none',
     transform: 'rotate(-90deg)',
     transformOrigin: 'center',
   }

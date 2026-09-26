@@ -1,30 +1,23 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
 import { cilCalendar, cilMusicNote, cilBook, cilArrowRight, cilClock } from '@coreui/icons'
+import { getUrgency } from '../../utils/dates'
 import ProgressRing from './ProgressRing'
-
-const getUrgency = (dueDate) => {
-  if (!dueDate) return { color: '#64748b', label: 'Sin fecha', variant: 'none' }
-  const due = new Date(dueDate)
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24))
-  if (diffDays < 0)
-    return { color: '#ef4444', label: 'Vencida', variant: 'urgent-overdue', diffDays }
-  if (diffDays === 0) return { color: '#f59e0b', label: 'Hoy', variant: 'urgent-today', diffDays }
-  if (diffDays <= 3)
-    return { color: '#06b6d4', label: `${diffDays}d`, variant: 'urgent-week', diffDays }
-  return { color: '#22c55e', label: `${diffDays}d`, variant: 'urgent-future', diffDays }
-}
 
 const ActionCard = ({ task, onClick }) => {
   const urgency = getUrgency(task.due_date)
+  // `color` es el nombre de CoreUI ('danger', 'warning'...) y `hex` el valor
+  // real. Las reglas de este componente son CSS plano, no clases de CoreUI:
+  // usar `color` producia `backgroundColor: 'danger15'`, una declaracion
+  // invalida que el navegador descarta en silencio, y la tarjeta se quedaba
+  // sin color de urgencia.
+  const tone = urgency.hex
   const instrumentColor = task.instrument_color || '#6366f1'
 
   return (
     <div
       className={`action-card ${urgency.variant}`}
-      style={{ '--action-color': urgency.color }}
+      style={{ '--action-color': tone }}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -42,9 +35,9 @@ const ActionCard = ({ task, onClick }) => {
             <span
               className="badge text-truncate d-flex align-items-center gap-1"
               style={{
-                backgroundColor: `${urgency.color}15`,
-                color: urgency.color,
-                border: `1px solid ${urgency.color}40`,
+                backgroundColor: `${tone}15`,
+                color: tone,
+                border: `1px solid ${tone}40`,
                 fontSize: '0.6rem',
                 padding: '2px 6px',
               }}

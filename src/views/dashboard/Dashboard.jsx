@@ -39,6 +39,7 @@ import ActionCard from '../../components/dashboard/ActionCard'
 import DailyGoalCard from '../../components/dashboard/DailyGoalCard'
 import WeeklyDots from '../../components/dashboard/WeeklyDots'
 import { getInstrumentColor } from '../../utils/colors'
+import { localDateKey, parseDbDate } from '../../utils/dates'
 import { Equalizer, MusicNote, StaffDivider } from '../../components/MusicDecor'
 
 // Import compact styles
@@ -139,8 +140,12 @@ const Dashboard = () => {
 
       const monthMap = {}
       data.forEach((p) => {
-        const d = new Date(p.payment_date)
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        // payment_date es una columna DATE: 'YYYY-MM-DD'. `new Date()` la
+        // lee como medianoche UTC y getMonth() la devuelve en hora local,
+        // así que al oeste de UTC los pagos caían en el mes anterior.
+        const d = parseDbDate(p.payment_date)
+        if (!d) return
+        const key = localDateKey(p.payment_date)
         const label = d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' })
         if (!monthMap[key]) monthMap[key] = { key, label, total: 0 }
         monthMap[key].total += Number(p.amount)

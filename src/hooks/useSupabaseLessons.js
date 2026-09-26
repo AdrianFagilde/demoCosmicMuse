@@ -3,6 +3,8 @@ import supabase from '../lib/supabase'
 import { notifyInApp } from '../utils/notifications'
 import useSupabaseQuery from './useSupabaseQuery'
 
+const EMPTY_LESSONS = []
+
 const useSupabaseLessons = (studentId) => {
   const fetchLessons = useCallback(async () => {
     let query = supabase
@@ -28,7 +30,7 @@ const useSupabaseLessons = (studentId) => {
     loading,
     error,
     refetch,
-  } = useSupabaseQuery(fetchLessons)
+  } = useSupabaseQuery(fetchLessons, true, EMPTY_LESSONS)
 
   const addLesson = useCallback(
     async (lessonData) => {

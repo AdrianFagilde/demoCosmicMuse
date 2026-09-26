@@ -25,23 +25,26 @@ $cosmic-magenta: #b42d75;
   $sidebar-color: #ffffff,
   $sidebar-brand-bg: rgba($cosmic-purple, 0.15),
   // lg mantiene el ancho base (16rem = 256px) para que el occupy responda
-  $sidebar-widths: (sm: 12rem, lg: 16rem, xl: 24rem),
+  $sidebar-widths: (
+      sm: 12rem,
+      lg: 16rem,
+      xl: 24rem,
+    ),
   // Header
   $header-bg: $cosmic-purple,
   $header-color: #ffffff,
   $header-border-color: rgba(255, 255, 255, 0.12),
-
   // Tipografía
   $font-family-sans-serif: (
-    'Lexend Variable',
-    'Lexend',
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    Arial,
-    sans-serif
-  )
+      'Lexend Variable',
+      'Lexend',
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      Arial,
+      sans-serif,
+    )
 );
 
 @use 'vendors/simplebar';
@@ -55,7 +58,8 @@ $cosmic-magenta: #b42d75;
   --gradient-accent: linear-gradient(135deg, #{$cosmic-cyan}, #{$cosmic-navy});
 
   // Tipografía artística: Lexend en toda la app (títulos + acentos)
-  --font-display: 'Lexend Variable', 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-display:
+    'Lexend Variable', 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --font-script: 'Lexend Variable', 'Lexend', 'Dancing Script', cursive;
 
   // Uniforme primario: sidebar + header
@@ -178,7 +182,9 @@ h6,
 // Artistic - Ornamental fine frames (same palette)
 // =============================================
 
-.card:not(.welcome-banner):not(.streak-card):not(.xp-card):not(.practice-card):not(.tasks-card):not(.next-lesson-card),
+.card:not(.welcome-banner):not(.streak-card):not(.xp-card):not(.practice-card):not(.tasks-card):not(
+    .next-lesson-card
+  ),
 .modal-content {
   position: relative;
 
@@ -289,6 +295,37 @@ h6,
 
   50% {
     height: 100%;
+  }
+}
+
+// Pulso de las insignias de tarea vencida. La clase la aplica
+// TaskUrgencyRow.jsx pero no existia en ninguna hoja de estilos (tampoco en
+// CoreUI), asi que el aviso de "Vencida" era puramente textual.
+.blink {
+  animation: blink-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes blink-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+// Quien tenga "reducir movimiento" activado en el sistema recibe el mismo
+// indicador, pero sin la animacion.
+@media (prefers-reduced-motion: reduce) {
+  .blink,
+  .equalizer span {
+    animation: none;
+  }
+
+  .blink {
+    opacity: 1;
   }
 }
 

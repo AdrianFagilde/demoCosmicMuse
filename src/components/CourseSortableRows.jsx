@@ -10,9 +10,12 @@ const baseStyle = (transform, transition, isDragging) => ({
   opacity: isDragging ? 0.6 : 1,
 })
 
-const dragHandleProps = (attributes, listeners) => ({
+const dragHandleProps = (attributes, listeners, label) => ({
   ...attributes,
   ...listeners,
+  // dnd-kit aporta role/tabIndex pero no nombre accesible: sin esto un
+  // lector de pantalla anuncia un boton sin etiqueta.
+  'aria-label': label,
   className: 'text-medium-emphasis',
   style: { cursor: 'grab', touchAction: 'none' },
 })
@@ -32,7 +35,7 @@ export const SortableTaskRow = ({
   return (
     <CCard ref={setNodeRef} style={baseStyle(transform, transition, isDragging)} className="mb-2">
       <CCardBody className="d-flex align-items-center gap-2 py-2">
-        <span {...dragHandleProps(attributes, listeners)}>
+        <span {...dragHandleProps(attributes, listeners, `Reordenar ${task.title}`)}>
           <CIcon icon={cilMenu} />
         </span>
         <div className="flex-grow-1">
@@ -74,7 +77,7 @@ export const SortableFormRow = ({ form, taskLabel, onEdit, onViewResponses, onDe
   return (
     <CCard ref={setNodeRef} style={baseStyle(transform, transition, isDragging)} className="mb-2">
       <CCardBody className="d-flex align-items-center gap-3 py-2">
-        <span {...dragHandleProps(attributes, listeners)}>
+        <span {...dragHandleProps(attributes, listeners, `Reordenar ${form.title}`)}>
           <CIcon icon={cilMenu} />
         </span>
         <div className="flex-grow-1">
@@ -98,18 +101,25 @@ export const SortableFormRow = ({ form, taskLabel, onEdit, onViewResponses, onDe
   )
 }
 
-export const StudentSortableChecklistItem = ({ item, checked, onChange }) => {
+export const StudentSortableChecklistItem = ({ item, checked, onChange, disabled = false }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
+    disabled,
   })
   return (
     <div ref={setNodeRef} style={baseStyle(transform, transition, isDragging)} className="mb-2">
       <div
-        {...dragHandleProps(attributes, listeners)}
         className="text-medium-emphasis d-flex align-items-center gap-2"
-        style={{ cursor: 'grab', touchAction: 'none', padding: '4px 8px', borderRadius: '4px' }}
+        style={{ padding: '4px 8px', borderRadius: '4px' }}
       >
-        <CIcon icon={cilMenu} />
+        {/* El reordenado es una operacion de admin: reescribe la posicion de
+            los items del curso entero. El alumno solo marca, asi que el asa
+            no se renderiza y useSortable queda deshabilitado. */}
+        {!disabled && (
+          <span {...dragHandleProps(attributes, listeners, `Reordenar ${item.label}`)}>
+            <CIcon icon={cilMenu} />
+          </span>
+        )}
         <CFormCheck
           id={`check-${item.id}`}
           label={item.label}

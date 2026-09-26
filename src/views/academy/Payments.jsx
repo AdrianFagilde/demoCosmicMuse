@@ -34,13 +34,20 @@ const Payments = () => {
   const studentOptions = students.map((s) => ({ value: s.id, label: s.full_name }))
 
   const handleSendReminder = async (reminder, trigger) => {
-    const entries = await sendReminder(reminder, trigger, studentBalances)
-    if (entries && entries.length > 0) {
-      const methodLabel = reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'
-      notifyBrowser(
-        `Recordatorio ${methodLabel}`,
-        `${entries.length} notificaciones enviadas a ${reminder.target_group}`,
-      )
+    try {
+      const entries = await sendReminder(reminder, trigger, studentBalances)
+      if (entries && entries.length > 0) {
+        const methodLabel = reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'
+        notifyBrowser(
+          `Recordatorio ${methodLabel}`,
+          `${entries.length} notificaciones enviadas a ${reminder.target_group}`,
+        )
+      } else {
+        notifyBrowser('Recordatorio', 'No había destinatarios para este grupo.')
+      }
+    } catch (err) {
+      console.error('Payments: fallo al enviar el recordatorio', err?.message || err)
+      notifyBrowser('Recordatorio', 'No se pudo enviar el recordatorio. Inténtalo de nuevo.')
     }
   }
 

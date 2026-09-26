@@ -48,6 +48,10 @@ const AppContent = () => {
             )
           })}
           <Route path="/" element={<Navigate to="dashboard" replace />} />
+          {/* Sin esta ruta, cualquier URL no declarada (un typo, un bookmark
+              viejo, un atajo del manifest retirado) renderizaba el layout con
+              el cuerpo vacio y sin explicacion. */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>
     </CContainer>

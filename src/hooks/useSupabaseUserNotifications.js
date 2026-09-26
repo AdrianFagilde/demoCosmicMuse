@@ -2,6 +2,8 @@ import { useCallback, useEffect } from 'react'
 import supabase from '../lib/supabase'
 import useSupabaseQuery from './useSupabaseQuery'
 
+const EMPTY_NOTIFICATIONS = []
+
 const useSupabaseUserNotifications = (userId) => {
   const fetchNotifications = useCallback(async () => {
     if (!userId) return []
@@ -24,7 +26,7 @@ const useSupabaseUserNotifications = (userId) => {
     loading,
     error,
     refetch,
-  } = useSupabaseQuery(fetchNotifications)
+  } = useSupabaseQuery(fetchNotifications, true, EMPTY_NOTIFICATIONS)
 
   useEffect(() => {
     if (!userId) return

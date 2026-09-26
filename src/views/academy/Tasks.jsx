@@ -34,6 +34,7 @@ import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
+import { isOverdue } from '../../utils/dates'
 
 const statusColors = {
   Pendiente: 'warning',
@@ -202,8 +203,10 @@ const Tasks = () => {
     if (!ok) setFormError('No se pudo actualizar el estado.')
   }
 
-  const handleProgressCommit = (taskId, value) => {
-    const ok = changeTaskProgress(taskId, value)
+  const handleProgressCommit = async (taskId, value) => {
+    // changeTaskProgress devuelve una Promise: sin await era siempre truthy,
+    // asi que `if (!ok)` nunca se cumplia y el error nunca se mostraba.
+    const ok = await changeTaskProgress(taskId, value)
     if (!ok) setFormError('No se pudo actualizar el progreso.')
   }
 
@@ -214,9 +217,7 @@ const Tasks = () => {
       pending: userTasks.filter((t) => t.status === 'Pendiente').length,
       inProgress: userTasks.filter((t) => t.status === 'En progreso').length,
       completed: userTasks.filter((t) => t.status === 'Completado').length,
-      overdue: userTasks.filter(
-        (t) => t.status !== 'Completado' && new Date(t.due_date) < new Date(),
-      ).length,
+      overdue: userTasks.filter((t) => t.status !== 'Completado' && isOverdue(t.due_date)).length,
     }
   }
 
@@ -423,14 +424,14 @@ const Tasks = () => {
                       <CTableDataCell>
                         <span
                           className={
-                            new Date(task.due_date) < new Date() && task.status !== 'Completado'
+                            isOverdue(task.due_date) && task.status !== 'Completado'
                               ? 'text-danger fw-semibold'
                               : ''
                           }
                         >
                           {task.due_date}
                         </span>
-                        {new Date(task.due_date) < new Date() && task.status !== 'Completado' && (
+                        {isOverdue(task.due_date) && task.status !== 'Completado' && (
                           <CBadge color="danger" className="ms-1" style={{ fontSize: '0.65rem' }}>
                             Vencida
                           </CBadge>

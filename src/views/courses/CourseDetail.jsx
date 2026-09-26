@@ -63,6 +63,7 @@ import TaskEditorModal from '../../components/TaskEditorModal'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 import { FILE_ACCEPT, validateCourseFile } from '../../utils/forms'
 import { computeStats } from '../../utils/courses'
+import { isOverdue } from '../../utils/dates'
 
 const CourseDetail = () => {
   const { id } = useParams()
@@ -805,7 +806,7 @@ const CourseDetail = () => {
               .filter((f) => !f.task_id)
               .map((form) => {
                 const submitted = Boolean(mySubmissions[form.id])
-                const overdue = form.due_date && !submitted && new Date(form.due_date) < new Date()
+                const overdue = form.due_date && !submitted && isOverdue(form.due_date)
                 return (
                   <div
                     key={form.id}
@@ -858,8 +859,7 @@ const CourseDetail = () => {
           const taskPercent = taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : 0
           const taskForm = (course.course_forms || []).find((f) => f.task_id === task.id)
           const formSubmitted = taskForm ? Boolean(mySubmissions[taskForm.id]) : false
-          const formOverdue =
-            taskForm?.due_date && !formSubmitted && new Date(taskForm.due_date) < new Date()
+          const formOverdue = taskForm?.due_date && !formSubmitted && isOverdue(taskForm.due_date)
           const sortedItems = [...(task.task_checklist_items || [])].sort(
             (a, b) => (a.position ?? 0) - (b.position ?? 0),
           )
@@ -885,6 +885,10 @@ const CourseDetail = () => {
                       sensors={sensors}
                       collisionDetection={closestCenter}
                       onDragEnd={async (event) => {
+                        // Defensa en profundidad: aunque los items ya van
+                        // deshabilitados para el alumno, reorderChecklistItems
+                        // es la escritura de admin y no debe alcanzarse nunca.
+                        if (!isAdmin) return
                         const { active, over } = event
                         if (!over || active.id === over.id) return
                         const oldIndex = sortedItems.findIndex((i) => i.id === active.id)
@@ -892,7 +896,10 @@ const CourseDetail = () => {
                         const reordered = arrayMove(sortedItems, oldIndex, newIndex)
                         const ok = await reorderChecklistItems(reordered)
                         if (!ok) {
-                          // Revert on failure - the UI will reset since items come from course state
+                          // Sin estado optimista: los items se releen del
+                          // estado del curso, que no cambio, asi que la lista
+                          // vuelve sola a su orden real.
+                          setCourse((prev) => ({ ...prev }))
                         }
                       }}
                     >
@@ -907,23 +914,29 @@ const CourseDetail = () => {
                               key={item.id}
                               item={item}
                               checked={checked}
+                              disabled={!isAdmin}
                               onChange={async (next) => {
-                                setMyProgressRows((rows) =>
-                                  next
-                                    ? [...rows, { item_id: item.id, student_id: user.id }]
-                                    : rows.filter(
-                                        (row) =>
-                                          !(row.item_id === item.id && row.student_id === user.id),
-                                      ),
-                                )
-                                const ok = await toggleProgressItem(item.id, user.id, next)
-                                if (!ok) {
+                                // Estado optimista: refleja el clic al instante.
+                                const apply = (checked) =>
                                   setMyProgressRows((rows) =>
-                                    !next
-                                      ? [...rows, { item_id: item.id, student_id: user.id }]
-                                      : rows.filter((row) => row.item_id !== item.id),
+                                    checked
+                                      ? rows.some((r) => r.item_id === item.id)
+                                        ? rows
+                                        : [...rows, { item_id: item.id, student_id: user.id }]
+                                      : rows.filter(
+                                          (row) =>
+                                            !(
+                                              row.item_id === item.id && row.student_id === user.id
+                                            ),
+                                        ),
                                   )
-                                }
+
+                                apply(next)
+                                const ok = await toggleProgressItem(item.id, user.id, next)
+                                // Se revierte al valor ANTERIOR, que es !next.
+                                // Antes invertia las ramas y dejaba la UI
+                                // espejada respecto a la base de datos.
+                                if (!ok) apply(!next)
                               }}
                             />
                           )

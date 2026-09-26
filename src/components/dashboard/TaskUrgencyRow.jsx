@@ -2,18 +2,7 @@ import React from 'react'
 import { CCard, CCardBody, CBadge, CProgress, CButton } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilCalendar, cilMusicNote, cilBook } from '@coreui/icons'
-
-const getUrgency = (dueDate) => {
-  if (!dueDate) return { color: 'secondary', label: 'Sin fecha' }
-  const due = new Date(dueDate)
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24))
-  if (diffDays < 0) return { color: 'danger', label: 'Vencida', diffDays }
-  if (diffDays === 0) return { color: 'warning', label: 'Hoy', diffDays }
-  if (diffDays <= 3) return { color: 'info', label: `${diffDays}d`, diffDays }
-  return { color: 'success', label: `${diffDays}d`, diffDays }
-}
+import { getUrgency } from '../../utils/dates'
 
 const TaskUrgencyRow = ({ task, onClick }) => {
   const urgency = getUrgency(task.due_date)
@@ -28,7 +17,21 @@ const TaskUrgencyRow = ({ task, onClick }) => {
       <CCardBody
         className="py-2 px-3"
         style={{ cursor: onClick ? 'pointer' : 'default' }}
+        // La fila es clicable pero no era alcanzable con teclado: sin role
+        // ni tabIndex los usuarios de teclado se quedan sin esta accion.
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
         onClick={onClick}
+        onKeyDown={
+          onClick
+            ? (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  onClick(task)
+                }
+              }
+            : undefined
+        }
       >
         <div className="d-flex align-items-start gap-3">
           <div className="flex-grow-1 min-w-0">

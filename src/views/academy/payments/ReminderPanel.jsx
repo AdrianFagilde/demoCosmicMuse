@@ -41,6 +41,7 @@ const ReminderPanel = ({
 }) => {
   const [form, setForm] = useState(() => emptyForm(studentOptions[0]?.value || ''))
   const [submitError, setSubmitError] = useState('')
+  const [sendingId, setSendingId] = useState(null)
 
   const effectiveStudentId = form.studentId || studentOptions[0]?.value || ''
 
@@ -219,9 +220,18 @@ const ReminderPanel = ({
                               <CButton
                                 size="sm"
                                 color="warning"
-                                onClick={() => onSendReminder(reminder, 'Manual')}
+                                // Sin bloqueo, un doble clic entregaba dos
+                                // tandas completas de notificaciones.
+                                disabled={sendingId === reminder.id}
+                                onClick={() => {
+                                  setSendingId(reminder.id)
+                                  Promise.resolve(onSendReminder(reminder, 'Manual')).finally(() =>
+                                    setSendingId(null),
+                                  )
+                                }}
                               >
-                                <CIcon icon={cilSend} className="me-1" /> Enviar ahora
+                                <CIcon icon={cilSend} className="me-1" />{' '}
+                                {sendingId === reminder.id ? 'Enviando…' : 'Enviar ahora'}
                               </CButton>
                               {onUpdateReminder && (
                                 <CButton

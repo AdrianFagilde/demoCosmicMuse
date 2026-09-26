@@ -1,12 +1,13 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import supabase from '../lib/supabase'
 import useSupabaseQuery from './useSupabaseQuery'
 
 const EMPTY_STREAK = { current_streak: 0, longest_streak: 0, last_practice_date: null }
+const EMPTY_PRACTICE = { sessions: [], streak: EMPTY_STREAK, weeklySummary: [] }
 
 const useSupabasePractice = (studentId) => {
   const fetchAll = useCallback(async () => {
-    if (!studentId) return { sessions: [], streak: EMPTY_STREAK, weeklySummary: [] }
+    if (!studentId) return EMPTY_PRACTICE
 
     const [
       { data: sessionsData, error: sessionsError },
@@ -35,11 +36,70 @@ const useSupabasePractice = (studentId) => {
     }
   }, [studentId])
 
-  const { data, setData, loading, error, refetch } = useSupabaseQuery(fetchAll)
+  const { data, setData, loading, error, refetch } = useSupabaseQuery(
+    fetchAll,
+    true,
+    EMPTY_PRACTICE,
+  )
+
+  // Sesion abierta en curso, para poder cerrarla al desmontar sin depender
+  // de que la vista la haya guardado.
+  const openSessionId = useRef(null)
+
+  const endPractice = useCallback(
+    async (sessionId) => {
+      const { data: updated, error } = await supabase
+        .from('practice_sessions')
+        .update({ ended_at: new Date().toISOString() })
+        .eq('id', sessionId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('[Practice] End error:', error.message)
+        return null
+      }
+
+      if (openSessionId.current === sessionId) openSessionId.current = null
+
+      setData((prev) => ({
+        ...prev,
+        sessions: (prev?.sessions || []).map((s) => (s.id === sessionId ? updated : s)),
+      }))
+      await refetch()
+      return updated
+    },
+    [setData, refetch],
+  )
+
+  // Cierra la sesion abierta mas reciente de este alumno.
+  const stopPractice = useCallback(async () => {
+    if (!studentId) return null
+    const { data: open, error: openError } = await supabase
+      .from('practice_sessions')
+      .select('id')
+      .eq('student_id', studentId)
+      .is('ended_at', null)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (openError) {
+      console.error('[Practice] No se pudo leer la sesion abierta:', openError.message)
+      return null
+    }
+    if (!open) return null
+    return endPractice(open.id)
+  }, [studentId, endPractice])
 
   const startPractice = useCallback(
     async (options = {}) => {
       if (!studentId) return null
+
+      // Sin esto, cada pulsacion de "Practicar" dejaba una sesion abierta
+      // para siempre: duration_minutes se quedaba a null, no sumaba al
+      // objetivo diario y la racha nunca avanzaba.
+      await stopPractice()
 
       const { data: session, error } = await supabase
         .from('practice_sessions')
@@ -59,35 +119,31 @@ const useSupabasePractice = (studentId) => {
         return null
       }
 
+      openSessionId.current = session.id
       setData((prev) => ({ ...prev, sessions: [session, ...(prev?.sessions || [])] }))
       return session
     },
-    [studentId, setData],
+    [studentId, setData, stopPractice],
   )
 
-  const endPractice = useCallback(
-    async (sessionId) => {
-      const { data: updated, error } = await supabase
+  // Al desmontar se cierra lo que quedara abierto. Sin esto, recargar o
+  // navegar lejos dejaba sesiones huerfanas sin ended_at.
+  useEffect(() => {
+    return () => {
+      const sessionId = openSessionId.current
+      if (!sessionId) return
+      openSessionId.current = null
+      supabase
         .from('practice_sessions')
         .update({ ended_at: new Date().toISOString() })
         .eq('id', sessionId)
-        .select()
-        .single()
-
-      if (error) {
-        console.error('[Practice] End error:', error.message)
-        return null
-      }
-
-      setData((prev) => ({
-        ...prev,
-        sessions: (prev?.sessions || []).map((s) => (s.id === sessionId ? updated : s)),
-      }))
-      await refetch()
-      return updated
-    },
-    [setData, refetch],
-  )
+        .then(({ error: closeError }) => {
+          if (closeError) {
+            console.error('[Practice] No se pudo cerrar la sesion:', closeError.message)
+          }
+        })
+    }
+  }, [])
 
   const updatePracticeNotes = useCallback(
     async (sessionId, notes) => {
@@ -130,6 +186,7 @@ const useSupabasePractice = (studentId) => {
     error,
     startPractice,
     endPractice,
+    stopPractice,
     updatePracticeNotes,
     deletePractice,
     refetch,
