@@ -1,14 +1,64 @@
 -- =============================================
 -- VERIFICACION 017_security_corrections.sql
--- Ejecutar en el SQL Editor de Supabase.
+-- =============================================
+-- ESTE FICHERO TIENE DOS BLOQUES. NO LOS PEGUES JUNTOS.
 --
---   ANTES  -> guarda la salida en "antes.txt"
---   aplicar 017  (supabase db push)
---   DESPUES -> compara las secciones marcadas con [REPETIR]
+-- BLOQUE A  -> solo lectura. Se ejecuta entero en el SQL Editor.
+--              No contiene ni una escritura.
+--
+-- BLOQUE B  -> pruebas funcionales, con escritura.
+--              NO SE PEGAN EN EL SQL EDITOR.
+--              Van dentro de BEGIN/ROLLBACK, asi que no cambian nada,
+--              pero solo funcionan si se ejecutan en el cliente psql
+--              de una sesion real, no en el dashboard.
+--
+-- POR QUE NO EN EL SQL EDITOR (importante):
+-- los triggers de la 017 empiezan asi
+--     jwt_claims := NULLIF(current_setting('request.jwt.claims', true), '');
+--     IF jwt_claims IS NULL THEN RETURN NEW; END IF;
+-- En el SQL Editor no hay JWT, asi que devuelven NEW y el UPDATE malicioso
+-- SE APLICA DE VERDAD. Ademas `postgres` es dueno de las tablas, asi que
+-- las RLS tampoco frenan nada. Un
+--     UPDATE public.profiles SET email = 'atacante@ejemplo.com'
+-- desde el dashboard cambia el email real de un alumno, y como
+-- send_due_payment_reminders notifica a profiles.email, sus avisos de
+-- pago se irian a otra direccion: justo lo que la 017 viene a cerrar.
 -- =============================================
 
+
+-- ###########################################################################
+-- BLOQUE A - SOLO LECTURA. Pegar y ejecutar en el SQL Editor.
+-- ###########################################################################
+
 -- =============================================
--- [REPETIR] 1. Las 3 politicas del escape entre cursos
+-- 0. La 017 esta aplicada y registrada en el historial
+-- Como se aplico a mano desde el SQL Editor, hay que registrarla:
+--   INSERT INTO supabase_migrations.schema_migrations (version, name, statements)
+--   VALUES ('17', 'security_corrections', ARRAY[]::text[])
+--   ON CONFLICT (version) DO NOTHING;
+-- Si no aparece la 17 aqui, `supabase db push` la intentara de nuevo.
+-- =============================================
+SELECT version, name, array_length(statements, 1) AS n_sentencias
+FROM supabase_migrations.schema_migrations
+ORDER BY version DESC
+LIMIT 3;
+-- Esperado: 17 / security_corrections / 0
+
+-- =============================================
+-- 1. Contrato de get_next_badges
+-- Esta es la comprobacion que habria evitado el 42P13. PostgreSQL no deja
+-- cambiar el tipo de retorno con CREATE OR REPLACE: si 017 lo hubiera
+-- declarado distinto, la migracion habria fallado entera.
+-- =============================================
+SELECT pg_get_function_result(
+         'public.get_next_badges(uuid)'::regprocedure) AS retorna;
+-- Esperado EXACTO:
+--   TABLE(badge_key text, badge_name text, badge_description text,
+--         progress integer, target integer)
+-- Si sale jsonb, hay una version anterior a medias en la base.
+
+-- =============================================
+-- 2. Las 3 politicas del escape entre cursos
 -- Expectativa: las 3 existen, son FOR SELECT, y el texto contiene la
 -- columna externa cualificada (course_tasks.course_id, etc.).
 -- Si aparece `e.course_id = course_id` sin cualificar, el bug sigue vivo.
@@ -23,7 +73,7 @@ WHERE policyname IN (
 ORDER BY tablename;
 
 -- =============================================
--- [REPETIR] 2. DELETE real de mensajes
+-- 3. DELETE real de mensajes
 -- Expectativa: exactamente UNA politica "User delete own messages" y es
 -- FOR DELETE. Antes habia una FOR UPDATE duplicada.
 -- =============================================
@@ -33,8 +83,8 @@ WHERE tablename = 'messages'
 ORDER BY cmd, policyname;
 
 -- =============================================
--- [REPETIR] 3. Trigger anti-reasignacion de participacion
--- Expectativa: 1 fila (trg_restrict_participation_reassignment).
+-- 4. Trigger anti-reasignacion de participacion
+-- Expectativa: 1 fila (trg_restrict_participation_reassignment), BEFORE.
 -- =============================================
 SELECT tgname, tgenabled, pg_get_triggerdef(oid) AS definition
 FROM pg_trigger
@@ -42,69 +92,36 @@ WHERE tgrelid = 'public.conversation_participants'::regclass
   AND NOT tgisinternal;
 
 -- =============================================
--- 4. Prueba funcional del trigger (la importante)
--- Ejecutar MANUALMENTE con dos usuarios reales. Sustituye los UUID.
---
---   a) Crear un usuario A y un usuario B (Dashboard > Authentication).
---   b) Crear una conversacion con ambos como participantes (admin).
---   c) Con la sesion de A, UPDATE su fila de participacion cambiando
---      conversation_id por la de B. Debe fallar con 42501.
+-- 5. Aislamiento real: lo que un estudiante puede leer
+-- El SQL Editor corre como postgres y saltandose las RLS, asi que aqui NO
+-- se puede medir el aislamiento. Hazlo desde la app con un alumno
+-- autenticado, o con la sesion de BLOQUE B, y compara:
+--   SELECT count(*) FROM public.course_tasks;     -- global, como postgres
+--   SELECT count(*) FROM public.course_tasks;     -- como alumno: menor
+--   SELECT count(*) FROM public.course_forms;     -- idem
+--   SELECT count(*) FROM public.course_materials; -- idem
+-- Referencia: seccion 8 te da las cifras globales.
 -- =============================================
--- Desde la sesion de A:
--- UPDATE public.conversation_participants
---    SET conversation_id = '<conversation_id_de_B>'
---  WHERE conversation_id = '<conversation_id_de_A>'
---    AND user_id = auth.uid();
--- Esperado: ERROR: No puedes mover tu participacion a otra conversacion
-
--- Con el mismo usuario A pero cambiando solo `muted`, debe funcionar:
--- UPDATE public.conversation_participants
---    SET muted = true
---  WHERE user_id = auth.uid();
--- Esperado: UPDATE 1
 
 -- =============================================
--- [REPETIR] 5. Aislamiento real: lo que un estudiante puede leer
--- Ejecuta esto DESPUES de cambiar la sesion a un usuario alumno y compara
--- con el total global. Lo que el alumno devuelva debe ser solo lo suyo.
--- =============================================
--- El curso ajeno del alumno no debe aparecer en course_tasks.
--- SELECT count(*) FROM public.course_tasks;                 -- como admin
--- SELECT count(*) FROM public.course_tasks;                 -- como alumno: menor
--- SELECT count(*) FROM public.course_forms;                 -- idem
--- SELECT count(*) FROM public.course_materials;             -- idem
-
--- =============================================
--- [REPETIR] 6. Badges: el alumno NO debe tener first_course por tick suelta
+-- 6. Badges: el alumno NO debe tener first_course por tick suelta
 -- Antes de la 017, marcar un solo item de checklist otorgaba `first_course`.
+-- Anota el estado antes de marcar nada:
 -- =============================================
--- Registro de prueba: elige un alumno y un curso con items de checklist.
--- Antes de tocar el checklist, anota su numero de insignias:
-SELECT sb.student_id, count(*) AS badges
+SELECT sb.student_id, count(*) AS insignias
 FROM public.student_badges sb
 GROUP BY sb.student_id
-ORDER BY badges DESC;
+ORDER BY insignias DESC;
 
--- Marca UN item del checklist como ese alumno y vuelve a consultar:
--- si el alumno NO tiene el 100% del curso, `first_course` no debe aparecer.
+-- Marca UN item del checklist como ese alumno y vuelve a consultar: si el
+-- alumno no tiene el 100% del curso, `first_course` no debe aparecer.
 SELECT badge_key, earned_at
 FROM public.student_badges
-WHERE student_id = '<alumno>'
+WHERE student_id = '<UUID_ALUMNO>'
 ORDER BY earned_at DESC;
 
 -- =============================================
--- [REPETIR] 7. Tarea sin asignar ya no rompe el UPDATE
--- Antes: marcar como Completado una tarea con student_id NULL abortaba
--- con 23502 not_null_violation por el INSERT del badge.
--- =============================================
--- UPDATE public.tasks
---    SET status = 'Completado'
---  WHERE student_id IS NULL
---  RETURNING id, title, status;
--- Esperado: UPDATE <n>, sin error.
-
--- =============================================
--- [REPETIR] 8. Nivel de gamificacion ya no se queda en 1
+-- 7. Nivel de gamificacion ya no se queda en 1
 -- Antes: SQRT(integer/integer) trunca a 0 hasta 10000 XP.
 -- Con 250 XP el nivel correcto es FLOOR(SQRT(250/100)) + 1 = 2.
 -- =============================================
@@ -118,59 +135,53 @@ LIMIT 10;
 -- Esperado: desfase = 0 para todos (el trigger ya recalcula al proximo evento)
 
 -- =============================================
--- 9. Triggers de inmutabilidad (notificaciones y perfil)
--- Expectativa: 2 filas, trg_restrict_notification_update y
--- trg_restrict_student_profile_update, ambas BEFORE UPDATE.
--- La inmutabilidad NO esta en WITH CHECK porque una politica RLS no puede
--- comparar con la fila anterior; por eso son triggers.
--- =============================================
-SELECT tgname, tgenabled, pg_get_triggerdef(oid) AS definition
-FROM pg_trigger
-WHERE tgrelid IN ('public.notifications'::regclass, 'public.profiles'::regclass)
-  AND NOT tgisinternal
-ORDER BY tgname;
-
--- =============================================
--- 10. Prueba funcional de los triggers (importante)
--- Ejecutar MANUALMENTE con dos sesiones reales. Sustituye los UUID.
---
---   a) Crear un alumno A y abrir sesion con su token.
---   b) Con la sesion de A, intentar reescribir el texto de una notificacion
---      recibida. Debe fallar con 42501.
---   c) Con la sesion de A, marcar esa misma notificacion como leida.
---      Debe funcionar (UPDATE <n>).
---   d) Con la sesion de A, cambiarse el email a uno arbitrario. 42501.
---   e) Con la sesion de A, editar phone / instrument / level / avatar.
---      Debe funcionar: son los unicos campos que ofrece MyProfile.jsx.
--- =============================================
--- Desde la sesion de A:
--- UPDATE public.notifications SET message = 'texto falso'
---  WHERE recipient_id = '<id_de_A>';
--- UPDATE public.notifications SET read = true
---  WHERE recipient_id = '<id_de_A>';
--- UPDATE public.profiles SET email = 'atacante@ejemplo.com'
---  WHERE id = '<id_de_A>';
--- UPDATE public.profiles SET phone = '600000000', instrument = 'Piano'
---  WHERE id = '<id_de_A>';
-
--- =============================================
--- 11. Que datos se perderian al aplicar 017 (cifras previous, no bloqueantes)
+-- 8. Cifras de partida, para dimensionar el corte
 -- Conteo de filas de curso_task / course_form / course_material que SON
 -- accesibles hoy para un alumno con una unica inscripcion.
--- Sirve para dimensionar el alcance del corte.
 -- =============================================
 SELECT
-  (SELECT count(*) FROM public.course_tasks)    AS total_course_tasks,
-  (SELECT count(*) FROM public.course_forms)    AS total_course_forms,
-  (SELECT count(*) FROM public.course_materials) AS total_course_materials,
+  (SELECT count(*) FROM public.course_tasks)      AS total_course_tasks,
+  (SELECT count(*) FROM public.course_forms)      AS total_course_forms,
+  (SELECT count(*) FROM public.course_materials)  AS total_course_materials,
   (SELECT count(DISTINCT student_id) FROM public.course_enrollments)
     AS alumnos_con_al_menos_un_curso,
   (SELECT count(*) FROM public.profiles WHERE role = 'student') AS total_alumnos;
 
 -- =============================================
--- 12. Rollback
--- Si 017 causa problemas, revertir es:
---
+-- 9. Triggers de inmutabilidad y de gamificacion
+-- Expectativa: 4 filas, no 2.
+--   profiles       -> trg_protect_profiles_role        (007, previa)
+--                     trg_profiles_updated_at           (011, previa)
+--                     trg_restrict_student_profile_update (017, nueva)
+--   notifications  -> trg_restrict_notification_update   (017, nueva)
+-- La inmutabilidad NO esta en WITH CHECK porque una politica RLS no puede
+-- comparar con la fila anterior; por eso son triggers.
+-- =============================================
+SELECT tgrelid::regclass AS tabla, tgname, tgenabled,
+       pg_get_triggerdef(oid) AS definition
+FROM pg_trigger
+WHERE tgrelid IN ('public.notifications'::regclass,
+                  'public.profiles'::regclass,
+                  'public.tasks'::regclass)
+  AND NOT tgisinternal
+ORDER BY tgrelid::regclass::text, tgname;
+
+-- =============================================
+-- 10. Los 3 triggers nuevos de la 017, y solo los 3
+-- =============================================
+SELECT tgname, tgenabled, pg_get_triggerdef(oid) AS definition
+FROM pg_trigger
+WHERE tgname IN (
+  'trg_restrict_participation_reassignment',
+  'trg_restrict_notification_update',
+  'trg_restrict_student_profile_update'
+)
+ORDER BY tgname;
+-- Esperado: 3 filas, los tres BEFORE UPDATE (el de participacion, BEFORE).
+
+-- =============================================
+-- 11. Rollback de la 017, por si hace falta
+-- =============================================
 --   DROP TRIGGER IF EXISTS trg_restrict_participation_reassignment
 --     ON public.conversation_participants;
 --   DROP FUNCTION IF EXISTS public.restrict_participation_reassignment();
@@ -183,7 +194,99 @@ SELECT
 --     ON public.profiles;
 --   DROP FUNCTION IF EXISTS public.restrict_student_profile_update();
 --
--- Las 3 politicas de lectura de la seccion 1 se restauran copiando el texto
+-- Las 3 politicas de lectura de la seccion 2 se restauran copiando el texto
 -- original de 008/009. Las demas correcciones (badges, nivel) son silenciosas
 -- y no afectan funcionalidad visible.
+
+
+-- ###########################################################################
+-- BLOQUE B - PRUEBAS FUNCIONALES CON ESCRITURA.
+-- NO PEGAR EN EL SQL EDITOR. Ver la nota de la cabecera.
+-- Sustituye los UUID y ejecuta cada bloque por separado.
+--
+-- Cada bloque simula la sesion del alumno con el GUC del JWT y hace
+-- SET ROLE authenticated, de modo que se ejercitan las RLS y el trigger a
+-- la vez. No hay COMMIT: termine lo que termine, nada se guarda.
+--
+-- AVISO sobre el resultado: si un UPDATE devuelve "UPDATE 0" en vez de
+-- 42501, la prueba NO vale. Significa que las RLS ya filtraron la fila
+-- antes de que el trigger llegara a ejecutarse (por ejemplo porque el
+-- usuario no tiene role = 'student'). El trigger no se probo.
 -- =============================================
+
+-- ---- B1. No se puede reescribir una notificacion (espera 42501) --------
+-- BEGIN;
+-- set local request.jwt.claims =
+--   '{"sub":"<UUID_ALUMNO>","role":"authenticated","email":"<EMAIL>"}';
+-- set local role authenticated;
+-- UPDATE public.notifications
+--    SET message = 'texto falso'
+--  WHERE recipient_id = '<UUID_ALUMNO>';
+-- ROLLBACK;
+
+-- ---- B2. Si se puede marcar como leida (espera UPDATE n) ---------------
+-- BEGIN;
+-- set local request.jwt.claims =
+--   '{"sub":"<UUID_ALUMNO>","role":"authenticated","email":"<EMAIL>"}';
+-- set local role authenticated;
+-- UPDATE public.notifications
+--    SET read = true
+--  WHERE recipient_id = '<UUID_ALUMNO>';
+-- ROLLBACK;
+
+-- ---- B3. No se puede cambiar el email del perfil (espera 42501) --------
+-- BEGIN;
+-- set local request.jwt.claims =
+--   '{"sub":"<UUID_ALUMNO>","role":"authenticated","email":"<EMAIL>"}';
+-- set local role authenticated;
+-- UPDATE public.profiles
+--    SET email = 'atacante@ejemplo.com'
+--  WHERE id = '<UUID_ALUMNO>';
+-- ROLLBACK;
+
+-- ---- B4. Editar phone / instrument si se permite (espera UPDATE n) ------
+-- Son justo los 4 campos que ofrece MyProfile.jsx: phone, instrument,
+-- level, avatar.
+-- BEGIN;
+-- set local request.jwt.claims =
+--   '{"sub":"<UUID_ALUMNO>","role":"authenticated","email":"<EMAIL>"}';
+-- set local role authenticated;
+-- UPDATE public.profiles
+--    SET phone = '600000000', instrument = 'Piano', level = 'Intermedio'
+--  WHERE id = '<UUID_ALUMNO>';
+-- ROLLBACK;
+
+-- ---- B5. No se puede mover la participacion a otra conversacion --------
+-- Necesitas dos usuarios A y B en una misma conversacion.
+-- Espera 42501.
+-- BEGIN;
+-- set local request.jwt.claims =
+--   '{"sub":"<UUID_A>","role":"authenticated","email":"<EMAIL_A>"}';
+-- set local role authenticated;
+-- UPDATE public.conversation_participants
+--    SET conversation_id = '<UUID_CONVERSACION_DE_B>'
+--  WHERE conversation_id = '<UUID_CONVERSACION_DE_A>'
+--    AND user_id = '<UUID_A>';
+-- ROLLBACK;
+
+-- ---- B6. Silenciar la conversacion si se permite (espera UPDATE n) ------
+-- BEGIN;
+-- set local request.jwt.claims =
+--   '{"sub":"<UUID_A>","role":"authenticated","email":"<EMAIL_A>"}';
+-- set local role authenticated;
+-- UPDATE public.conversation_participants
+--    SET muted = true
+--  WHERE user_id = '<UUID_A>';
+-- ROLLBACK;
+
+-- ---- B7. Marcar Completado una tarea sin alumno ya no rompe (23502) -----
+-- Antes abortaba con not_null_violation por el INSERT del badge.
+-- Se hace como postgres, sin SET ROLE, porque el caso a probar es
+-- student_id IS NULL.
+-- BEGIN;
+-- UPDATE public.tasks
+--    SET status = 'Completado'
+--  WHERE student_id IS NULL
+--  RETURNING id, title, status;
+-- ROLLBACK;
+-- Esperado: las filas devueltas, sin error.
