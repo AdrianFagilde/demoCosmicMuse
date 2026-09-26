@@ -78,7 +78,7 @@ Cosmic Muse Academy es una SPA construida con React 19, Vite y CoreUI React, con
 
 ## Modelo de datos (Supabase)
 
-Definido en `supabase/migrations/` (idempotentes, aplicar en orden):
+Definido en `supabase/migrations/` (aplicar en orden, una vez cada una):
 
 | Tabla                  | Descripción                                                                      |
 | ---------------------- | -------------------------------------------------------------------------------- |
@@ -95,6 +95,19 @@ Definido en `supabase/migrations/` (idempotentes, aplicar en orden):
 | `task_checklist_items` | Ítems de checklist por tarea (ordenados por `position`)                          |
 | `course_enrollments`   | Inscripción manual de estudiantes a cursos                                       |
 | `checklist_progress`   | Marcado de ítems por estudiante (fuente del % de avance)                         |
+| `course_forms`        | Formularios de un curso                                                          |
+| `form_questions`      | Preguntas de un formulario (texto, opción, archivo)                               |
+| `form_answers`        | Respuestas a esas preguntas                                                      |
+| `form_submissions`    | Envíos de formulario por estudiante                                              |
+| `course_materials`    | Material descargable de un curso                                                  |
+| `conversations`       | Hilos de mensajería entre participantes                                         |
+| `conversation_participants` | Quién está en cada conversación, con `muted` y `last_read_at`              |
+| `messages`            | Mensajes dentro de una conversación                                              |
+| `push_subscriptions`  | Suscripciones push del navegador (tabla **sin interfaz**)                         |
+| `practice_sessions`   | Sesiones de práctica con minutos, XP y fecha                                      |
+| `practice_streaks`    | Rachas por estudiante (actualizadas por trigger, no editables)                   |
+| `student_gamification` | XP, nivel, minutos y contadores por estudiante                                  |
+| `student_badges`      | Insignias otorgadas (incluye su fecha `earned_at`)                                |
 
 Buckets de Storage: `avatars` (público) y `payment-proofs` (privado, solo admin).
 
@@ -104,7 +117,8 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 
 - La función `public.is_admin()` (SECURITY DEFINER, STABLE) lee el rol desde la tabla `profiles`, nunca desde metadatos editables del JWT. Todas las políticas de administración pasan por ella.
 - La migración `016_security_fixes.sql` endurece: los RPC de mensajería (014) y `get_weekly_practice_summary`/`get_next_badges` (013/015) verifican `auth.uid()` y revocan permisos de `PUBLIC`; se bloquea el auto-reporte de streak de práctica (trigger `trg_block_practice_tampering`) y se limita el XP a 120 min por sesión (`LEAST`); `submit_form` valida la pregunta y limpia respuestas huérfanas; las notificaciones solo se insertan enviadas por uno mismo o por un admin (anti-spam); `is_admin()` deja de ser ejecutable por `PUBLIC`.
-- Los estudiantes solo pueden leer/actualizar sus propias filas (`id = auth.uid()` / `student_id = auth.uid()`) y leer los perfiles de staff (`role = 'admin'`) necesarios para mostrar profesores.
+- Los estudiantes solo pueden leer/actualizar sus propias filas (`id = auth.uid()` / `student_id = auth.uid()`) y leer los perfiles de staff (`role = 'admin'`) necesarios para mostrar profesores. **Actualizar la fila propia no significa poder cambiar cualquier columna:** el trigger `trg_restrict_student_profile_update` (017) rechaza con `42501` si cambian `email`, `username`, `status`, `progress`, `attendance`, `teacher`, `next_lesson`, `created_at` o `id`, y `trg_protect_profiles_role` (007) rechaza `role`. Sigue siendo válido cambiar `full_name`, `phone`, `instrument`, `level`, `birth_date`, `avatar_url` y los campos de tutor, aunque `MyProfile.jsx` solo ofrezca cuatro de ellos.
+- La migración `017_security_corrections.sql` (aplicada el 2026-09-25) endurece cinco cosas más: las políticas de lectura de `course_tasks`, `course_forms` y `course_materials` solo exponen contenido de cursos en los que el alumno está matriculado, antes permitían leer cursos ajenos; `conversation_participants` gana un trigger `BEFORE UPDATE` que impide mover la participación a otra conversación; la política "User delete own messages" estaba declarada `FOR UPDATE` y ahora hay un `DELETE` real; y las notificaciones recibidas y el perfil quedan inmutables salvo `read` y los campos de identidad respectivamente. Detalle en `supabase/BASELINE.md`.
 - El campo `profiles.role` está protegido por el trigger `trg_protect_profiles_role`: solo un admin puede modificarlo (con bypass para service_role y contextos sin HTTP).
 - El trigger `handle_new_user` crea el perfil tras el registro forzando siempre `role = 'student'`.
 - Storage `payment-proofs`: cada estudiante solo accede a los comprobantes de su propia carpeta (`(storage.foldername(name))[1] = auth.uid()::text`).
@@ -127,7 +141,7 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 - `src/views/academy/Lessons.jsx` - Programación de clases (admin)
 - `src/views/academy/Payments.jsx` - Pagos y recordatorios (admin), con subcomponentes en `payments/`
 - `src/views/admin/Users.jsx` - Gestión de roles y estados de usuario (admin)
-- `src/views/academy/Notifications.jsx` - Envío y lectura de notificaciones in-app
+- `src/views/academy/Notifications.jsx` - Bandeja personal de notificaciones, solo lectura: el alumno únicamente puede marcar `read`. El envío vive en `src/views/admin/SendNotifications.jsx` (admin), y el trigger `trg_restrict_notification_update` (017) rechaza con `42501` si el alumno intenta reescribir el texto o el remitente de una notificación recibida.
 - `src/views/pages/login|register` - Autenticación
 
 ## Build y despliegue

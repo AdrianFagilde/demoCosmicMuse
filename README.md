@@ -31,7 +31,7 @@ VITE_SUPABASE_ANON_KEY=<tu-anon-key>
 VITE_VAPID_PUBLIC_KEY=<opcional, para notificaciones web push>
 ```
 
-3. Aplica las migraciones de base de datos de `supabase/migrations/` **en orden numérico**. Cada archivo está pensado para ser idempotente (`IF NOT EXISTS` / `DROP ... IF EXISTS`), de modo que reejecutarlo no rompe nada.
+3. Aplica las migraciones de base de datos de `supabase/migrations/` **en orden numérico**, una vez cada una. No son idempotentes y no deberían serlo: la 017 lo demostró en producción, donde un tipo de retorno equivocado abortó el `CREATE OR REPLACE` con `42P13` después de que las nueve sentencias anteriores ya se hubieran aplicado. Si una migración falla, envuélvela en `BEGIN`/`COMMIT` completo en lugar de reintentarla a medias. Ver `supabase/BASELINE.md`.
 
    Con la CLI de Supabase y un stack **local** (requiere Docker):
 
@@ -90,9 +90,9 @@ public/
 └── sw.js              # Service worker: shell offline y push
 supabase/
 ├── config.toml        # Configuración del stack local
-├── migrations/        # Esquema SQL, políticas RLS y triggers (idempotentes)
+├── migrations/        # Esquema SQL, políticas RLS y triggers (aplicar en orden, una vez)
 ├── functions/         # Edge Functions (create-student, delete-user, send-push-notification)
-├── BASELINE.md        # Referencia del esquema y procedimiento para regenerarla
+├── BASELINE.md        # Estado del esquema, cómo detectar drift y qué corrigió la 017
 └── VERIFICACION_017.sql  # Comprobaciones tras aplicar la migración 017
 ```
 

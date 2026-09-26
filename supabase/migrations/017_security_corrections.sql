@@ -3,7 +3,15 @@
 -- Cierra la exposicion de datos y las escalada de privilegios identificadas
 -- en la auditoria del esquema tras aplicar 001-016.
 --
--- Idempotente: puede aplicarse mas de una vez sin efectos acumulativos.
+-- NO es idempotente, y este fichero es el ejemplo de por que importa.
+-- PostgreSQL aborta el CREATE OR REPLACE con 42P13 si una funcion ya
+-- existe con otro tipo de retorno, sin avisar antes y sin deshacer lo que
+-- ya se habia aplicado. Para mas detalle ver supabase/BASELINE.md.
+--
+-- Se aplico en produccion el 2026-09-25 dentro de un BEGIN/COMMIT
+-- explicito, y se registro despues con migration repair porque aplicarla
+-- a mano desde el SQL Editor no la anade al historial.
+--
 -- Depende de: 007 (is_admin), 008/009 (cursos), 013/014/016 (funciones).
 -- =============================================
 
@@ -192,10 +200,19 @@ CREATE TRIGGER trg_restrict_notification_update
 -- los demas. Nombre y username eran usables para suplantar a otro alumno en
 -- listas, notificaciones y mensajes.
 --
--- Allowlist de lo que un estudiante puede editar de si mismo. MyProfile.jsx
--- solo ofrece phone, instrument, level y avatar, asi que el resto queda
--- bloqueado; el trigger reemplaza a WITH CHECK por la misma razon que en la
--- seccion 3 (OLD no es accesible desde una politica).
+-- DENTRO DE LAS COLUMNAS DE IDENTIDAD Y ESTADO (denylist, NO allowlist).
+-- Este trigger rechaza 9 columnas concretas, no acepta una lista de las
+-- permitidas. Consecuencia: full_name, birth_date, guardian_name,
+-- guardian_phone y avatar_url SI siguen siendo editables por el alumno, y
+-- eso es intencionado, porque son datos suyos o de su tutor y no mueven
+-- nada de estado. Lo que si mueve dinero o permisos es lo de esta lista.
+-- El comentario anterior de este fichero lo llamaba "allowlist de lo que
+-- puede editar", lo cual era falso: una allowlist de 4 columnas habria
+-- dejado pasar tambien birth_date, guardian_name y guardian_phone, que
+-- MyProfile.jsx no ofrece pero la API si aceptaria.
+--
+-- El trigger reemplaza a WITH CHECK por la misma razon que en la seccion
+-- 3: OLD no es accesible desde una politica.
 
 DROP POLICY IF EXISTS "Student own profile update" ON profiles;
 CREATE POLICY "Student own profile update" ON profiles

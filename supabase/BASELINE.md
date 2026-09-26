@@ -108,7 +108,7 @@ Si una migración se aplicó a mano y falló a medias, la única salida limpia e
 | `013_student_practice_tracking.sql`  | Sesiones de práctica, XP, rachas e insignias                                                             |
 | `014_messaging_push.sql`             | Mensajería y suscripciones push (tablas **sin interfaz**)                                                |
 | `015_student_practice_dashboard.sql` | Vista de datos para el dashboard de práctica                                                             |
-| `016_security_fixes.sql`             | Endurecimiento previo: RLS de `profiles`, notificaciones, borrado de mensajes                            |
+| `016_security_fixes.sql`             | Endurecimiento de los RPC de mensajería y de práctica, anti-spam en notificaciones, límites de XP |
 | `017_security_corrections.sql`       | Correcciones de la auditoría actual (ver abajo)                                                          |
 
 ## Qué corrige la 017
@@ -126,10 +126,32 @@ Si una migración se aplicó a mano y falló a medias, la única salida limpia e
    (recibiendo así las alertas de pago ajenas). Son triggers
    `BEFORE UPDATE`, no políticas: una política RLS no puede comparar contra la
    fila anterior, porque `OLD` solo existe dentro de una función de trigger.
-5. **Insignias y nivel**: `student_badges.student_id` es `NOT NULL` mientras
-   `tasks.student_id` no lo es, de modo que completar una tarea sin asignar
-   abortaba el `UPDATE` del administrador. También se corrige el truncamiento
-   entero del cálculo de nivel.
+5. **Insignias y nivel**, cuatro cosas distintas:
+   - `student_badges.student_id` es `NOT NULL` mientras `tasks.student_id` no
+     lo es, de modo que completar una tarea sin asignar abortaba el `UPDATE`
+     del administrador con `23502`.
+   - `check_course_completion_badges` otorgaba `first_course` al marcar **un
+     solo** item del checklist: el trigger era `AFTER INSERT` pero la guardia
+     leía `OLD`, así que la condición se cumplía siempre. Ahora el curso solo
+     cuenta como completado con el 100 % de los items de todos sus
+     `course_task`.
+   - `get_next_badges` tenía un error en el subquery de progreso de
+     `first_course`: era un subquery escalar con `GROUP BY` y sin agregado, así
+     que devolvía una fila por curso y abortaba con *"more than one row
+     returned"* para alumnos con dos o más cursos. Su `HAVING` comparaba
+     `COUNT(tci.id)` con `COUNT(cp.item_id)` sobre un `INNER JOIN` donde
+     `cp.item_id` nunca es `NULL`, o sea que siempre era cierto.
+   - El nivel se calculaba con `SQRT(integer/integer)`, que trunca a 0, así que
+     se quedaba en 1 hasta 10000 XP. Ahora es `FLOOR(SQRT(xp::numeric/100)) + 1`:
+     nivel 2 a los 100 XP, 3 a los 400, 4 a los 900.
+
+6. **Contrato de `get_next_badges`**: la 017 mantiene el
+   `RETURNS TABLE(badge_key, badge_name, badge_description, progress, target)`
+   que fijó la 016. Un borrador anterior devolvía `jsonb`, lo que obliga a
+   `DROP FUNCTION` porque PostgreSQL no admite cambiar el tipo de retorno con
+   `CREATE OR REPLACE`. Ese borrador además devolvía un resumen de
+   gamificación en vez de las siguientes insignias, con lo que el nombre
+   dejaba de describir lo que hacía.
 
 ## Verificación tras aplicar
 

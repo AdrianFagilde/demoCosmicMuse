@@ -91,7 +91,7 @@ Abre `http://localhost:3000`.
 
 - Si la app no arranca, revisa la consola del navegador y el terminal de Vite
 - Si una ruta falla, confirma su definición en `src/routes.js`
-- Para errores de permisos, revisa las políticas RLS en `supabase/migrations/` y el `profile.role` cargado en AuthContext
+- Para errores de permisos, no mires solo las políticas RLS. Desde la 017 la mayoría de denegaciones son excepciones `42501` lanzadas por triggers `BEFORE UPDATE`, no políticas: "No puedes modificar los datos de identidad o estado de tu perfil", "Solo puedes marcar una notificacion como leida" y "No puedes mover tu participacion a otra conversacion". Si el `UPDATE` devuelve `0` filas en vez de `42501`, el motivo es que las RLS ya filtraron la fila y el trigger no llegó a ejecutarse. Revisa ambos: políticas en `supabase/migrations/` y triggers en la 017, más el `profile.role` cargado en AuthContext.
 
 ## Despliegue
 
