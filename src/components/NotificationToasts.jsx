@@ -32,7 +32,7 @@ const buildMeta = (notification) =>
     .join(' · ')
 
 const NotificationToasts = () => {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
   const { notifications, unreadCount, loading } = useNotifications()
 
