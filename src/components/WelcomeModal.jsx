@@ -46,7 +46,7 @@ const WelcomeModal = () => {
 
   return (
     <CModal visible={visible} onClose={handleClose} alignment="center" size="lg">
-      <CModalBody className="text-center py-5 px-4 position-relative overflow-hidden rounded-3">
+      <CModalBody className="text-center py-5 px-4 position-relative overflow-hidden">
         <TrebleClef size={130} color="var(--cui-primary)" className="music-modal-clef" />
         <MusicNote size={40} color="var(--cui-primary)" className="mb-3" />
         <h3 className="mb-2">Bienvenido a Cosmic Muse</h3>
