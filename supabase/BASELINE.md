@@ -1,44 +1,95 @@
 # Baseline de la base de datos
 
-Referencia del estado del esquema de Supabase para detectar derivas antes de
-aplicar la migración `017_security_corrections.sql`.
+Estado del esquema de Supabase, verificado tras aplicar la migración
+`017_security_corrections.sql`. Sirve para dos cosas distintas, que conviene
+no confundir:
 
-## Por qué no se generó automáticamente
+- **Detectar drift**: comprobar que las migraciones describen la base entera.
+  Para eso no hace falta ningún fichero, se usa `supabase db diff --linked`.
+- **Reconstruir la base**: tener un `.sql` independiente al que recurrir si
+  algún día hay que levantar el esquema desde cero sin pasar por el CLI. Se
+  genera a voluntad con el comando de más abajo y no está versionado; las
+  migraciones ya son la fuente de verdad del esquema.
 
-El proyecto enlazado (`AdrianFagilde's Project`) es **producción** y contiene
-datos reales. No se ha ejecutado ni `supabase db dump` ni `supabase db push`
-sobre él, por acuerdo explícito. Tampoco hay Docker en esta máquina, así que
-no se pudo levantar un stack local con `supabase start` para volcar un
-esquema de referencia.
+## Estado a 2026-09-25
 
-Lo que sigue es el procedimiento para generarlo cuando haya un entorno de
-pruebas, más el inventario obtenido por lectura estática de las migraciones.
+No hay drift: las 17 migraciones describen el esquema completo. Se comparó el
+inventario de tablas y coinciden exactamente, 26 en `public`.
 
-## Generar el baseline (requiere un proyecto que NO sea producción)
-
-```bash
-# 1. Stack local (necesita Docker Desktop)
-supabase start
-
-# 2. Volcar SOLO el esquema, sin filas de datos
-supabase db dump --schema-only -f supabase/baseline_001.sql
-
-# 3. Contrastar el dump contra las migraciones
-supabase db diff --schema supabase/baseline_001.sql
+```
+schemas presentes : auth, extensions, public, realtime, storage,
+                    supabase_migrations, vault   (todos estándar de Supabase)
+tablas en public  : 26 declaradas en migraciones, 26 en producción
 ```
 
-`db diff` debería devolver vacío. Si no lo hace, hay objetos creados a mano
-en la base de datos que no están en las migraciones, y eso es exactamente lo
-que el baseline sirve para detectar.
+Que cuadren las tablas no demuestra que cuadren columnas, índices, políticas ni
+triggers. Para cerrarlo del todo, `supabase db diff --linked` debería devolver
+vacío.
 
-Para un entorno de pruebas remoto, sustituye `supabase start` por
-`supabase link --project-ref <ref-de-pruebas>`.
+### Cómo se aplicó la 017
+
+A mano, desde el SQL Editor, dentro de un `BEGIN`/`COMMIT` explícito. Al
+aplicarla así no queda registrada en el historial, porque el registro lo hace
+el CLI. Se registró después:
+
+```sql
+INSERT INTO supabase_migrations.schema_migrations (version, name, statements)
+VALUES ('17', 'security_corrections', ARRAY[]::text[])
+ON CONFLICT (version) DO NOTHING;
+```
+
+Equivale a `supabase migration repair --status applied 17 --linked`. Si
+alguna vez se repite, ese es el procedimiento. Ojo: `db push` **no** es
+equivalente, intentaría aplicar el fichero entero otra vez.
+
+## Detectar drift
+
+```bash
+# Compara supabase/migrations/ contra el proyecto enlazado
+supabase db diff --linked
+```
+
+Sin salida significa que las migraciones y la base coinciden. Si devuelve SQL,
+hay objetos en la base que no están en las migraciones.
+
+## Generar el snapshot de referencia
+
+```bash
+# Solo esquema, sin filas de datos
+supabase db dump --linked --schema public -f supabase/baseline/schema-public.sql
+```
+
+`db dump` es un `pg_dump`: **solo lee**. No es peligroso contra producción,
+pero conviene decirlo porque el documento anterior mezclaba ambos casos. Lo
+que sí escribe es `db push`, y ese no se ha ejecutado nunca sobre producción.
+
+Dos avisos sobre el comando:
+
+- **No existe `--schema-only`.** `db dump` vuelca el esquema por defecto; el
+  flag para el otro sentido es `--data-only`. Pasarlo da error.
+- **`db diff --schema` no toma una ruta de fichero**, sino nombres de esquema
+  separados por comas. La variante anterior del documento se lo pasaba como si
+  fuera un path.
+
+No hace falta Docker. Las vías `supabase start` + dump local que aparecen en
+documentación antigua solo son relevantes si quieres un entorno de pruebas
+aislado.
 
 ## Orden de aplicación y estado
 
-Las migraciones deben aplicarse en orden numérico. Todas son pensadas para
-ser idempotentes (`IF NOT EXISTS`, `DROP ... IF EXISTS`, `CREATE OR REPLACE`),
-de modo que reejecutar una migración ya aplicada no produce error.
+Las migraciones se aplican **una vez**, en orden numérico, y el CLI las
+registra. No son idempotentes por diseño y no deberían serlo: que una
+migración "se pueda repetir" no es una garantía, es una casualidad de cómo
+estuvo escrita.
+
+La 017 es el ejemplo de por qué. Su `CREATE OR REPLACE FUNCTION` sobre
+`get_next_badges` declaraba un tipo de retorno distinto al que ya tenía, y
+PostgreSQL aborta con `42P13` sin aviso previo. Las nueve sentencias
+anteriores del fichero ya se habían aplicado. Reejecutar no habría
+"arreglado" nada.
+
+Si una migración se aplicó a mano y falló a medias, la única salida limpia es
+`BEGIN`/`COMMIT` alrededor del fichero completo, o deshacerla a mano.
 
 | Migración                            | Contenido                                                                                                |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -82,15 +133,31 @@ de modo que reejecutar una migración ya aplicada no produce error.
 
 ## Verificación tras aplicar
 
-Ejecuta `supabase/VERIFICACION_017.sql` completo. Las secciones marcadas
-`[REPETIR]` son consultas de solo lectura y se pueden lanzar de una vez. Las
-funcionales requieren dos sesiones autenticadas reales y **deben ejecutarse
-con un alumno de prueba**, nunca con datos de producción.
+Empieza por el **smoke test**, que es la sección 0 de
+`supabase/VERIFICACION_017.sql`: una consulta, cinco resultados, cinco `OK`.
+Si eso pasa, la 017 está entera.
+
+El fichero está partido en dos bloques, y la separación importa:
+
+- **Bloque A**, solo lectura. Se pega entero en el SQL Editor, sin riesgo.
+- **Bloque B**, pruebas funcionales con escritura. **No van en el SQL Editor.**
+  Los triggers de la 017 abren con `IF jwt_claims IS NULL THEN RETURN NEW`,
+  así que sin JWT no hacen nada, y como el dashboard conecta como `postgres`
+  las RLS tampoco frenan. Descomentar ahí el `UPDATE` del email cambiaría el
+  email real de un alumno y, como `send_due_payment_reminders` notifica a
+  `profiles.email`, sus avisos de pago se irían a otra dirección.
+
+El bloque B necesita `psql`, que sí está instalado en esta máquina. Copia cada
+prueba a su propio fichero y lánzalo así:
 
 ```bash
-# Estado de migraciones aplicadas
-supabase migration list
+psql "<connection-string>" -v ON_ERROR_STOP=0 -f b3.sql
 ```
+
+`ON_ERROR_STOP=0` es importante: con el valor por defecto, `psql` aborta en el
+primer `ERROR` y no llega al `ROLLBACK` final. Cada prueba lleva su
+`BEGIN`/`ROLLBACK` y el fichero no tiene ningún `COMMIT`, así que nada queda
+guardado tanto si pasa como si falla.
 
 ## Rollback
 

@@ -31,24 +31,64 @@
 -- ###########################################################################
 
 -- =============================================
--- 0. La 017 esta aplicada y registrada en el historial
--- Como se aplico a mano desde el SQL Editor, hay que registrarla:
---   INSERT INTO supabase_migrations.schema_migrations (version, name, statements)
---   VALUES ('17', 'security_corrections', ARRAY[]::text[])
---   ON CONFLICT (version) DO NOTHING;
--- Si no aparece la 17 aqui, `supabase db push` la intentara de nuevo.
+-- 0. SMOKE TEST. Ejecuta esto primero: son cinco OK en un segundo.
 -- =============================================
-SELECT version, name, array_length(statements, 1) AS n_sentencias
-FROM supabase_migrations.schema_migrations
-ORDER BY version DESC
-LIMIT 3;
--- Esperado: 17 / security_corrections / 0
+-- Una sola consulta, solo lectura. Es la guarda que habria detectado el
+-- 42P13 antes de que la 017 llegara a produccion: el fallo fue declarar
+-- get_next_badges con un tipo de retorno distinto al que ya tenia, y
+-- PostgreSQL aborta el CREATE OR REPLACE sin avisar antes. El resto de
+-- secciones miran el detalle; esta mira lo unico que importa, que es si
+-- la migracion esta entera y no a medias.
+--
+--   1. la 017 quedo registrada en el historial (se aplico a mano desde el
+--      SQL Editor, asi que hubo que registrarla con migration repair)
+--   2. get_next_badges conserva su contrato TABLE
+--   3. las 3 politicas de lectura de cursos existen y son FOR SELECT
+--   4. hay una unica politica DELETE en messages, no dos UPDATE
+--   5. los 3 triggers nuevos de la 017 existen
+--
+-- Cinco OK y la 017 esta bien. Un FALLO en la 2 significa que hay una
+-- version anterior a medias en la base.
+-- =============================================
+WITH r AS (
+  SELECT '1. 017 en el historial' AS c,
+         CASE WHEN EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations
+                            WHERE version = '17')
+              THEN 'OK' ELSE 'FALLO' END AS v
+  UNION ALL
+  SELECT '2. get_next_badges devuelve TABLE',
+         CASE WHEN pg_get_function_result(
+                         to_regprocedure('public.get_next_badges(uuid)')) LIKE 'TABLE%'
+              THEN 'OK' ELSE 'FALLO' END
+  UNION ALL
+  SELECT '3. las 3 politicas de lectura de cursos',
+         CASE WHEN (SELECT count(*) FROM pg_policies
+                     WHERE cmd = 'SELECT' AND policyname IN (
+                       'Student read tasks of enrolled courses',
+                       'Student read forms of enrolled courses',
+                       'Student read materials of enrolled courses')) = 3
+              THEN 'OK' ELSE 'FALLO' END
+  UNION ALL
+  SELECT '4. una sola politica DELETE en messages',
+         CASE WHEN (SELECT count(*) FROM pg_policies
+                     WHERE tablename = 'messages' AND cmd = 'DELETE') = 1
+              THEN 'OK' ELSE 'FALLO' END
+  UNION ALL
+  SELECT '5. los 3 triggers nuevos de la 017',
+         CASE WHEN (SELECT count(*) FROM pg_trigger
+                     WHERE NOT tgisinternal AND tgname IN (
+                       'trg_restrict_participation_reassignment',
+                       'trg_restrict_notification_update',
+                       'trg_restrict_student_profile_update')) = 3
+              THEN 'OK' ELSE 'FALLO' END
+)
+SELECT c AS comprobacion, v AS resultado FROM r;
 
 -- =============================================
--- 1. Contrato de get_next_badges
--- Esta es la comprobacion que habria evitado el 42P13. PostgreSQL no deja
--- cambiar el tipo de retorno con CREATE OR REPLACE: si 017 lo hubiera
--- declarado distinto, la migracion habria fallado entera.
+-- 1. Contrato de get_next_badges, en detalle
+-- El smoke test (0) solo mira que devuelva TABLE. Esto imprime la
+-- firma completa, para confirmar columna por columna. Debe coincidir con
+-- la que creo la 016, o un CREATE OR REPLACE futuro fallara con 42P13.
 -- =============================================
 SELECT pg_get_function_result(
          'public.get_next_badges(uuid)'::regprocedure) AS retorna;
