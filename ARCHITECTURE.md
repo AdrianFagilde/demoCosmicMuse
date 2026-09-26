@@ -59,16 +59,22 @@ Cosmic Muse Academy es una SPA construida con React 19, Vite y CoreUI React, con
 ### Acceso a datos
 
 - `src/hooks/useSupabase*.js`
-  - Un hook por dominio: students, lessons, tasks, payments, reminders, notifications, userNotifications, courses, messaging, forms, practice
+  - Un hook por dominio: students, lessons, tasks, payments, reminders, notifications, userNotifications, courses, forms, practice
   - Encapsulan queries, mutaciones y estado de carga; exponen `refetch`
   - Las vistas nunca hablan con Supabase directamente salvo casos puntuales (registro, subida de avatar)
+  - `useSupabaseMessaging` y `useSupabasePushNotifications` se eliminaron: sin interfaz de chat ni consumidor, eran código muerto
 - `src/hooks/useSupabaseQuery.js`
-  - Hook genérico (`useSupabaseQuery(queryFn, autoFetch = true)`) que estandariza `{ data, setData, loading, error, refetch }` y protege el orden de las respuestas contra carreras
-  - Lo usan los hooks más simples (Tasks, Students, Lessons, Reminders, Notifications, UserNotifications, Practice); los de lógica compleja (Courses, Forms, Messaging, Payments, PushNotifications) mantienen su estructura propia
+  - Hook genérico (`useSupabaseQuery(queryFn, autoFetch = true, emptyValue = EMPTY)`) que estandariza `{ data, setData, loading, error, refetch }` y protege el orden de las respuestas contra carreras
+  - `emptyValue` es el valor con el que se vacía la data antes de recargar cuando cambia `queryFn` (evita mostrar las filas del estudiante anterior). Se lee a través de un ref y **no** figura entre las dependencias del efecto, de modo que un array u objeto literal en el punto de llamada no provoca recargas infinitas
+  - Lo usan los hooks más simples (Tasks, Students, Lessons, Reminders, Notifications, UserNotifications, Practice); los de lógica compleja (Courses, Forms, Payments) mantienen su estructura propia
+- `src/context/NotificationContext.jsx`
+  - `useSupabaseUserNotifications` se monta una sola vez en `DefaultLayout` y se reparte por contexto. Antes lo consumían `NotificationBell`, `NotificationToasts` y la vista `Notifications`, lo que significaba tres SELECT de 50 filas y tres canales Realtime por página, y contadores de no leídos desincronizados entre campana y toasts
 - `src/utils/courses.js`
   - Lógica compartida de cursos, p. ej. `computeStats` (porcentaje de avance por tarea/estudiante)
+- `src/utils/dates.js`
+  - `parseDbDate` / `localDateKey` / `isOverdue` / `getUrgency`. PostgREST devuelve las columnas `DATE` como `'YYYY-MM-DD'`, que `new Date()` interpreta como medianoche **UTC**; comparar eso contra la medianoche local desplazaba un día y clasificaba mal la urgencia. Toda comparación de fechas de entrega pasa por aquí
 - `src/utils/version.js`
-  - Fuente única de `BUILD_VERSION` y `buildHash` (usa `VITE_BUILD_VERSION` o un valor por defecto); evita el desfase de versiones entre vistas
+  - Fuente única de `BUILD_VERSION` y `buildHash`. El valor lo define `vite.config.mjs` en cada build a partir de `VITE_BUILD_VERSION`, del HEAD de git o de la marca de tiempo; el mismo valor se estampa en `public/sw.js` para el cache busting
 
 ## Modelo de datos (Supabase)
 
@@ -127,12 +133,25 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 ## Build y despliegue
 
 - `npm run build` genera el bundle en `build/`
-- Deploy en **Vercel**: `vercel.json` define rewrites SPA y cacheo immutable de assets
+- `vite.config.mjs` resuelve la versión de build (`VITE_BUILD_VERSION` → HEAD de git → marca de tiempo), la inyecta en `import.meta.env.VITE_BUILD_VERSION` y estampa `public/sw.js` en `closeBundle` para que el nombre de la caché cambie en cada despliegue
+- Deploy en **Vercel**: `vercel.json` define el rewrite SPA, `Cache-Control: immutable` para `/assets/(.*)` y `no-store` para el resto. La regla general excluye explícitamente `assets/` y `sw.js` con un lookahead negativo, para que el `no-store` no pise el cacheo inmutable independientemente del orden en que Vercel aplique las cabeceras
+- Cabeceras de seguridad aplicadas por `vercel.json`: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `X-DNS-Prefetch-Control` y `Permissions-Policy` (cámara, geolocalización, micrófono y pagos restringidos; la app no usa ninguno). Ajustar si se incorporan funciones que los necesiten
 - Variables de entorno requeridas en el host: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`; opcional: `VITE_VAPID_PUBLIC_KEY` (notificaciones push) y `VITE_BUILD_VERSION`
 - Secretos de Edge Functions en Supabase: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, y la service role key si se usa el flujo local
+
+## PWA y offline
+
+- `index.html` enlaza `public/site.webmanifest`; sin ese enlace los navegadores no instalan la PWA
+- `public/sw.js` cachea **solo el propio origen**. El tráfico a `*.supabase.co` se deja pasar: sus respuestas dependen de la cabecera de autorización, no de la URL, así que cachearlas podría devolver los datos de un usuario a otro
+- Navegaciones _network first_ con `/index.html` de respaldo; assets con hash _cache first_; el resto del mismo origen va directo a la red
+- `activate` borra cualquier caché con otra versión; `clearCache` preserva la activa para no dejar el worker sin shell offline
+- La actualización pide confirmación y recarga en `controllerchange`, no antes: recargar mientras sigue activo el worker viejo descarta el bundle recién descargado
 
 ## Tareas de mantenimiento
 
 - Mantener actualizadas las dependencias de CoreUI y React
 - Toda nueva tabla debe incluir sus políticas RLS desde el inicio
 - Nuevas rutas administrativas deben declarar `roles: ['admin']` en `routes.js`
+- Una política RLS no puede comparar con la fila anterior: para impedir que alguien cambie una columna concreta hay que usar un trigger `BEFORE UPDATE` con `OLD` (ver `trg_restrict_notification_update` y `trg_restrict_student_profile_update` en la migración 017)
+- Las fechas `DATE` que llegan de PostgREST como `'YYYY-MM-DD'` se comparan siempre con `src/utils/dates.js`, nunca con `new Date()` directo
+- No hay suite de tests: `npm run lint` + `npm run build` es la puerta mínima, y `supabase/VERIFICACION_017.sql` cubre lo que solo puede comprobarse contra la base de datos

@@ -31,7 +31,17 @@ VITE_SUPABASE_ANON_KEY=<tu-anon-key>
 VITE_VAPID_PUBLIC_KEY=<opcional, para notificaciones web push>
 ```
 
-3. Aplica las migraciones de base de datos (carpeta `supabase/migrations/`) en tu proyecto de Supabase, en orden numérico.
+3. Aplica las migraciones de base de datos de `supabase/migrations/` **en orden numérico**. Cada archivo está pensado para ser idempotente (`IF NOT EXISTS` / `DROP ... IF EXISTS`), de modo que reejecutarlo no rompe nada.
+
+   Con la CLI de Supabase y un stack **local** (requiere Docker):
+
+   ```bash
+   supabase start        # levanta la BD local definida en supabase/config.toml
+   supabase db reset     # recrea la BD local y aplica 001..017
+   supabase db lint      # advisor de seguridad
+   ```
+
+   > Si el proyecto está enlazado a producción (`supabase link`), `supabase db push` aplicaría **en producción**. Revisa siempre el diff de migraciones antes de empujar. `supabase/VERIFICACION_017.sql` contiene las comprobaciones para después de aplicar la 017, y `supabase/BASELINE.md` documenta el procedimiento de referencia del esquema.
 
 4. Inicia la app:
 
@@ -43,36 +53,47 @@ Abre `http://localhost:3000` en tu navegador.
 
 ## Scripts disponibles
 
-| Comando         | Descripción                                  |
-| --------------- | -------------------------------------------- |
-| `npm start`     | Inicia el servidor de desarrollo en modo HMR |
-| `npm run build` | Genera el bundle de producción con Vite      |
-| `npm run serve` | Sirve el build de producción localmente      |
-| `npm run lint`  | Ejecuta ESLint sobre el código               |
+| Comando          | Descripción                                  |
+| ---------------- | -------------------------------------------- |
+| `npm start`      | Inicia el servidor de desarrollo en modo HMR |
+| `npm run build`  | Genera el bundle de producción con Vite      |
+| `npm run serve`  | Sirve el build de producción localmente      |
+| `npm run lint`   | Ejecuta ESLint sobre el código               |
+| `npm run format` | Aplica Prettier a todo el proyecto           |
+
+No hay suite de tests automatizados. La verificación es `npm run lint` + `npm run build`, más el script `supabase/VERIFICACION_017.sql` para lo que solo puede comprobarse contra la base de datos.
 
 ## Estructura del proyecto
 
 ```
 src/
 ├── assets/            # Imágenes y logos
-├── components/        # Componentes reutilizables de UI (layout, header, breadcrumb)
-├── context/           # AuthContext: sesión y perfil de usuario con Supabase
-├── hooks/             # Hooks useSupabase* para acceso a datos
+├── components/        # Componentes reutilizables de UI (layout, header, dashboard)
+├── context/           # AuthContext (sesión y perfil) y NotificationContext (fuente única de avisos)
+├── hooks/             # Hooks useSupabase* para acceso de datos, sobre useSupabaseQuery
 ├── layout/            # Layout principal de la aplicación
 ├── lib/               # Cliente de Supabase
 ├── scss/              # Estilos globales y temas
+├── utils/             # Fechas locales, formato y versión de build
 ├── views/
 │   ├── academy/       # Estudiantes, clases, tareas, pagos, notificaciones, perfil
-│   ├── admin/         # Gestión de usuarios (solo admin)
+│   ├── admin/         # Gestión de usuarios y envío de avisos (solo admin)
+│   ├── courses/       # Cursos, contenido y cuestionarios
 │   ├── dashboard/     # Panel principal con gráficos
 │   └── pages/         # Login y registro
 ├── App.jsx            # Componente raíz con router y guardas de autenticación
 ├── auth.js            # Wrapper sobre Supabase Auth
 ├── navigation.jsx     # Menú lateral configurado por roles
 └── routes.js          # Definición de rutas protegidas
+public/
+├── site.webmanifest   # Manifiesto PWA (instalable)
+└── sw.js              # Service worker: shell offline y push
 supabase/
+├── config.toml        # Configuración del stack local
 ├── migrations/        # Esquema SQL, políticas RLS y triggers (idempotentes)
-└── functions/         # Edge Functions (create-student, send-push-notification)
+├── functions/         # Edge Functions (create-student, delete-user, send-push-notification)
+├── BASELINE.md        # Referencia del esquema y procedimiento para regenerarla
+└── VERIFICACION_017.sql  # Comprobaciones tras aplicar la migración 017
 ```
 
 ## Autenticación y roles
@@ -88,17 +109,37 @@ El primer administrador debe crearse manualmente en Supabase (Dashboard → Auth
 
 ## Rutas principales
 
-- `/login` - Inicio de sesión
-- `/register` - Registro de estudiantes
-- `/dashboard` - Panel principal
-- `/students` - Listado de estudiantes (admin)
-- `/students/:id` - Perfil del estudiante (admin)
-- `/lessons` - Clases (admin)
-- `/tasks` - Tareas
-- `/payments` - Pagos y recordatorios (admin)
-- `/users` - Gestión de usuarios (admin)
-- `/notifications` - Notificaciones in-app
-- `/my-profile` - Perfil personal
+Definidas en `src/routes.js`. El control de acceso real está en las políticas RLS, no solo aquí.
+
+| Ruta                               | Acceso  | Descripción                      |
+| ---------------------------------- | ------- | -------------------------------- |
+| `/login`, `/register`              | público | Inicio de sesión y registro      |
+| `/dashboard`                       | todos   | Panel principal                  |
+| `/tasks`                           | todos   | Tareas                           |
+| `/notifications`                   | student | Bandeja de notificaciones in-app |
+| `/my-profile`                      | todos   | Perfil personal                  |
+| `/courses`, `/courses/:id`         | todos   | Cursos y detalle                 |
+| `/courses/:courseId/forms/:formId` | todos   | Cuestionario de un curso         |
+| `/students`, `/students/:id`       | admin   | Listado y ficha de estudiantes   |
+| `/lessons`                         | admin   | Clases                           |
+| `/payments`                        | admin   | Pagos, recordatorios e historial |
+| `/users`                           | admin   | Gestión de usuarios              |
+| `/send-notifications`              | admin   | Enviar avisos a grupos           |
+
+Cualquier ruta no declarada redirige a `/dashboard`.
+
+## PWA
+
+`index.html` enlaza `public/site.webmanifest` y `src/index.jsx` registra `public/sw.js`.
+
+- El service worker cachea **solo recursos del propio origen** (el shell y los assets con hash). El tráfico a `*.supabase.co` nunca se intercepta ni se cachea, porque las respuestas autenticadas se indexarían únicamente por URL.
+- Las navegaciones van _network first_ con el shell como respaldo offline; los assets con hash van _cache first_.
+- El nombre de la caché incluye la versión de build, que `vite.config.mjs` deriva de `VITE_BUILD_VERSION`, del HEAD de git o de la marca de tiempo. Al activarse una versión nueva se purgan las cachés anteriores.
+- La actualización no se recarga sola: se pregunta al usuario y, al aceptar, se envía `skipWaiting` al worker; la recarga ocurre en `controllerchange`, cuando el shell nuevo ya está activo.
+
+## Nota sobre mensajería
+
+Las tablas de mensajería (`messages`, `conversation_participants`) y la Edge Function `send-push-notification` siguen existiendo, pero **no hay interfaz de chat en la app** y sus rutas fueron retiradas. La 017 corrige sus políticas RLS y bloquea la reasignación de participantes para que no sigan siendo explotables por API directa. Si se va a recuperar el chat, hay que rehacer la capa de cliente (los hooks `useSupabaseMessaging` y `useSupabasePushNotifications` se han eliminado por estar sin uso).
 
 ## Documentación adicional
 
