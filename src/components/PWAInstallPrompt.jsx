@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { CButton, CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { cilCloudDownload, cilMobile, cilX } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 

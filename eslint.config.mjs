@@ -10,7 +10,9 @@ export default [
     ...eslintPluginReact.configs.flat['jsx-runtime'],
     files: ['src/**/*.{js,jsx}'],
     plugins: {
-      eslintPluginReact,
+      // La clave debe ser 'react', no el nombre del import: las reglas que
+      // extiende flat.recommended vienen con el prefijo 'react/'.
+      react: eslintPluginReact,
       'react-hooks': eslintPluginReactHooks,
     },
     languageOptions: {
@@ -33,6 +35,10 @@ export default [
     },
     rules: {
       ...eslintPluginReactHooks.configs.recommended.rules,
+      // Un componente JSX sin importar no lo caza no-undef (no aplica a
+      // JSX) ni vite (no resuelve referencias), asi que se rompe en
+      // produccion con "X is not defined". Esta regla lo para antes.
+      'react/jsx-no-undef': 'error',
     },
   },
   eslintPluginPrettierRecommended,
