@@ -23,13 +23,12 @@
     }
   ],
   "categories": ["education", "music"],
-  "screenshots": [],
   "shortcuts": [
     {
-      "name": "Herramientas de práctica",
-      "short_name": "Práctica",
-      "description": "Metrónomo, afinador, temporizador y grabadora",
-      "url": "/practice-tools",
+      "name": "Panel",
+      "short_name": "Inicio",
+      "description": "Resumen de progreso y tareas",
+      "url": "/dashboard",
       "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     },
     {
@@ -40,10 +39,10 @@
       "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Mensajes",
-      "short_name": "Mensajes",
-      "description": "Chatear con profesores y compañeros",
-      "url": "/messages",
+      "name": "Notificaciones",
+      "short_name": "Avisos",
+      "description": "Mis notificaciones y avisos",
+      "url": "/notifications",
       "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }
   ]

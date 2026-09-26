@@ -62,9 +62,9 @@ const PWAInstallPrompt = () => {
     const { outcome } = await deferredPrompt.userChoice
 
     if (outcome === 'accepted') {
-      console.log('[PWA] User accepted install')
+      if (import.meta.env.DEV) console.log('[PWA] User accepted install')
     } else {
-      console.log('[PWA] User dismissed install')
+      if (import.meta.env.DEV) console.log('[PWA] User dismissed install')
     }
 
     setDeferredPrompt(null)
