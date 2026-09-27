@@ -24,7 +24,8 @@ ALTER TABLE public.lessons ALTER COLUMN lesson_start SET NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_lessons_start ON public.lessons (lesson_start);
 
 -- 3b. duration TEXT -> INTEGER (minutos)
-ALTER TABLE public.lessons ALTER COLUMN duration TYPE INTEGER USING duration::int;
+-- Los valores pueden venir como "45 min", "60 min", etc. Extraer solo el número.
+ALTER TABLE public.lessons ALTER COLUMN duration TYPE INTEGER USING regexp_replace(duration, '\D', '', 'g')::int;
 
 -- 4. Dropear columnas antiguas
 ALTER TABLE public.lessons DROP COLUMN IF EXISTS lesson_date;
