@@ -14,6 +14,7 @@ import {
   CFormText,
   CFormTextarea,
   CInputGroup,
+  CInputGroupText,
   CModal,
   CModalBody,
   CModalFooter,
@@ -32,7 +33,7 @@ import {
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import CIcon from '@coreui/icons-react'
-import { cilArrowLeft, cilPencil, cilPlus } from '@coreui/icons'
+import { cilArrowLeft, cilCalendar, cilPencil, cilPlus } from '@coreui/icons'
 import useCourseEnrollments from '../../hooks/useCourseEnrollments'
 import { SortableFormRow, SortableTaskRow } from '../../components/CourseSortableRows'
 import CourseEnrollmentManager from './CourseEnrollmentManager'
@@ -67,6 +68,7 @@ const CourseDetailAdmin = ({
   const [metaForm, setMetaForm] = useState(null)
   const [metaError, setMetaError] = useState('')
   const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [newTaskDueDate, setNewTaskDueDate] = useState('')
   const [addingTask, setAddingTask] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [formEditorTarget, setFormEditorTarget] = useState(null) // { form|null, taskId|null, taskTitle }
@@ -127,10 +129,15 @@ const CourseDetailAdmin = ({
     const title = newTaskTitle.trim()
     if (!title) return
     setAddingTask(true)
-    const created = await api.addTask(course, { title, createdBy: actor.id })
+    const created = await api.addTask(course, {
+      title,
+      dueDate: newTaskDueDate || null,
+      createdBy: actor.id,
+    })
     setAddingTask(false)
     if (created) {
       setNewTaskTitle('')
+      setNewTaskDueDate('')
       await reload()
     }
   }
@@ -302,6 +309,17 @@ const CourseDetailAdmin = ({
                 }
               }}
               placeholder="Título de la nueva tarea..."
+              aria-label="Título de la nueva tarea"
+            />
+            <CInputGroupText>
+              <CIcon icon={cilCalendar} size="sm" />
+            </CInputGroupText>
+            <CFormInput
+              type="date"
+              value={newTaskDueDate}
+              onChange={(e) => setNewTaskDueDate(e.target.value)}
+              aria-label="Fecha de entrega (opcional)"
+              style={{ maxWidth: 170 }}
             />
             <CButton type="button" color="primary" onClick={handleAddTask} disabled={addingTask}>
               {addingTask ? <CSpinner size="sm" /> : <CIcon icon={cilPlus} />}

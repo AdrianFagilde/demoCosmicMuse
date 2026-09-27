@@ -1,8 +1,7 @@
 # Baseline de la base de datos
 
-Estado del esquema de Supabase a 2026-09-26, con `018_realtime_notifications.sql`
-escrita pero **pendiente de aplicar**. Sirve para dos cosas distintas, que conviene
-no confundir:
+Estado del esquema de Supabase a 2026-09-27. Sirve para dos cosas distintas, que
+conviene no confundir:
 
 - **Detectar drift**: comprobar que las migraciones describen la base entera.
   Para eso no hace falta ningún fichero, se usa `supabase db diff --linked`.
@@ -11,31 +10,59 @@ no confundir:
   genera a voluntad con el comando de más abajo y no está versionado; las
   migraciones ya son la fuente de verdad del esquema.
 
-## Estado a 2026-09-26
+## Estado a 2026-09-27
 
-Las 17 primeras migraciones describen el esquema completo: 26 tablas declaradas en
-migraciones, 26 en producción. El inventario de tablas cuadra, pero eso no
-demuestra que cuadren columnas, índices, políticas ni triggers; para cerrarlo del
-todo, `supabase db diff --linked` debería devolver vacío.
+**Las 26 migraciones están aplicadas** y el historial remoto está sincronizado
+con el repositorio: `001`–`026` presentes en ambos lados, sin entradas fantasma.
 
 ```
-schemas presentes : auth, extensions, public, realtime, storage,
-                    supabase_migrations, vault   (todos estándar de Supabase)
-tablas en public  : 26 declaradas en migraciones, 26 en producción
+supabase migration list --linked
+Local | Remote
+  001..026 | 001..026   (cuadran)
 ```
 
-Quedan tres discrepancias conocidas y sin resolver, porque las tres
-migraciones están escritas pero pendientes de aplicar:
+Las secciones «Cómo se aplicó la 017» y las que describen la aplicación manual de
+018–020 quedan como registro histórico de aquel momento. **Ya no hacen falta**:
+para una base nueva basta `supabase db reset`, que aplica el fichero en orden.
 
-| Migración | Qué la base real tiene y el repo no | ¿Visible en la app? |
-| --------- | ----------------------------------- | ------------------- |
-| `018` | La 018 no está en el historial. `notifications` sí está publicada en `supabase_realtime` (habilitada a mano) | No, funciona |
-| `019` | Las dos políticas de `messages` siguen tautológicas | **Sí: fuga de mensajes** |
-| `020` | Faltan los CHECK de integridad | No, solo limita basura |
+### Lo que rompía la vista de estudiante (025 y 026)
 
-La 019 es la urgente: es un fallo de seguridad explotable, no una deriva de
-historial. Las otras dos son de mantenimiento. Ver «Cómo se aplican la 018, la
-019 y la 020».
+La 021 unificó `tasks` y `course_tasks`, pero renombró la tabla sin re-apuntar
+las claves foráneas ni renombrar las constraints. PostgREST resuelve los embeds
+usando el grafo de FK, así que dos consultas del frontend devolvían
+`400 PGRST200` y las funciones que las lanzaban se tragaban el error:
+
+| Consulta | Origen | Error |
+| --- | --- | --- |
+| `courses.select('*, tasks!course_id(id, task_checklist_items(id))')` | `useSupabaseCourses.js` | `task_checklist_items` no tenía FK a `tasks` |
+| `tasks.select('*, profiles!tasks_student_id_fkey(...)')` | `useSupabaseTasks.js` | la constraint se llamaba `assignments_student_id_fkey` |
+
+Efecto: el alumno veía «No estás inscrito en ningún curso todavía» y «No tienes
+tareas asignadas» **pendiendo de que las inscripciones existieran**. RLS siempre
+estuvo bien; el fallo era enteramente de metadatos.
+
+Las 025 y 026 lo reparan y además eliminan dos tablas muertas:
+
+- `course_tasks_legacy` (025): los ids coincidían uno a uno con `tasks`, 0 huérfanos.
+- `tasks_legacy` (026): la `tasks` original, vacía y **con 6 políticas RLS
+  activas**, es decir expuesta por PostgREST como duplicado de `tasks`.
+
+Las cuatro constraints de `tasks` quedaron renombradas a `tasks_*_fkey` para
+coincidir con el nombre de la tabla y con los hints que usa la app.
+
+> **Lección**: `ALTER TABLE ... RENAME` no renombra las constraints. Y una
+> guarda de idempotencia que busque `pg_constraint.conname` **de forma global**
+> da falsos positivos, porque los nombres de constraint solo son únicos *por
+> tabla*: `tasks_course_id_fkey` ya existía en `tasks_legacy` y la guarda de la
+> 025 omitió el renombrado por eso. Acotar siempre con `conrelid`.
+
+### La 025 también arregla `form_submissions`
+
+La política que creó la 024 llamaba `is_enrolled_in(form_id)`, pero esa función
+espera un **course_id**. Como el UUID de un formulario nunca coincide con el de
+un curso, la condición era siempre falsa y el alumno no podía leer ni insertar
+entregas. Ahora resuelve el curso a través de `course_forms`.
+
 
 ### Cómo se aplicó la 017
 
@@ -215,6 +242,12 @@ Si una migración se aplicó a mano y falló a medias, la única salida limpia e
 | `018_realtime_notifications.sql`     | Publica `notifications` en `supabase_realtime` (idempotente)                                              |
 | `019_fix_messaging_rls_policies.sql`  | Corrije dos políticas de `messages` tautológicas (idempotente)                                          |
 | `020_integrity_constraints.sql`       | CHECK constraints que faltaban en `form_answers` y `practice_sessions` (idempotente)                    |
+| `021_unify_tasks_course_tasks.sql`     | Unifica `tasks` y `course_tasks` en una sola tabla (idempotente)                                         |
+| `022_lessons_timestamptz.sql`          | `lessons.lesson_start` pasa a `TIMESTAMPTZ` (idempotente)                                                |
+| `023_extract_student_metrics.sql`       | Extrae `progress`, `attendance` y `next_lesson` a `student_metrics` (idempotente)                        |
+| `024_is_enrolled_in.sql`               | Función `is_enrolled_in()` y reescritura de 9 políticas RLS (idempotente)                                |
+| `025_repair_task_fks.sql`              | Reapunta las FK `task_id` a `tasks`, borra `course_tasks_legacy`, arregla `form_submissions` (idempotente) |
+| `026_drop_tasks_legacy_rename_constraints.sql` | Borra `tasks_legacy` y renombra las constraints de `tasks` a `tasks_*_fkey` (idempotente)      |
 
 ## Qué corrige la 017
 

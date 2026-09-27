@@ -180,14 +180,26 @@ const Dashboard = () => {
     })()
   }, [isStudent, fetchPaymentsByMonth])
 
-  const recentTasks = tasks
-    .filter((task) => (isStudent ? task.student_id === user?.id : true))
-    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+  // Una tarea de curso no tiene status propio: el CHECK assignments_context_xor
+  // impide que tenga course_id y student_id a la vez. Su avance real es el
+  // checklist, asi que se considera completada cuando el alumno marco todos
+  // sus items.
+  const isCourseTask = (task) => Boolean(task.course_id)
+  const isTaskDone = (task) =>
+    isCourseTask(task) ? task.checklist_percent === 100 : task.status === 'Completado'
+
+  // RLS ya limita al alumno a sus propias tareas mas las de los cursos en los
+  // que esta matriculado. El filtro por student_id solo ocultaba las de curso.
+  const myTasks = isStudent
+    ? tasks.filter((task) => task.student_id === user?.id || task.course_id)
+    : tasks
+
+  const recentTasks = [...myTasks]
+    .sort((a, b) => new Date(a.due_date || 0) - new Date(b.due_date || 0))
     .slice(0, 5)
 
-  const studentTasks = tasks.filter((t) => t.student_id === user?.id)
-  const pendingTasks = studentTasks.filter((t) => t.status !== 'Completado')
-  const completedTasks = studentTasks.filter((t) => t.status === 'Completado')
+  const pendingTasks = myTasks.filter((t) => !isTaskDone(t))
+  const completedTasks = myTasks.filter((t) => isTaskDone(t))
 
   const nextLessonCountdown = getNextLessonCountdown(profile?.next_lesson)
 
@@ -575,13 +587,15 @@ const Dashboard = () => {
             <CCardHeader>Tareas recientes</CCardHeader>
             <CCardBody>
               <div className="text-medium-emphasis mb-3">
-                Las últimas tareas registradas en la academia.
+                {isStudent
+                  ? 'Tus tareas, incluidas las de los cursos en los que estás inscrito.'
+                  : 'Las últimas tareas registradas en la academia.'}
               </div>
               <table className="table table-striped">
                 <thead>
                   <tr>
                     <th>Título</th>
-                    <th>Estudiante</th>
+                    <th>{isStudent ? 'Curso' : 'Estudiante'}</th>
                     <th>Entrega</th>
                     <th>Estado</th>
                   </tr>
@@ -590,9 +604,15 @@ const Dashboard = () => {
                   {recentTasks.map((task) => (
                     <tr key={task.id}>
                       <td>{task.title}</td>
-                      <td>{task.profiles?.full_name || '—'}</td>
-                      <td>{task.due_date}</td>
-                      <td>{task.status}</td>
+                      <td>
+                        {isStudent ? task.course?.title || '—' : task.profiles?.full_name || '—'}
+                      </td>
+                      <td>{task.due_date || '—'}</td>
+                      <td>
+                        {isCourseTask(task)
+                          ? `${task.checklist_completed ?? 0}/${task.checklist_total ?? 0} checklist`
+                          : task.status}
+                      </td>
                     </tr>
                   ))}
                   {recentTasks.length === 0 && (

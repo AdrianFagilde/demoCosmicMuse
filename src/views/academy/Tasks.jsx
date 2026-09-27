@@ -36,6 +36,7 @@ import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import { isOverdue } from '../../utils/dates'
 import { buildAssignmentGroups, byFullName, isActiveStudent } from '../../utils/students'
+import { Link } from 'react-router-dom'
 
 const statusColors = {
   Pendiente: 'warning',
@@ -57,6 +58,17 @@ const statusOptions = ['Todos', 'Pendiente', 'En progreso', 'Completado']
 const ALL_STUDENTS_VALUE = '__all__'
 const INSTRUMENT_VALUE_PREFIX = '__instrument__:'
 const ALL_STUDENTS_FILTER = '__all__'
+
+// Una tarea de curso no tiene status propio: el CHECK assignments_context_xor
+// impide que una tarea tenga course_id y student_id a la vez. Su avance real es
+// el checklist, asi que se considera completada cuando el alumno marco todos
+// sus items.
+const isCourseTask = (task) => Boolean(task.course_id)
+
+const isTaskDone = (task) =>
+  isCourseTask(task) ? task.checklist_percent === 100 : task.status === 'Completado'
+
+const effectiveStatus = (task) => (isCourseTask(task) ? null : task.status)
 
 const emptyNewTask = {
   title: '',
@@ -109,8 +121,15 @@ const Tasks = () => {
   const { user, profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const { students } = useSupabaseStudents()
-  const { tasks, loading, addTasks, deleteTask, changeTaskStatus, changeTaskProgress } =
-    useSupabaseTasks()
+  const {
+    tasks,
+    loading,
+    error: loadError,
+    addTasks,
+    deleteTask,
+    changeTaskStatus,
+    changeTaskProgress,
+  } = useSupabaseTasks()
   const [newTask, setNewTask] = useState(emptyNewTask)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -151,8 +170,12 @@ const Tasks = () => {
     )
   }, [assignmentTargets, newTask.title, tasks])
 
-  const studentTasks = tasks.filter((task) => task.student_id === user?.id)
-  const visibleTasks = isAdmin ? tasks : studentTasks
+  // RLS ya limita al alumno a sus propias tareas mas las tareas de curso de
+  // los cursos en los que esta matriculado. El filtro anterior solo por
+  // student_id ocultaba las tareas de curso, que no tienen student_id.
+  const visibleTasks = isAdmin
+    ? tasks
+    : tasks.filter((task) => task.student_id === user?.id || task.course_id)
 
   const filteredAndSortedTasks = useMemo(() => {
     let result = [...visibleTasks]
@@ -164,13 +187,17 @@ const Tasks = () => {
         (task) =>
           task.title?.toLowerCase().includes(term) ||
           task.description?.toLowerCase().includes(term) ||
-          task.profiles?.full_name?.toLowerCase().includes(term),
+          task.profiles?.full_name?.toLowerCase().includes(term) ||
+          task.course?.title?.toLowerCase().includes(term),
       )
     }
 
-    // Status filter
+    // Status filter. Las tareas de curso no tienen status propio, asi que
+    // "Completado" para ellas significa checklist al 100%.
     if (statusFilter !== 'Todos') {
-      result = result.filter((task) => task.status === statusFilter)
+      result = result.filter((task) =>
+        statusFilter === 'Completado' ? isTaskDone(task) : effectiveStatus(task) === statusFilter,
+      )
     }
 
     // Student filter (admin only, to navigate bulk-created rows)
@@ -187,7 +214,7 @@ const Tasks = () => {
           return new Date(b.due_date) - new Date(a.due_date)
         case 'status':
           const statusOrder = { Pendiente: 0, 'En progreso': 1, Completado: 2 }
-          return (statusOrder[a.status] || 3) - (statusOrder[b.status] || 3)
+          return (statusOrder[effectiveStatus(a)] ?? 3) - (statusOrder[effectiveStatus(b)] ?? 3)
         case 'title':
           return (a.title || '').localeCompare(b.title || '')
         case 'created_desc':
@@ -265,13 +292,12 @@ const Tasks = () => {
   }
 
   const getTaskStats = () => {
-    const userTasks = tasks.filter((t) => t.student_id === user?.id)
     return {
-      total: userTasks.length,
-      pending: userTasks.filter((t) => t.status === 'Pendiente').length,
-      inProgress: userTasks.filter((t) => t.status === 'En progreso').length,
-      completed: userTasks.filter((t) => t.status === 'Completado').length,
-      overdue: userTasks.filter((t) => t.status !== 'Completado' && isOverdue(t.due_date)).length,
+      total: visibleTasks.length,
+      pending: visibleTasks.filter((t) => !isTaskDone(t)).length,
+      inProgress: visibleTasks.filter((t) => !isCourseTask(t) && t.status === 'En progreso').length,
+      completed: visibleTasks.filter((t) => isTaskDone(t)).length,
+      overdue: visibleTasks.filter((t) => !isTaskDone(t) && isOverdue(t.due_date)).length,
     }
   }
 
@@ -500,6 +526,11 @@ const Tasks = () => {
           </div>
         </CCardHeader>
         <CCardBody>
+          {loadError && (
+            <div className="alert alert-danger">
+              No se pudieron cargar las tareas: {loadError.message}
+            </div>
+          )}
           {loading ? (
             <CSpinner color="primary" />
           ) : (
@@ -507,7 +538,14 @@ const Tasks = () => {
               <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell>Título</CTableHeaderCell>
-                  {isAdmin && <CTableHeaderCell>Estudiante</CTableHeaderCell>}
+                  {isAdmin ? (
+                    <>
+                      <CTableHeaderCell>Estudiante</CTableHeaderCell>
+                      <CTableHeaderCell>Curso</CTableHeaderCell>
+                    </>
+                  ) : (
+                    <CTableHeaderCell>Curso</CTableHeaderCell>
+                  )}
                   <CTableHeaderCell>Fecha de entrega</CTableHeaderCell>
                   <CTableHeaderCell>Estado</CTableHeaderCell>
                   <CTableHeaderCell>Progreso</CTableHeaderCell>
@@ -526,35 +564,58 @@ const Tasks = () => {
                         <CTableDataCell>{task.profiles?.full_name || '—'}</CTableDataCell>
                       )}
                       <CTableDataCell>
+                        {isCourseTask(task) ? (
+                          <Link to={`/courses/${task.course_id}`}>{task.course?.title || '—'}</Link>
+                        ) : (
+                          <span className="text-medium-emphasis">—</span>
+                        )}
+                      </CTableDataCell>
+                      <CTableDataCell>
                         <span
                           className={
-                            isOverdue(task.due_date) && task.status !== 'Completado'
+                            isOverdue(task.due_date) && !isTaskDone(task)
                               ? 'text-danger fw-semibold'
                               : ''
                           }
                         >
                           {task.due_date}
                         </span>
-                        {isOverdue(task.due_date) && task.status !== 'Completado' && (
+                        {isOverdue(task.due_date) && !isTaskDone(task) && (
                           <CBadge color="danger" className="ms-1" style={{ fontSize: '0.65rem' }}>
                             Vencida
                           </CBadge>
                         )}
                       </CTableDataCell>
                       <CTableDataCell>
-                        <CBadge color={statusColors[task.status] || 'secondary'}>
-                          {task.status}
+                        <CBadge
+                          color={
+                            isCourseTask(task)
+                              ? task.checklist_percent === 100
+                                ? 'success'
+                                : 'info'
+                              : statusColors[task.status] || 'secondary'
+                          }
+                        >
+                          {isCourseTask(task)
+                            ? `${task.checklist_completed ?? 0}/${task.checklist_total ?? 0} checklist`
+                            : task.status}
                         </CBadge>
                       </CTableDataCell>
                       <CTableDataCell>
                         <div className="d-flex align-items-center gap-2">
-                          <span>{task.progress}%</span>
+                          <span>
+                            {isCourseTask(task) ? (task.checklist_percent ?? 0) : task.progress}%
+                          </span>
                           <div className="progress flex-grow-1" style={{ minWidth: 120 }}>
                             <div
                               className="progress-bar"
                               role="progressbar"
-                              style={{ width: `${task.progress}%` }}
-                              aria-valuenow={task.progress}
+                              style={{
+                                width: `${isCourseTask(task) ? (task.checklist_percent ?? 0) : task.progress}%`,
+                              }}
+                              aria-valuenow={
+                                isCourseTask(task) ? (task.checklist_percent ?? 0) : task.progress
+                              }
                               aria-valuemin={0}
                               aria-valuemax={100}
                             />
@@ -600,7 +661,7 @@ const Tasks = () => {
                   ))
                 ) : (
                   <CTableRow>
-                    <CTableDataCell colSpan={isAdmin ? 6 : 5} className="text-center">
+                    <CTableDataCell colSpan={isAdmin ? 7 : 6} className="text-center">
                       {isAdmin
                         ? 'No hay tareas registradas todavía.'
                         : 'No tienes tareas asignadas por el momento.'}

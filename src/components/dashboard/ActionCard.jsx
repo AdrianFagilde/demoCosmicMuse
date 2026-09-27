@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React from 'react'
 import CIcon from '@coreui/icons-react'
-import { cilCalendar, cilMusicNote, cilBook, cilArrowRight, cilClock } from '@coreui/icons'
+import { cilCalendar, cilMusicNote, cilBook, cilArrowRight } from '@coreui/icons'
 import { getUrgency } from '../../utils/dates'
 import ProgressRing from './ProgressRing'
 
-const ActionCard = ({ task, onClick, isActive = false }) => {
+const ActionCard = ({ task, onClick }) => {
   const urgency = getUrgency(task.due_date)
   // `color` es el nombre de CoreUI ('danger', 'warning'...) y `hex` el valor
   // real. Las reglas de este componente son CSS plano, no clases de CoreUI:
@@ -15,12 +15,13 @@ const ActionCard = ({ task, onClick, isActive = false }) => {
   const instrumentColor = task.instrument_color || '#6366f1'
   const [isFocused, setIsFocused] = React.useState(false)
 
-  const handleKeyDown = (e) => {
-    if ((e.key === 'Enter' || e.key === ' ') && onClick) {
-      e.preventDefault()
-      onClick()
-    }
-  }
+  // Una tarea de curso no tiene status/progress propios: su avance es el
+  // checklist que el alumno marca dentro del curso.
+  const isCourseTask = Boolean(task.course_id)
+  const progress = isCourseTask ? (task.checklist_percent ?? 0) : (task.progress ?? 0)
+  const progressLabel = isCourseTask
+    ? `${task.checklist_completed ?? 0} de ${task.checklist_total ?? 0} pasos del checklist`
+    : `progreso ${progress}%`
 
   return (
     <div
@@ -29,8 +30,7 @@ const ActionCard = ({ task, onClick, isActive = false }) => {
       onClick={onClick}
       role="button"
       tabIndex={0}
-      aria-pressed={isActive}
-      aria-label={`${task.title}, ${urgency.label}, progreso ${task.progress || 0}%`}
+      aria-label={`${task.title}, ${urgency.label}, ${progressLabel}`}
       onKeyDown={(e) => {
         if ((e.key === 'Enter' || e.key === ' ') && onClick) {
           e.preventDefault()
@@ -63,17 +63,17 @@ const ActionCard = ({ task, onClick, isActive = false }) => {
               {urgency.label}
             </span>
           </div>
-          {task.course_title && (
+          {task.course?.title && (
             <div className="d-flex align-items-center gap-1 text-medium-emphasis small mb-2">
               <CIcon icon={cilBook} size="xs" />
               <span className="text-truncate" style={{ maxWidth: '200px' }}>
-                {task.course_title}
+                {task.course.title}
               </span>
             </div>
           )}
           <div className="d-flex align-items-center gap-2">
             <ProgressRing
-              progress={task.progress || 0}
+              progress={progress}
               size={44}
               strokeWidth={4}
               color={instrumentColor}
@@ -83,10 +83,10 @@ const ActionCard = ({ task, onClick, isActive = false }) => {
             />
             <div className="d-flex flex-column">
               <span className="fw-semibold small" style={{ color: instrumentColor }}>
-                {task.progress || 0}%
+                {progress}%
               </span>
               <span className="text-medium-emphasis" style={{ fontSize: '0.65rem' }}>
-                {task.task_type === 'course' ? 'Tarea de curso' : 'Tarea general'}
+                {isCourseTask ? 'Tarea de curso' : 'Tarea general'}
               </span>
             </div>
           </div>

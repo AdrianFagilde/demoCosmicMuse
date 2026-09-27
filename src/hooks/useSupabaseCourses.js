@@ -13,14 +13,20 @@ const useSupabaseCourses = () => {
   const fetchCourses = useCallback(async () => {
     const { data, error: fetchError } = await supabase
       .from('courses')
-      .select('*, tasks!course_id(id, task_checklist_items(id)), course_enrollments(student_id)')
+      .select(
+        `id, title, description, instrument, level, created_by, created_at, updated_at,
+        tasks!course_id(id, position, task_checklist_items(id)),
+        course_enrollments(student_id)`,
+      )
       .order('created_at', { ascending: false })
     if (fetchError) {
       setError(fetchError)
       console.error('[Courses] Error:', fetchError.message, fetchError)
     } else {
       setError(null)
-      setCourses(data || [])
+      // La capa de UI consume `course_tasks` de forma uniforme, tanto en el
+      // listado como en el detalle. PostgREST devuelve el embed como `tasks`.
+      setCourses((data || []).map((course) => ({ ...course, course_tasks: course.tasks || [] })))
     }
     setLoading(false)
   }, [])
@@ -177,10 +183,10 @@ const useSupabaseCourses = () => {
   }, [])
 
   const addTask = useCallback(async (course, taskData) => {
-    const position = (course.tasks || []).reduce(
-      (max, t) => Math.max(max, (t.position ?? 0) + 1),
-      0,
-    )
+    // El detalle expone `course_tasks`; antes se leia `course.tasks`, que
+    // venia undefined y dejaba todas las tareas nuevas en position 0.
+    const existingTasks = course.course_tasks || course.tasks || []
+    const position = existingTasks.reduce((max, t) => Math.max(max, (t.position ?? 0) + 1), 0)
     const { data, error: insertError } = await supabase
       .from('tasks')
       .insert({

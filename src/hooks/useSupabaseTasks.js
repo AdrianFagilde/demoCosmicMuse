@@ -3,19 +3,69 @@ import supabase from '../lib/supabase'
 import { notifyInApp } from '../utils/notifications'
 import useSupabaseQuery from './useSupabaseQuery'
 
+// course:courses!tasks_course_id_fkey solo viene relleno en tareas de curso.
+// task_checklist_items alimenta el progreso real del alumno en el feed
+// unificado: una tarea de curso no tiene status/progress propios.
+const TASK_SELECT = `
+  id,
+  title,
+  description,
+  course_id,
+  student_id,
+  assigned_by,
+  due_date,
+  position,
+  status,
+  progress,
+  created_at,
+  updated_at,
+  profiles!tasks_student_id_fkey(id, full_name),
+  assigned_by_profile:profiles!tasks_assigned_by_fkey(id, full_name),
+  course:courses!tasks_course_id_fkey(id, title),
+  task_checklist_items(id)
+`
+
 const useSupabaseTasks = () => {
   const fetchTasks = useCallback(async () => {
     const { data, error } = await supabase
       .from('tasks')
-      .select(
-        '*, profiles!tasks_student_id_fkey(full_name), assigned_by_profile:profiles!tasks_assigned_by_fkey(full_name)',
-      )
+      .select(TASK_SELECT)
       .order('created_at', { ascending: false })
     if (error) {
       console.error('[Tasks] Error:', error.message, error)
       throw error
     }
-    return data || []
+
+    const rows = data || []
+    const itemIds = rows.flatMap((t) => (t.task_checklist_items || []).map((i) => i.id))
+    if (itemIds.length === 0) return rows
+
+    const { data: sessionData } = await supabase.auth.getSession()
+    const userId = sessionData?.session?.user?.id
+    if (!userId) return rows
+
+    const { data: progress, error: progressError } = await supabase
+      .from('checklist_progress')
+      .select('item_id')
+      .eq('student_id', userId)
+      .in('item_id', itemIds)
+    if (progressError) {
+      console.error('[Tasks] Checklist progress error:', progressError.message, progressError)
+      return rows
+    }
+
+    const done = new Set((progress || []).map((p) => p.item_id))
+    return rows.map((t) => {
+      const items = t.task_checklist_items || []
+      if (!t.course_id || items.length === 0) return t
+      const completed = items.filter((i) => done.has(i.id)).length
+      return {
+        ...t,
+        checklist_total: items.length,
+        checklist_completed: completed,
+        checklist_percent: Math.round((completed / items.length) * 100),
+      }
+    })
   }, [])
 
   const { data: tasks, setData: setTasks, loading, error, refetch } = useSupabaseQuery(fetchTasks)
