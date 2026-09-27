@@ -1,52 +1,49 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CCard, CCardBody, CCardHeader, CRow, CCol, CButton } from '@coreui/react'
-import { cilLockLocked, cilInfo, cilBan, cilCheckCircle, cilX } from '@coreui/icons'
 
 const lastUpdated = '27 de septiembre de 2026'
 const version = '1.0'
 
-const cookieTable = [
+// Inventario real, verificado contra el codigo. La version 1.0 de esta
+// politica listaba seis cookies (session_id, csrf_token, auth_token,
+// csrf_refresh, preferences, cookie_consent) que la aplicacion nunca
+// escribio: supabase-js guarda la sesion en localStorage y `document.cookie`
+// no aparece en ningun archivo de src/. Decirlo aqui evita que el inventario
+// se vuelva a inventar: si se anaden cookies o almacenamiento, se anaden
+// aqui.
+const storageTable = [
   {
-    name: 'session_id',
+    name: 'sb-<referencia-del-proyecto>-auth-token',
+    medium: 'localStorage',
     type: 'Esencial',
-    duration: 'Sesión',
-    purpose: 'Mantiene la sesión de usuario autenticado',
+    duration: 'Hasta cerrar sesión',
+    purpose: 'Mantener la sesión autenticada entre recargas',
     category: 'Esencial',
   },
   {
-    name: 'csrf_token',
-    type: 'Esencial',
-    duration: 'Sesión',
-    purpose: 'Protección contra ataques CSRF',
-    category: 'Esencial',
-  },
-  {
-    name: 'auth_token',
-    type: 'Esencial',
-    duration: '30 días',
-    purpose: 'Recordar sesión ("Recordarme")',
-    category: 'Esencial',
-  },
-  {
-    name: 'csrf_refresh',
-    type: 'Esencial',
-    duration: '1 año',
-    purpose: 'Renovación segura de tokens CSRF',
-    category: 'Esencial',
-  },
-  {
-    name: 'preferences',
+    name: 'cosmo-music-theme',
+    medium: 'localStorage',
     type: 'Funcional',
-    duration: '1 año',
-    purpose: 'Preferencias de UI (tema, idioma, sidebar)',
+    duration: 'Persistente',
+    purpose: 'Recordar el tema claro u oscuro elegido',
     category: 'Funcional',
   },
   {
-    name: 'cookie_consent',
+    name: 'pwa-install-dismissed',
+    medium: 'localStorage',
     type: 'Funcional',
-    duration: '1 año',
-    purpose: 'Recordar preferencias de consentimiento de cookies',
+    duration: 'Persistente',
+    purpose:
+      'Recordar que el aviso de instalación de la app se descartó, para no volver a mostrarlo',
+    category: 'Funcional',
+  },
+  {
+    name: 'welcome-modal-<correo>',
+    medium: 'sessionStorage',
+    type: 'Funcional',
+    duration: 'Hasta cerrar la pestaña',
+    purpose: 'Mostrar el mensaje de bienvenida una sola vez por sesión',
     category: 'Funcional',
   },
 ]
@@ -72,30 +69,36 @@ const CookiePolicy = () => {
           <div className="d-flex justify-content-between align-items-center">
             <h4 className="mb-0">Política de Cookies</h4>
             <div className="text-end">
-              <small className="text-medium-emphasis d-block">Versión 1.0</small>
-              <small className="text-medium-emphasis">Actualizada: 27 de septiembre de 2026</small>
+              <small className="text-medium-emphasis d-block">Versión {version}</small>
+              <small className="text-medium-emphasis">Actualizada: {lastUpdated}</small>
             </div>
           </div>
         </CCardHeader>
         <CCardBody>
           <div className="mb-4">
-            <h4>1. ¿Qué son las cookies?</h4>
+            <h4>1. Resumen</h4>
             <p>
-              Las cookies son pequeños archivos de texto que los sitios web almacenan en su
-              dispositivo (ordenador, tablet, móvil) cuando los visita. Permiten que el sitio web
-              recuerde sus acciones y preferencias (inicio de sesión, idioma, preferencias de
-              visualización) durante un período de tiempo, para que no tenga que volver a
-              configurarlas cada vez que vuelve al sitio o navega entre páginas.
+              <strong>No utilizamos cookies.</strong> La aplicación no escribe ninguna cookie ni lee
+              ninguna, y no incrusta servicios de terceros que puedan establecerlas. La
+              autenticación, el tema y el resto de preferencias se guardan en el{' '}
+              <code>localStorage</code> y el <code>sessionStorage</code> de su navegador, que no se
+              envían al servidor con cada petición ni se comparten con ningún otro sitio.
+            </p>
+            <p>
+              Esta política se publica igualmente porque es la forma honesta de explicar qué
+              almacenamiento se usa y por qué: si en el futuro se incorporan cookies o servicios de
+              terceros, esta página se actualiza antes de que existan.
             </p>
           </div>
 
           <div className="mb-4">
-            <h4>2. Tipos de cookies que utilizamos</h4>
+            <h4>2. Almacenamiento local que sí utilizamos</h4>
             <div className="table-responsive">
               <table className="table table-sm table-hover">
                 <thead>
                   <tr>
-                    <th>Nombre</th>
+                    <th>Clave</th>
+                    <th>Almacenamiento</th>
                     <th>Tipo</th>
                     <th>Duración</th>
                     <th>Finalidad</th>
@@ -103,19 +106,20 @@ const CookiePolicy = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {cookieTable.map((cookie, index) => (
+                  {storageTable.map((item, index) => (
                     <tr key={index}>
                       <td>
-                        <code>{cookie.name}</code>
+                        <code>{item.name}</code>
                       </td>
-                      <td>{cookie.type}</td>
-                      <td>{cookie.duration}</td>
-                      <td>{cookie.purpose}</td>
+                      <td>{item.medium}</td>
+                      <td>{item.type}</td>
+                      <td>{item.duration}</td>
+                      <td>{item.purpose}</td>
                       <td>
                         <span
-                          className={`badge ${cookie.category === 'Esencial' ? 'bg-primary' : 'bg-secondary'}`}
+                          className={`badge ${item.category === 'Esencial' ? 'bg-primary' : 'bg-secondary'}`}
                         >
-                          {cookie.category}
+                          {item.category}
                         </span>
                       </td>
                     </tr>
@@ -123,43 +127,57 @@ const CookiePolicy = () => {
                 </tbody>
               </table>
             </div>
+            <p className="mt-2">
+              <strong>Nota:</strong> esta tabla es el inventario real. Si alguna vez se añade una
+              cookie o un tercero que guarde datos en su navegador, debe aparecer aquí con su nombre
+              y su finalidad.
+            </p>
           </div>
 
           <div className="mb-4">
-            <h4>3. Categorías de cookies</h4>
+            <h4>3. Categorías</h4>
             <ul>
               <li>
-                <strong>Esenciales:</strong> Necesarias para el funcionamiento básico de la
-                plataforma (autenticación, seguridad, sesión). No se pueden desactivar.
+                <strong>Esenciales:</strong> necesarias para el funcionamiento básico de la
+                plataforma (mantener la sesión iniciada). No se pueden desactivar.
               </li>
               <li>
-                <strong>Funcionales:</strong> Mejoran la experiencia de usuario recordando
-                preferencias. Se pueden desactivar.
+                <strong>Funcionales:</strong> recuerdan preferencias de uso (tema, aviso de
+                instalación ya descartado, mensaje de bienvenida). Se pueden eliminar en cualquier
+                momento sin perder la sesión.
               </li>
               <li>
-                <strong>Analíticas:</strong> Nos ayudan a entender cómo se usa la plataforma (no
-                usamos actualmente).
+                <strong>Analíticas:</strong> no utilizamos ninguna. No hay medición de audiencia ni
+                herramientas de analítica en la aplicación.
               </li>
               <li>
-                <strong>Publicitarias:</strong> Para publicidad personalizada.{' '}
-                <strong>No utilizamos.</strong>
+                <strong>Publicitarias:</strong> no utilizamos ninguna.
               </li>
             </ul>
           </div>
 
           <div className="mb-4">
-            <h4>3. Cookies de terceros</h4>
+            <h4>4. Servicios de terceros</h4>
             <p>
-              No utilizamos cookies de terceros para publicidad ni seguimiento entre sitios. Las
-              únicas cookies de terceros provienen de servicios esenciales integrados (ej.
-              proveedores de pago certificados) y están sujetas a sus propias políticas de
-              privacidad.
+              La aplicación no carga recursos de terceros: ni fuentes de tipografía desde servidores
+              externos (se sirven desde el propio dominio), ni analítica, ni publicidad. Los iconos
+              y las tipografías se incluyen en el propio paquete de la aplicación.
+            </p>
+            <p>
+              El único servicio externo es la base de datos y la autenticación, que comunican con
+              nuestra infraestructura y se rigen por nuestra{' '}
+              <Link to="/privacy-policy">Política de Privacidad</Link>. Los pagos se registran en la
+              plataforma; si se incorporan pasarelas de pago, sus políticas se publicarán aquí.
             </p>
           </div>
 
           <div className="mb-4">
-            <h4>4. Gestión de cookies</h4>
-            <p>Puede controlar y eliminar cookies desde la configuración de su navegador:</p>
+            <h4>5. Cómo desactivarlo o eliminarlo</h4>
+            <p>
+              Puede borrar el almacenamiento local desde la configuración de su navegador. Tenga en
+              cuenta que <strong>eliminar el almacenamiento esencial cierra la sesión</strong> y
+              tendrá que volver a iniciar sesión:
+            </p>
             <ul>
               <li>
                 <strong>Chrome:</strong>{' '}
@@ -178,31 +196,34 @@ const CookiePolicy = () => {
               </li>
             </ul>
             <p className="mt-2">
-              <strong>Nota:</strong> Desactivar cookies esenciales impedirá el funcionamiento
-              correcto de la plataforma (no podrá iniciar sesión, usar formularios, etc.).
+              La aplicación también ofrece cerrar sesión explícitamente desde el menú de usuario, lo
+              que elimina la sesión almacenada en su dispositivo.
             </p>
           </div>
 
           <div className="mb-4">
-            <h4>5. Consentimiento</h4>
+            <h4>6. Consentimiento</h4>
             <p>
-              Al utilizar nuestra plataforma, acepta el uso de cookies esenciales y funcionales
-              según esta política. Las cookies no esenciales requieren su consentimiento explícito,
-              que puede gestionar desde el banner de cookies o la configuración de su cuenta.
+              No hay cookies publicitarias ni de analítica, así que{' '}
+              <strong>no necesitamos un banner de consentimiento</strong> ni mecanismos para
+              aceptarlas: no se recoja ningún dato de navegación con fines de perfilado. El único
+              almacenamiento no esencial (tema y avisos descartados) es necesario para el
+              funcionamiento descrito en el punto 2 y puede borrarse en cualquier momento como se
+              indica en el punto 5.
             </p>
           </div>
 
           <div className="mb-4">
-            <h4>6. Actualizaciones</h4>
+            <h4>7. Actualizaciones</h4>
             <p>
-              Podemos actualizar esta política para reflejar cambios en el uso de cookies. Le
-              notificaremos cambios materiales mediante notificación en la plataforma o correo
-              electrónico.
+              Podemos actualizar esta política para reflejar cambios en el uso de almacenamiento
+              local. Le notificaremos cambios materiales mediante notificación en la plataforma o
+              correo electrónico.
             </p>
           </div>
 
           <div className="mb-4">
-            <h4>7. Contacto</h4>
+            <h4>8. Contacto</h4>
             <p>
               Para consultas sobre esta política:{' '}
               <a href="mailto:privacidad@cosmicmuse.com">privacidad@cosmicmuse.com</a>

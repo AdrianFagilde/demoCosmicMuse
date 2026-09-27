@@ -42,12 +42,20 @@ const DefaultLayout = () => {
   return (
     <NotificationProvider>
       <div>
+        {/* Primer elemento enfocable del documento: con teclado, saltar la
+            navegacion lateral (que son decenas de enlaces) sin tener que
+            tabular por ella en cada pagina. Va oculto de verdad con
+            clip-path, no con display:none, porque display:none lo saca del
+            orden de tabulacion y el enlace se volveria inalcanzable. */}
+        <a href="#contenido-principal" className="skip-link">
+          Ir al contenido principal
+        </a>
         <AppSidebar />
         <div className="wrapper d-flex flex-column min-vh-100">
           <AppHeader />
-          <div className="body flex-grow-1">
+          <main id="contenido-principal" className="body flex-grow-1" tabIndex={-1}>
             <AppContent />
-          </div>
+          </main>
           <AppFooter />
         </div>
         <NotificationToasts />

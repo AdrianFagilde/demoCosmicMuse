@@ -79,6 +79,9 @@ const ActionCard = ({ task, onClick }) => {
               color={instrumentColor}
               backgroundColor="rgba(0,0,0,0.05)"
               showValue={false}
+              // El "82%" de al lado ya dice el progreso: si el anillo tambien
+              // se anuncia, el lector de pantalla lo lee dos veces seguidas.
+              decorative
               animate={true}
             />
             <div className="d-flex flex-column">

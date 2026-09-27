@@ -91,32 +91,44 @@ const NotificationToasts = () => {
     }
 
     setToasts((prev) => [...prev, ...created].slice(-MAX_VISIBLE_TOASTS))
-  }, [loading, notifications, unreadCount])
+  }, [loading, notifications, unreadCount, user])
 
   return (
-    <CToaster placement="top-end" role="status" aria-live="polite" aria-atomic="true">
+    // Una sola region viva para todos los toasts. Cada CToast lleva tambien
+    // role="alert" + aria-live="assertive": anidar una region viva dentro de
+    // otra hace que algunos lectores anuncien el mensaje dos veces, otras no
+    // lo anuncien, y el aviso de una notificacion cualquiera (que no es una
+    // emergencia) interruptsa al usuario. El anuncio vive aqui; el toast
+    // individual no vuelve a declararse como region viva.
+    <CToaster placement="top-end" role="status" aria-live="polite" aria-atomic="false">
       {toasts.map((toast) => (
-        <CToast
-          key={toast.key}
-          autohide
-          delay={toast.delay}
-          onClose={() => removeToast(toast.key)}
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-        >
+        <CToast key={toast.key} autohide delay={toast.delay} onClose={() => removeToast(toast.key)}>
           <CToastHeader closeButton>
             <CIcon icon={cilBell} className="text-primary me-2" />
             <strong className="me-auto">{toast.title}</strong>
             <small className="text-body-secondary">{toast.meta}</small>
           </CToastHeader>
-          <CToastBody
-            role={toast.notificationId ? 'button' : undefined}
-            style={toast.notificationId ? { cursor: 'pointer' } : undefined}
-            onClick={() => openToast(toast)}
-          >
-            {toast.body}
-          </CToastBody>
+          {toast.notificationId ? (
+            // role="button" sin tabIndex ni onKeyDown dejaba el cuerpo del
+            // toast fuera del orden de tabulacion: con teclado no habia forma
+            // de abrir la notificacion. Ahora es un control de verdad.
+            <CToastBody
+              role="button"
+              tabIndex={0}
+              style={{ cursor: 'pointer' }}
+              onClick={() => openToast(toast)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  openToast(toast)
+                }
+              }}
+            >
+              {toast.body}
+            </CToastBody>
+          ) : (
+            <CToastBody>{toast.body}</CToastBody>
+          )}
         </CToast>
       ))}
     </CToaster>

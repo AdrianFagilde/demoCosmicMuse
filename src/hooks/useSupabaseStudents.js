@@ -6,7 +6,14 @@ const useSupabaseStudents = () => {
   const fetchStudents = useCallback(async () => {
     const { data, error } = await supabase
       .from('profiles_with_metrics')
-      .select('*')
+      // Columnas explicitas, no select('*'). La vista hace p.* sobre
+      // profiles, asi que el asterisco arrastraba email, phone, username,
+      // birth_date, guardian_name y guardian_phone de los diez alumnos al
+      // navegador en cada pagina de administracion, sin que ninguna las
+      // pintara. Se queda lo que las vistas usan de verdad; el correo y el
+      // nivel que aparecen en Students.jsx vienen del formulario de alta,
+      // no del roster.
+      .select('id, full_name, instrument, status, teacher, progress, attendance')
       .eq('role', 'student')
       .order('full_name')
     if (error) {

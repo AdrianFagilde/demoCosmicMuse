@@ -19,6 +19,8 @@ const ProgressRing = ({
   backgroundColor = 'rgba(99, 102, 241, 0.15)',
   showValue = true,
   valueLabel = '',
+  label = 'Progreso',
+  decorative = false,
   children,
   className = '',
   animate = true,
@@ -54,22 +56,39 @@ const ProgressRing = ({
     transformOrigin: 'center',
   }
 
+  // El anillo es un grafico, y el patron ARIA para un valor numerico es
+  // role="progressbar" con aria-valuenow/min/max. Antes el div de fuera y el
+  // <svg> de dentro llevaban los dos role="img" con la MISMA etiqueta, y el
+  // svg arrastraba aria-valuenow/min/max, que no son atributos validos de
+  // role="img": un lector de pantalla anuncia "Progreso: 82%" dos veces.
+  //
+  // El <svg> queda como decoracion (aria-hidden): el trazo no aporta nada que
+  // el valor ya no diga. `decorative` es para cuando el llamante pinta el
+  // porcentaje al lado (ActionCard): entonces el anillo no aporta nada y se
+  // oculta entero para no repetir el mismo dato dos veces seguidas.
+  const accessibleValue = `${clampedProgress}%${valueLabel ? `, ${valueLabel}` : ''}`
+
   return (
     <div
       className={`progress-ring ${className}`}
       style={{ width: size, height: size, position: 'relative' }}
-      role="img"
-      aria-label={`Progreso: ${clampedProgress}%`}
+      {...(decorative
+        ? { 'aria-hidden': 'true' }
+        : {
+            role: 'progressbar',
+            'aria-label': label,
+            'aria-valuenow': clampedProgress,
+            'aria-valuemin': 0,
+            'aria-valuemax': 100,
+            'aria-valuetext': accessibleValue,
+          })}
     >
       <svg
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        role="img"
-        aria-label={`Progreso: ${clampedProgress}%`}
-        aria-valuenow={clampedProgress}
-        aria-valuemin={0}
-        aria-valuemax={100}
+        aria-hidden="true"
+        focusable="false"
       >
         <circle
           cx={size / 2}

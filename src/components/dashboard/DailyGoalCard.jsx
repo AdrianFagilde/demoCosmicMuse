@@ -52,6 +52,7 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
           backgroundColor="rgba(255,255,255,0.2)"
           showValue={true}
           valueLabel=""
+          label="Progreso del objetivo diario"
           animate={true}
           className="flex-shrink-0"
         />

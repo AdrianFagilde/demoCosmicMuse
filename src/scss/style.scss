@@ -846,3 +846,42 @@ h6,
 
   // Uniforme primario se mantiene (gradiente navy -> purple)
 }
+
+// =============================================
+// Accesibilidad
+// =============================================
+
+// Enlace de salto al contenido. En reposo es 1x1 px recortado con clip-path
+// (no display:none ni visibility:hidden, que lo sacarian del orden de
+// tabulacion); al recibir foco se despliega sobre el contenido. El:focus
+// plano lo haria aparecer tambien al hacer clic con el raton, y ese no es
+// el caso de uso.
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+  padding: 0.75rem 1.25rem;
+  background-color: #{$cosmic-navy};
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom-right-radius: 0.5rem;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+
+  &:focus,
+  &:focus-visible {
+    clip-path: none;
+    outline: 2px solid #fff;
+    outline-offset: -4px;
+  }
+}
+
+// El destino del salto recibe foco al navegar con teclado, y el anillo de
+// foco que lo dibuja seria un recuaddo sobre toda la pagina. Se quita solo
+// para la navegacion por teclado, que es donde no aporta.
+#contenido-principal:focus {
+  outline: none;
+}
