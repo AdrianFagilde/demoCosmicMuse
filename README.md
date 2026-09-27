@@ -35,13 +35,13 @@ opcional (ver [PWA](#pwa)). La columna `notifications` debe estar publicada en
 `supabase_realtime` para que las notificaciones in-app lleguen en vivo; la
 migración `018` lo hace.
 
-3. Aplica las migraciones de base de datos de `supabase/migrations/` **en orden numérico**, una vez cada una. No son idempotentes y no deberían serlo: la 017 lo demostró en producción, donde un tipo de retorno equivocado abortó el `CREATE OR REPLACE` con `42P13` después de que las nueve sentencias anteriores ya se hubieran aplicado. La 018 es la excepción, idempotente a propósito. Si una migración falla, envuélvela en `BEGIN`/`COMMIT` completo en lugar de reintentarla a medias. Ver `supabase/BASELINE.md`.
+3. Aplica las migraciones de base de datos de `supabase/migrations/` **en orden numérico**, una vez cada una. No son idempotentes y no deberían serlo: la 017 lo demostró en producción, donde un tipo de retorno equivocado abortó el `CREATE OR REPLACE` con `42P13` después de que las nueve sentencias anteriores ya se hubieran aplicado. Las idempotentes son la excepción deliberada: la 018, la 019 y la 020 solo hacen `DROP`/`CREATE` sobre políticas y constraints, así que repetirlas es inofensivo. Si una migración falla, envuélvela en `BEGIN`/`COMMIT` completo en lugar de reintentarla a medias. Ver `supabase/BASELINE.md`.
 
    Con la CLI de Supabase y un stack **local** (requiere Docker):
 
    ```bash
    supabase start        # levanta la BD local definida en supabase/config.toml
-   supabase db reset     # recrea la BD local y aplica 001..018
+   supabase db reset     # recrea la BD local y aplica 001..020
    supabase db lint      # advisor de seguridad
    ```
 

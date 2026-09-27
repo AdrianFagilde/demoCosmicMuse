@@ -100,9 +100,9 @@ Definido en `supabase/migrations/` (aplicar en orden, una vez cada una):
 | `form_answers`        | Respuestas a esas preguntas                                                      |
 | `form_submissions`    | Envíos de formulario por estudiante                                              |
 | `course_materials`    | Material descargable de un curso                                                  |
-| `conversations`       | Hilos de mensajería entre participantes                                         |
+| `conversations`       | Hilos de mensajería entre participantes (**sin interfaz**, ver nota)              |
 | `conversation_participants` | Quién está en cada conversación, con `muted` y `last_read_at`              |
-| `messages`            | Mensajes dentro de una conversación                                              |
+| `messages`            | Mensajes dentro de una conversación (**sin interfaz**, ver nota)                   |
 | `push_subscriptions`  | Suscripciones push del navegador (tabla **sin interfaz**)                         |
 | `practice_sessions`   | Sesiones de práctica con minutos, XP y fecha                                      |
 | `practice_streaks`    | Rachas por estudiante (actualizadas por trigger, no editables)                   |
@@ -110,6 +110,19 @@ Definido en `supabase/migrations/` (aplicar en orden, una vez cada una):
 | `student_badges`      | Insignias otorgadas (incluye su fecha `earned_at`)                                |
 
 Buckets de Storage: `avatars` (público) y `payment-proofs` (privado, solo admin).
+
+> **Nota sobre "sin interfaz".** `push_subscriptions` y las tres tablas de
+> mensajería (`conversations`, `conversation_participants`, `messages`) están
+> creadas y con RLS, pero **ningún archivo de `src/` las consulta**: no hay
+> chat en la aplicación. No es lo mismo que una feature dormida que se pueda
+> activar tal cual, porque el esquema sí está expuesto por PostgREST y la anon
+> key es pública, así que cualquier hueco de RLS es explotable sin que nadie
+> use la feature. Eso fue justo lo que pasó: la 014 dejó dos políticas de
+> `messages` con una comparación tautológica que permitía leer e inyectar
+> mensajes en conversaciones ajenas, y nadie lo notó porque no hay UI que lo
+> delatara. Lo corrige la `019`, que está escrita pero pendiente de aplicar.
+> Antes de construir el chat sobre este esquema, aplicar la 019.
+> Detalle en `supabase/BASELINE.md`.
 
 ### Seguridad (RLS)
 
@@ -123,6 +136,8 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 - El trigger `handle_new_user` crea el perfil tras el registro forzando siempre `role = 'student'`.
 - La tabla `notifications` está publicada en `supabase_realtime`; en producción se habilitó a mano desde el panel y la migración `018_realtime_notifications.sql` está escrita pero pendiente de aplicar, para que el historial del scheme describa la base real. Sin esa publicación, la suscripción de `useSupabaseUserNotifications` no recibe eventos y las notificaciones in-app solo se actualizan al recargar. La 018 es idempotente: envuelve su sentencia en un `DO $$` que consulta `pg_publication_tables` antes de ejecutar el `ALTER PUBLICATION`. No toca `REPLICA IDENTITY`, porque la identidad por defecto basta para un filtro que compara el registro nuevo.
 - Storage `payment-proofs`: cada estudiante solo accede a los comprobantes de su propia carpeta (`(storage.foldername(name))[1] = auth.uid()::text`).
+- La migración `019_fix_messaging_rls_policies.sql` (escrita, pendiente de aplicar) corrige las dos políticas de `messages` que la 014 dejó tautológicas por una columna sin qualificar dentro de un subquery, lo que en PostgreSQL se resuelve al scope interno. Permitía leer los mensajes de todas las conversaciones e insertar en conversaciones ajenas, sin necesidad de interfaz porque PostgREST expone el esquema. La 016 ya había arreglado los RPC, pero no estas dos políticas.
+- La migración `020_integrity_constraints.sql` (escrita, pendiente de aplicar) añade CHECK `NOT VALID` en `form_answers` (como mucho un valor por respuesta), `practice_sessions` (como mucho una referencia de tarea) y `practice_sessions.metronome_bpm` (rango 20-300). No mueven datos ni cambian el modelo: los triggers de 013/016 siguen siendo los dueños de la lógica de negocio.
 
 > Nota: el JWT `role` de Supabase siempre es `authenticated`; el rol de aplicación vive únicamente en la tabla `profiles`.
 

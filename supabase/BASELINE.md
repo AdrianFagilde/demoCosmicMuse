@@ -24,12 +24,18 @@ schemas presentes : auth, extensions, public, realtime, storage,
 tablas en public  : 26 declaradas en migraciones, 26 en producción
 ```
 
-Queda una discrepancia conocida y sin resolver: la 018 existe en el repositorio
-pero no está en el historial de la base, así que `supabase db diff` la propondrá
-hasta que se aplique. La tabla `notifications` ya está publicada en
-`supabase_realtime` en producción (habilitada a mano desde el panel), de modo que
-no es un fallo visible para la app: solo el historial del scheme está
-desalineado. Ver «Cómo se aplica la 018».
+Quedan tres discrepancias conocidas y sin resolver, porque las tres
+migraciones están escritas pero pendientes de aplicar:
+
+| Migración | Qué la base real tiene y el repo no | ¿Visible en la app? |
+| --------- | ----------------------------------- | ------------------- |
+| `018` | La 018 no está en el historial. `notifications` sí está publicada en `supabase_realtime` (habilitada a mano) | No, funciona |
+| `019` | Las dos políticas de `messages` siguen tautológicas | **Sí: fuga de mensajes** |
+| `020` | Faltan los CHECK de integridad | No, solo limita basura |
+
+La 019 es la urgente: es un fallo de seguridad explotable, no una deriva de
+historial. Las otras dos son de mantenimiento. Ver «Cómo se aplican la 018, la
+019 y la 020».
 
 ### Cómo se aplicó la 017
 
@@ -81,6 +87,54 @@ Una fila significa que está publicada. Cero filas significa que las
 notificaciones in-app no llegan en vivo, aunque la campana y los toasts
 parezcan funcionar: se estarían actualizando solo al recargar.
 
+### Cómo se aplican la 019 y la 020
+
+Ninguna de las dos está aplicada, y la 019 es urgente. Aplicar en este orden:
+**019 antes que 020**, aunque sean independientes.
+
+Las dos son idempotentes, así que a diferencia de la 017 el paso 1 puede ser
+`supabase db push` sin riesgo. Pasos para cada una:
+
+1. `supabase db push` (o pegar el fichero en el SQL Editor).
+2. Registrar el historial:
+   `supabase migration repair --status applied 19 --linked` y luego
+   `--status applied 20 --linked`.
+
+**Comprobación de la 019.** La tautología es visible sin ejecutar nada de la
+aplicación, así que esta consulta debe devolver dos filas y en ambas el
+`qual` debe mencionar `messages.conversation_id`:
+
+```sql
+SELECT polname, polcmd, polqual
+FROM pg_policy
+WHERE polrelid = 'public.messages'::regclass
+  AND polcmd IN ('r', 'a')
+ORDER BY polname;
+```
+
+Si `polqual` sale como `(cp.conversation_id = cp.conversation_id)`, la 019 no
+está aplicada. Si sale `((deleted_at IS NULL) AND (EXISTS (SELECT 1 FROM
+conversation_participants cp WHERE ((cp.conversation_id =
+messages.conversation_id) AND (cp.user_id = auth.uid()))))`, sí.
+
+**Comprobación de la 020.** Los tres CHECK deben aparecer como
+`convalidated = false`, que es lo esperado al estar `NOT VALID`:
+
+```sql
+SELECT conname, convalidated
+FROM pg_constraint
+WHERE conname IN (
+  'form_answers_one_value_per_answer',
+  'practice_sessions_single_task_ref',
+  'practice_sessions_metronome_bpm_range'
+);
+```
+
+Que salga `false` no es un error: significa que solo protegen las filas nuevas.
+Para que protejan también las existentes hay que sanear primero los outliers y
+luego `ALTER TABLE ... VALIDATE CONSTRAINT ...`, que es un paso aparte y no
+urgente.
+
 ## Detectar drift
 
 ```bash
@@ -117,9 +171,11 @@ aislado.
 ## Orden de aplicación y estado
 
 Las migraciones se aplican **una vez**, en orden numérico, y el CLI las
-registra. Salvo la 018, que es idempotente por diseño, no son idempotentes y
-no deberían serlo: que una migración "se pueda repetir" no es una garantía, es
-una casualidad de cómo estuvo escrita.
+registra. Las idempotentes son la excepción deliberada: 018, 019 y 020 solo
+hacen `DROP`/`CREATE` sobre políticas y constraints, o consultan el catálogo
+antes de actuar, así que repetirlas es inofensivo. Las demás no son idempotentes
+y no deberían serlo: que una migración "se pueda repetir" no es una garantía,
+es una casualidad de cómo estuvo escrita.
 
 La 017 es el ejemplo de por qué. Su `CREATE OR REPLACE FUNCTION` sobre
 `get_next_badges` declaraba un tipo de retorno distinto al que ya tenía, y
@@ -157,6 +213,8 @@ Si una migración se aplicó a mano y falló a medias, la única salida limpia e
 | `016_security_fixes.sql`             | Endurecimiento de los RPC de mensajería y de práctica, anti-spam en notificaciones, límites de XP |
 | `017_security_corrections.sql`       | Correcciones de la auditoría actual (ver abajo)                                                          |
 | `018_realtime_notifications.sql`     | Publica `notifications` en `supabase_realtime` (idempotente)                                              |
+| `019_fix_messaging_rls_policies.sql`  | Corrije dos políticas de `messages` tautológicas (idempotente)                                          |
+| `020_integrity_constraints.sql`       | CHECK constraints que faltaban en `form_answers` y `practice_sessions` (idempotente)                    |
 
 ## Qué corrige la 017
 
@@ -215,6 +273,67 @@ toasts y la bandeja seguían funcionando; solorecebían las actualizaciones
 por otras vías (recargar la página, marcar algo como leído), así que nada
 parecía roto. Por eso la comprobación de la sección anterior es de solo
 lectura y se puede pegar en el SQL Editor sin riesgo.
+
+## Qué hace la 019
+
+Corrige un fallo de seguridad real, y el más serio que se ha encontrado en la
+auditoría: dos políticas de `messages` que en la 014 quedaron tautológicas.
+
+La 014 las escribió con una columna sin qualificar dentro de un subquery:
+
+```sql
+WHERE cp.conversation_id = conversation_id AND cp.user_id = auth.uid()
+```
+
+En PostgreSQL una referencia sin qualificar se resuelve al scope más cercano,
+así que `conversation_id` era `cp.conversation_id` y la comparación quedaba
+`cp.conversation_id = cp.conversation_id`: siempre verdadera. La 016 arregló
+los cinco RPC de mensajería pero no redefinió estas dos políticas, solo la de
+`DELETE`, así que el fallo sobrevivió a la revisión anterior.
+
+Lo que permitía, sin necesitar ninguna interfaz:
+
+- **Leer**: el filtro se reducía a "participo en alguna conversación", así que
+  cualquier usuario autenticado podía listar los mensajes de todas las
+  conversaciones del centro.
+- **Escribir**: `sender_id = auth.uid()` seguía exigiendo identidad propia,
+  pero el `EXISTS` ya no acotaba `conversation_id`, así que se podía insertar en
+  cualquier conversación. Es decir: leer una conversación ajena y
+  thereinjectarse.
+
+Que la mensajería no tenga interfaz no lo mitiga. PostgREST expone todo el
+esquema `public` y la anon key va dentro del bundle, o sea que es pública:
+bastaba `supabase.from('messages').select()` desde la consola del navegador.
+
+La 019 también añade el filtro `deleted_at IS NULL` que faltaba en la política
+SELECT. `get_conversation_messages` ya lo aplicaba, así que las dos formas de
+leer no coincidían y una lectura directa devolvía los mensajes "borrados".
+
+## Qué hace la 020
+
+No corrige un fallo de seguridad ni cambia el modelo: añade CHECK constraints
+donde el esquema admitía estados sin sentido, para que un bug de cliente no
+pueda escribir basura en la base. Los triggers de 013/016 ya gestionan la
+lógica de negocio (XP, rachas, insignias); esto va una capa más abajo.
+
+- `form_answers`: es EAV con cinco columnas de valor, todas nullable. Nada
+  impedía guardar `value_text` y `value_number` a la vez. Un CHECK no puede
+  consultar `form_questions.type` (no admite subqueries), así que se limita a
+  exigir que como mucho una de las cuatro esté puesta. Permitir las cuatro a
+  NULL es correcto: es una pregunta sin responder.
+- `practice_sessions`: apunta a dos tablas de tareas distintas (`tasks` legacy y
+  `course_tasks`) y ambos campos son nullable sin restricción, así que una
+  sesión podía no apuntar a ninguna o apuntar a las dos, y en ambos casos es
+  ambigua.
+- `practice_sessions.metronome_bpm`: era texto libre. La 016 acota el XP a 120
+  minutos para frenar el farm, pero no el propio valor, así que se podía
+  guardar cualquier número.
+
+Van como `NOT VALID` a propósito: PostgreSQL no las contrasta contra las filas
+existentes, de modo que la migración no falla aunque haya datos legacy que no
+las cumplan, y siguen aplicándose a toda escritura nueva. Una vez saneados los
+outliers, `ALTER TABLE ... VALIDATE CONSTRAINT ...` las activa también para las
+viejas.
 
 ## Verificación tras aplicar
 
