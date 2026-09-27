@@ -210,52 +210,6 @@
   flex-shrink: 0;
 }
 
-/* League widget */
-.league-widget {
-  background: linear-gradient(135deg, var(--league-bg-start) 0%, var(--league-bg-end) 100%);
-  border-radius: 16px;
-  padding: 16px;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.league-rank {
-  font-size: 2.5rem;
-  font-weight: 800;
-  line-height: 1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Daily chest */
-.chest-widget {
-  border-radius: 16px;
-  padding: 16px;
-  background: var(--cui-card-bg);
-  border: 1px solid var(--cui-border-color);
-  text-align: center;
-}
-
-.chest-icon {
-  font-size: 3rem;
-  line-height: 1;
-  margin-bottom: 8px;
-  animation: chest-bounce 3s ease-in-out infinite;
-}
-
-@keyframes chest-bounce {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  10% {
-    transform: translateY(-6px) scale(1.05);
-  }
-  20% {
-    transform: translateY(0) scale(1);
-  }
-}
-
 /* Top bar */
 .dash-topbar {
   display: flex;
@@ -270,27 +224,6 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--cui-text);
-}
-
-.dash-stats-inline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.dash-stat-mini {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--cui-text-muted);
-  white-space: nowrap;
-}
-
-.dash-stat-mini .icon {
-  font-size: 1rem;
 }
 
 /* Weekly dots */

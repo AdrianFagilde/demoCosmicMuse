@@ -148,11 +148,6 @@ h6,
   font-family: var(--font-display);
 }
 
-.dash-stat-mini {
-  font-family: var(--font-script);
-  letter-spacing: 0.01em;
-}
-
 .body {
   display: flex;
   flex-direction: column;
@@ -298,34 +293,11 @@ h6,
   }
 }
 
-// Pulso de las insignias de tarea vencida. La clase la aplica
-// TaskUrgencyRow.jsx pero no existia en ninguna hoja de estilos (tampoco en
-// CoreUI), asi que el aviso de "Vencida" era puramente textual.
-.blink {
-  animation: blink-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes blink-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.45;
-  }
-}
-
 // Quien tenga "reducir movimiento" activado en el sistema recibe el mismo
 // indicador, pero sin la animacion.
 @media (prefers-reduced-motion: reduce) {
-  .blink,
   .equalizer span {
     animation: none;
-  }
-
-  .blink {
-    opacity: 1;
   }
 }
 
