@@ -1,4 +1,4 @@
-name: NPM Installation
+name: CI
 
 on:
   push:
@@ -9,6 +9,18 @@ on:
 
 env:
   FORCE_COLOR: 2
+  # Placeholders, no secretos. `vite build` no ejecuta el codigo de los modulos,
+  # asi que el `throw` de src/lib/supabase.js no se dispara durante el build: sin
+  # estas variables CI pasaria en verde con un bundle que lleva `undefined` dentro
+  # y revienta en el navegador al llamar createClient(). createClient() exige una
+  # URL con forma (supabase-js valida /^https?:\/\//), de ahi el dominio.
+  VITE_SUPABASE_URL: https://placeholder.supabase.co
+  VITE_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+
+# Los pushes seguidos no encolan cuatro jobs de matriz sobre el mismo commit.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -26,11 +38,20 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      # npm ci, no npm install: parte de package-lock.json en vez de resolver de
+      # nuevo, asi que una dependencia transitiva no puede colarse sin que se
+      # haya tocado ningun manifiesto.
       - name: Install npm dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run lint
         run: npm run lint
 
       - name: Run build
         run: npm run build
+
+      # El build no se basta a si mismo: comprueba que la variable llego al
+      # bundle. Sin esto, unset() -> undefined pasaria el typecheck de Rollup
+      # sin quejarse.
+      - name: Assert Supabase config reached the bundle
+        run: node scripts/assert-bundle-env.mjs

@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "lint": "eslint",
     "serve": "vite preview",
-    "start": "vite"
+    "start": "vite",
+    "verify": "npm run lint && npm run build && node scripts/assert-bundle-env.mjs"
   },
   "dependencies": {
     "@coreui/coreui": "^5.6.1",
