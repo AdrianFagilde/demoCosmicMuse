@@ -31,8 +31,7 @@ import RestrictedAccess from '../../components/RestrictedAccess'
 const emptyForm = {
   studentId: '',
   instrument: '',
-  lessonDate: '',
-  lessonTime: '',
+  lessonStart: '',
   duration: '60',
   teacher: '',
 }
@@ -83,11 +82,15 @@ const Lessons = () => {
 
   const openEdit = (lesson) => {
     setEditingId(lesson.id)
+    // lesson_start es ISO string (ej. '2026-01-15T15:30:00Z')
+    // Para datetime-local necesitamos formato local sin zona: '2026-01-15T15:30'
+    const localStart = lesson.lesson_start
+      ? new Date(lesson.lesson_start).toISOString().slice(0, 16)
+      : ''
     setForm({
       studentId: lesson.student_id || '',
       instrument: lesson.instrument || '',
-      lessonDate: lesson.lesson_date || '',
-      lessonTime: lesson.lesson_time || '',
+      lessonStart: localStart,
       duration: lesson.duration || '60',
       teacher: lesson.teacher || '',
     })
@@ -96,14 +99,8 @@ const Lessons = () => {
   }
 
   const handleSave = async () => {
-    if (
-      !form.studentId ||
-      !form.instrument ||
-      !form.lessonDate ||
-      !form.lessonTime ||
-      !form.teacher
-    ) {
-      setFormError('Completa estudiante, instrumento, fecha, hora y profesor.')
+    if (!form.studentId || !form.instrument || !form.lessonStart || !form.teacher) {
+      setFormError('Completa estudiante, instrumento, fecha/hora y profesor.')
       return
     }
     setSaving(true)
@@ -113,8 +110,7 @@ const Lessons = () => {
       ok = await updateLesson(editingId, {
         student_id: form.studentId,
         instrument: form.instrument,
-        lesson_date: form.lessonDate,
-        lesson_time: form.lessonTime,
+        lesson_start: form.lessonStart,
         duration: form.duration,
         teacher: form.teacher,
       })
@@ -167,8 +163,7 @@ const Lessons = () => {
               <CTableRow>
                 <CTableHeaderCell>Estudiante</CTableHeaderCell>
                 <CTableHeaderCell>Instrumento</CTableHeaderCell>
-                <CTableHeaderCell>Fecha</CTableHeaderCell>
-                <CTableHeaderCell>Hora</CTableHeaderCell>
+                <CTableHeaderCell>Fecha y hora</CTableHeaderCell>
                 <CTableHeaderCell>Duración</CTableHeaderCell>
                 <CTableHeaderCell>Profesor</CTableHeaderCell>
                 <CTableHeaderCell className="text-center">Acciones</CTableHeaderCell>
@@ -182,9 +177,13 @@ const Lessons = () => {
                     <CBadge color="info">{lesson.instrument}</CBadge>
                   </CTableDataCell>
                   <CTableDataCell>
-                    {new Date(lesson.lesson_date + 'T00:00:00').toLocaleDateString('es-ES')}
+                    {lesson.lesson_start
+                      ? new Date(lesson.lesson_start).toLocaleString('es-ES', {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                        })
+                      : '—'}
                   </CTableDataCell>
-                  <CTableDataCell>{lesson.lesson_time?.slice(0, 5)}</CTableDataCell>
                   <CTableDataCell>{lesson.duration} min</CTableDataCell>
                   <CTableDataCell>{lesson.teacher}</CTableDataCell>
                   <CTableDataCell className="text-center">
@@ -242,24 +241,13 @@ const Lessons = () => {
             value={form.instrument}
             onChange={(e) => setForm((f) => ({ ...f, instrument: e.target.value }))}
           />
-          <CRow className="mb-3">
-            <CCol sm={6}>
-              <CFormInput
-                label="Fecha"
-                type="date"
-                value={form.lessonDate}
-                onChange={(e) => setForm((f) => ({ ...f, lessonDate: e.target.value }))}
-              />
-            </CCol>
-            <CCol sm={6}>
-              <CFormInput
-                label="Hora"
-                type="time"
-                value={form.lessonTime}
-                onChange={(e) => setForm((f) => ({ ...f, lessonTime: e.target.value }))}
-              />
-            </CCol>
-          </CRow>
+          <CFormInput
+            label="Fecha y hora"
+            type="datetime-local"
+            className="mb-3"
+            value={form.lessonStart}
+            onChange={(e) => setForm((f) => ({ ...f, lessonStart: e.target.value }))}
+          />
           <CFormSelect
             label="Duración (minutos)"
             className="mb-3"

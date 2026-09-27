@@ -10,7 +10,7 @@ const useSupabaseLessons = (studentId) => {
     let query = supabase
       .from('lessons')
       .select('*, profiles!lessons_student_id_fkey(full_name)')
-      .order('lesson_date', { ascending: true })
+      .order('lesson_start', { ascending: true })
 
     if (studentId) {
       query = query.eq('student_id', studentId)
@@ -37,8 +37,7 @@ const useSupabaseLessons = (studentId) => {
       const { error } = await supabase.from('lessons').insert({
         student_id: lessonData.studentId,
         instrument: lessonData.instrument,
-        lesson_date: lessonData.lessonDate,
-        lesson_time: lessonData.lessonTime,
+        lesson_start: lessonData.lessonStart,
         duration: lessonData.duration,
         teacher: lessonData.teacher,
       })
@@ -47,7 +46,7 @@ const useSupabaseLessons = (studentId) => {
           senderId: lessonData.createdBy || null,
           recipients: [{ id: lessonData.studentId }],
           title: 'Nueva clase programada',
-          message: `Clase de ${lessonData.instrument} el ${lessonData.lessonDate} a las ${lessonData.lessonTime?.slice(0, 5)}`,
+          message: `Clase de ${lessonData.instrument} el ${lessonData.lessonStart ? new Date(lessonData.lessonStart).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : 'fecha pendiente'}`,
         })
         await refetch()
       }

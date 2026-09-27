@@ -71,11 +71,12 @@ const useSupabaseStudents = () => {
     const today = new Date()
     const weekEnd = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000)
 
+    const weekEndISO = new Date(weekEnd.getTime() + 24 * 60 * 60 * 1000).toISOString()
     const { count: lessonsThisWeek } = await supabase
       .from('lessons')
       .select('*', { count: 'exact', head: true })
-      .gte('lesson_date', toIsoDate(today))
-      .lte('lesson_date', toIsoDate(weekEnd))
+      .gte('lesson_start', today.toISOString())
+      .lt('lesson_start', weekEndISO)
 
     const { data: lessonTeachers } = await supabase.from('lessons').select('teacher')
 
