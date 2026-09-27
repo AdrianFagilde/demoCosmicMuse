@@ -57,10 +57,14 @@ const WelcomeModal = () => {
         <p className="text-medium-emphasis mb-4">
           Tu cuenta está lista. Explorá tu ruta musical, practicá y mantené tu racha.
         </p>
-        <CButton color="primary" size="lg" onClick={() => {
-          navigate('/dashboard')
-          setVisible(false)
-        }}>
+        <CButton
+          color="primary"
+          size="lg"
+          onClick={() => {
+            navigate('/dashboard')
+            setVisible(false)
+          }}
+        >
           ¡A empezar!
         </CButton>
       </CModalBody>
