@@ -8,7 +8,7 @@ Esta guía está destinada a los desarrolladores que trabajan en la aplicación 
 - npm 9+
 - Git
 - Un editor compatible con ESLint y Prettier (por ejemplo VS Code)
-- Variables de entorno en `.env`: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`; opcionalmente `VITE_VAPID_PUBLIC_KEY` (permite iniciar la suscripción a push) y `VITE_BUILD_VERSION`
+- Variables de entorno en `.env`: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`, y nada más. `VITE_BUILD_VERSION` es opcional (si no se define, `vite.config.mjs` la deriva del HEAD de git). No declares `VITE_VAPID_PUBLIC_KEY`: ya no hay cliente de push que la lea, y `src/lib/supabase.js` es el único módulo que consume el entorno, así que una variable de más solo genera ruido.
 
 ## Iniciar el proyecto
 

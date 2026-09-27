@@ -28,16 +28,20 @@ npm install
 ```bash
 VITE_SUPABASE_URL=https://<tu-proyecto>.supabase.co
 VITE_SUPABASE_ANON_KEY=<tu-anon-key>
-VITE_VAPID_PUBLIC_KEY=<opcional, para notificaciones web push>
 ```
 
-3. Aplica las migraciones de base de datos de `supabase/migrations/` **en orden numérico**, una vez cada una. No son idempotentes y no deberían serlo: la 017 lo demostró en producción, donde un tipo de retorno equivocado abortó el `CREATE OR REPLACE` con `42P13` después de que las nueve sentencias anteriores ya se hubieran aplicado. Si una migración falla, envuélvela en `BEGIN`/`COMMIT` completo en lugar de reintentarla a medias. Ver `supabase/BASELINE.md`.
+Son las dos únicas variables que necesita el front. `VITE_BUILD_VERSION` es
+opcional (ver [PWA](#pwa)). La columna `notifications` debe estar publicada en
+`supabase_realtime` para que las notificaciones in-app lleguen en vivo; la
+migración `018` lo hace.
+
+3. Aplica las migraciones de base de datos de `supabase/migrations/` **en orden numérico**, una vez cada una. No son idempotentes y no deberían serlo: la 017 lo demostró en producción, donde un tipo de retorno equivocado abortó el `CREATE OR REPLACE` con `42P13` después de que las nueve sentencias anteriores ya se hubieran aplicado. La 018 es la excepción, idempotente a propósito. Si una migración falla, envuélvela en `BEGIN`/`COMMIT` completo en lugar de reintentarla a medias. Ver `supabase/BASELINE.md`.
 
    Con la CLI de Supabase y un stack **local** (requiere Docker):
 
    ```bash
    supabase start        # levanta la BD local definida en supabase/config.toml
-   supabase db reset     # recrea la BD local y aplica 001..017
+   supabase db reset     # recrea la BD local y aplica 001..018
    supabase db lint      # advisor de seguridad
    ```
 
@@ -60,8 +64,11 @@ Abre `http://localhost:3000` en tu navegador.
 | `npm run serve`  | Sirve el build de producción localmente      |
 | `npm run lint`   | Ejecuta ESLint sobre el código               |
 | `npm run format` | Aplica Prettier a todo el proyecto           |
+| `npm run verify` | `lint` + `build` + comprobación de que la configuración de Supabase llegó al bundle |
 
-No hay suite de tests automatizados. La verificación es `npm run lint` + `npm run build`, más el script `supabase/VERIFICACION_017.sql` para lo que solo puede comprobarse contra la base de datos.
+No hay suite de tests automatizados. La verificación es `npm run verify`, más el script `supabase/VERIFICACION_017.sql` para lo que solo puede comprobarse contra la base de datos.
+
+`verify` incluye `scripts/assert-bundle-env.mjs` porque `vite build` no ejecuta el código de los módulos: el `throw` de `src/lib/supabase.js` no aborta el build, así que un bundle con `undefined` en lugar de la URL pasaría el build en verde y reventaría en el navegador. El script busca las variables en el bundle ya generado. En local no suele tener nada que comprobar, porque Vite las lee de `.env` y no de `process.env`; en CI, donde sí están definidas, la comprobación es real.
 
 ## Estructura del proyecto
 
@@ -101,7 +108,8 @@ supabase/
 La autenticación se realiza contra **Supabase Auth** (`src/context/AuthContext.jsx`):
 
 - Los usuarios se registran desde `/register`; un trigger SQL (`handle_new_user`) crea automáticamente su fila en `profiles`.
-- El rol (`admin` / `student`) vive en `profiles` y se sincroniza con el JWT (`user_metadata.role`).
+- El rol (`admin` / `student`) vive **solo** en `profiles.role`. No se lee del JWT: `user_metadata` es editable por el propio usuario, así que la migración 007 retiró esa fuente de autorización y redefinió `is_admin()` para que la verdad la consulte la tabla.
+- Dos triggers defienden esa columna en servidor: `trg_protect_profiles_role` rechaza con `42501` que un no-admin se cambie el rol, y `handle_new_user` fuerza `role = 'student'` en el alta, de modo que el `role: 'student'` que envía el formulario de registro no decide nada.
 - El rol determina qué elementos aparecen en la navegación y qué rutas son accesibles.
 - La autorización real se aplica en PostgreSQL mediante políticas RLS (ver `supabase/migrations/`).
 
@@ -141,6 +149,8 @@ Cualquier ruta no declarada redirige a `/dashboard`.
 
 Las tablas de mensajería (`messages`, `conversation_participants`) y la Edge Function `send-push-notification` siguen existiendo, pero **no hay interfaz de chat en la app** y sus rutas fueron retiradas. La 017 corrige sus políticas RLS y bloquea la reasignación de participantes para que no sigan siendo explotables por API directa. Si se va a recuperar el chat, hay que rehacer la capa de cliente (los hooks `useSupabaseMessaging` y `useSupabasePushNotifications` se han eliminado por estar sin uso).
 
+Lo mismo pasa con el push web: la Edge Function y la tabla `push_subscriptions` quedan desplegadas y endurecidas, pero **nada se suscribe**, porque el cliente que las usaba se eliminó. Por eso `VITE_VAPID_PUBLIC_KEY` ya no figura en `.env.example`: declararla habría sugerido un camino que no existe. `public/sw.js` sí sabe manejar los eventos `push` y `notificationclick`, así que la parte del service worker está lista; falta el registro de la suscripción. Recuperar cualquiera de las dos cosas implica rehacer su capa de cliente.
+
 ## Documentación adicional
 
 - `ARCHITECTURE.md` - Arquitectura del proyecto y stack técnico
@@ -165,4 +175,6 @@ npm run build
 npm run serve   # verificación local del build
 ```
 
-Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` como variables de entorno en Vercel antes del deploy. Para notificaciones push, despliega también las Edge Functions y configura los secretos `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT` en Supabase (y `VITE_VAPID_PUBLIC_KEY` en el front).
+Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` como variables de entorno en Vercel antes del deploy. No son secretos: la clave anon pública está pensada para ir en el bundle, y la autorización la impone RLS, no el secreto.
+
+El CI (`.github/workflows/npm.yml`) no define esas variables porque no las necesita: `vite build` no ejecuta el código de los módulos, así que el `throw` de `src/lib/supabase.js` no se dispara durante el build y el fallo aparecería en el navegador. Aun así el workflow injecta valores placeholder, para que el artefacto que sale de CI sea coherente y no lleve `undefined` dentro.

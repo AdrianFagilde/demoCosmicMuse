@@ -121,6 +121,7 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 - La migración `017_security_corrections.sql` (aplicada el 2026-09-25) endurece cinco cosas más: las políticas de lectura de `course_tasks`, `course_forms` y `course_materials` solo exponen contenido de cursos en los que el alumno está matriculado, antes permitían leer cursos ajenos; `conversation_participants` gana un trigger `BEFORE UPDATE` que impide mover la participación a otra conversación; la política "User delete own messages" estaba declarada `FOR UPDATE` y ahora hay un `DELETE` real; y las notificaciones recibidas y el perfil quedan inmutables salvo `read` y los campos de identidad respectivamente. Detalle en `supabase/BASELINE.md`.
 - El campo `profiles.role` está protegido por el trigger `trg_protect_profiles_role`: solo un admin puede modificarlo (con bypass para service_role y contextos sin HTTP).
 - El trigger `handle_new_user` crea el perfil tras el registro forzando siempre `role = 'student'`.
+- La tabla `notifications` está publicada en `supabase_realtime`; en producción se habilitó a mano desde el panel y la migración `018_realtime_notifications.sql` está escrita pero pendiente de aplicar, para que el historial del scheme describa la base real. Sin esa publicación, la suscripción de `useSupabaseUserNotifications` no recibe eventos y las notificaciones in-app solo se actualizan al recargar. La 018 es idempotente: envuelve su sentencia en un `DO $$` que consulta `pg_publication_tables` antes de ejecutar el `ALTER PUBLICATION`. No toca `REPLICA IDENTITY`, porque la identidad por defecto basta para un filtro que compara el registro nuevo.
 - Storage `payment-proofs`: cada estudiante solo accede a los comprobantes de su propia carpeta (`(storage.foldername(name))[1] = auth.uid()::text`).
 
 > Nota: el JWT `role` de Supabase siempre es `authenticated`; el rol de aplicación vive únicamente en la tabla `profiles`.
@@ -132,6 +133,7 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 ### Notificaciones push
 
 - `supabase/functions/send-push-notification/index.ts`: Edge Function que envía notificaciones web push con `web-push`. Solo un admin, o el propio destinatario, puede enviarse push; limpia suscripciones inválidas (404/410). Requiere los secretos `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`.
+- **Sin cliente.** La función y la tabla `push_subscriptions` siguen desplegadas, pero no hay código en `src/` que se suscriba, así que la vía está cerrada por el extremo del navegador. `public/sw.js` ya maneja `push` y `notificationclick`; lo que falta es el registro de la suscripción. `VITE_VAPID_PUBLIC_KEY` se retiró de `.env.example` por eso: mantenerla sugería un camino que no existe.
 
 ## Vistas principales
 
@@ -150,7 +152,7 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 - `vite.config.mjs` resuelve la versión de build (`VITE_BUILD_VERSION` → HEAD de git → marca de tiempo), la inyecta en `import.meta.env.VITE_BUILD_VERSION` y estampa `public/sw.js` en `closeBundle` para que el nombre de la caché cambie en cada despliegue
 - Deploy en **Vercel**: `vercel.json` define el rewrite SPA, `Cache-Control: immutable` para `/assets/(.*)` y `no-store` para el resto. La regla general excluye explícitamente `assets/` y `sw.js` con un lookahead negativo, para que el `no-store` no pise el cacheo inmutable independientemente del orden en que Vercel aplique las cabeceras
 - Cabeceras de seguridad aplicadas por `vercel.json`: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `X-DNS-Prefetch-Control` y `Permissions-Policy` (cámara, geolocalización, micrófono y pagos restringidos; la app no usa ninguno). Ajustar si se incorporan funciones que los necesiten
-- Variables de entorno requeridas en el host: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`; opcional: `VITE_VAPID_PUBLIC_KEY` (notificaciones push) y `VITE_BUILD_VERSION`
+- Variables de entorno requeridas en el host: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`; opcional: `VITE_BUILD_VERSION`. La anon key es pública por diseño y la autorización la impone RLS, así que no es un secreto
 - Secretos de Edge Functions en Supabase: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, y la service role key si se usa el flujo local
 
 ## PWA y offline
