@@ -31,7 +31,8 @@
 --      scale                      -> value_number
 --      file_upload                -> file_path
 --    Se permite que las cuatro sean NULL: es una pregunta sin responder.
-DROP CONSTRAINT IF EXISTS form_answers_one_value_per_answer ON public.form_answers;
+ALTER TABLE public.form_answers
+  DROP CONSTRAINT IF EXISTS form_answers_one_value_per_answer;
 ALTER TABLE public.form_answers
   ADD CONSTRAINT form_answers_one_value_per_answer
   CHECK (num_nonnulls(value_text, value_options, value_number, file_path) <= 1)
@@ -42,7 +43,8 @@ ALTER TABLE public.form_answers
 --    curricular). Ambos nullable y sin CHECK, así que una sesión puede no
 --    apuntar a ninguna, o a las dos, y en los dos casos es ambigua: ¿de qué
 --    tarea era la práctica?
-DROP CONSTRAINT IF EXISTS practice_sessions_single_task_ref ON public.practice_sessions;
+ALTER TABLE public.practice_sessions
+  DROP CONSTRAINT IF EXISTS practice_sessions_single_task_ref;
 ALTER TABLE public.practice_sessions
   ADD CONSTRAINT practice_sessions_single_task_ref
   CHECK (num_nonnulls(task_id, course_task_id) <= 1)
@@ -52,8 +54,8 @@ ALTER TABLE public.practice_sessions
 --    el XP a 120 minutos para frenar el farm, pero no acotaba el propio valor:
 --    se podía guardar 99999 como bpm. El rango de un metrónomo real es
 --    20-300.
-DROP CONSTRAINT IF EXISTS practice_sessions_metronome_bpm_range
-  ON public.practice_sessions;
+ALTER TABLE public.practice_sessions
+  DROP CONSTRAINT IF EXISTS practice_sessions_metronome_bpm_range;
 ALTER TABLE public.practice_sessions
   ADD CONSTRAINT practice_sessions_metronome_bpm_range
   CHECK (
