@@ -132,6 +132,7 @@ CREATE TRIGGER trg_assignments_updated_at
 -- =============================================
 -- 5. MIGRACIÓN DE DATOS: tasks (legacy) -> assignments
 -- =============================================
+-- Nota: tasks legacy no tiene created_by; usamos assigned_by como created_by
 INSERT INTO public.assignments (
   id, title, description, student_id, assigned_by,
   due_date, position, status, progress, created_by,
@@ -139,7 +140,7 @@ INSERT INTO public.assignments (
 )
 SELECT
   id, title, description, student_id, assigned_by,
-  due_date, 0, status, progress, created_by,
+  due_date, 0, status, progress, assigned_by,
   created_at, updated_at
 FROM public.tasks
 WHERE NOT EXISTS (
