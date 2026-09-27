@@ -127,7 +127,7 @@ CREATE POLICY "Admin create course assignments" ON public.assignments
 DROP TRIGGER IF EXISTS trg_assignments_updated_at ON public.assignments;
 CREATE TRIGGER trg_assignments_updated_at
   BEFORE UPDATE ON public.assignments
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- =============================================
 -- 5. MIGRACIÓN DE DATOS: tasks (legacy) -> assignments
@@ -244,7 +244,7 @@ CREATE POLICY "Admin create course tasks" ON public.tasks
 DROP TRIGGER IF EXISTS trg_tasks_updated_at ON public.tasks;
 CREATE TRIGGER trg_tasks_updated_at
   BEFORE UPDATE ON public.tasks
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- =============================================
 -- 10. LIMPIEZA OPCIONAL (comentar si se quiere conservar legacy)
