@@ -32,7 +32,7 @@ const sections = [
       'Datos académicos: instrumento, nivel, profesor asignado, progreso, asistencia, historial de clases y tareas.',
       'Datos de pago: información de facturación, historial de pagos, comprobantes.',
       'Datos técnicos: dirección IP, tipo de navegador, sistema operativo, logs de acceso, identificadores de dispositivo.',
-      'Comunicaciones: mensajes enviados a través de la plataforma, notificaciones, formularios enviados.',
+      'Comunicaciones: notificaciones de la plataforma y respuestas a cuestionarios enviados.',
     ],
   },
   {

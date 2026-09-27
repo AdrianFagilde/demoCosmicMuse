@@ -100,9 +100,6 @@ Definido en `supabase/migrations/` (aplicar en orden, una vez cada una):
 | `form_answers`        | Respuestas a esas preguntas                                                      |
 | `form_submissions`    | Envíos de formulario por estudiante                                              |
 | `course_materials`    | Material descargable de un curso                                                  |
-| `conversations`       | Hilos de mensajería entre participantes (**sin interfaz**, ver nota)              |
-| `conversation_participants` | Quién está en cada conversación, con `muted` y `last_read_at`              |
-| `messages`            | Mensajes dentro de una conversación (**sin interfaz**, ver nota)                   |
 | `push_subscriptions`  | Suscripciones push del navegador (tabla **sin interfaz**)                         |
 | `practice_sessions`   | Sesiones de práctica con minutos, XP y fecha                                      |
 | `practice_streaks`    | Rachas por estudiante (actualizadas por trigger, no editables)                   |
@@ -111,18 +108,30 @@ Definido en `supabase/migrations/` (aplicar en orden, una vez cada una):
 
 Buckets de Storage: `avatars` (público) y `payment-proofs` (privado, solo admin).
 
-> **Nota sobre "sin interfaz".** `push_subscriptions` y las tres tablas de
-> mensajería (`conversations`, `conversation_participants`, `messages`) están
-> creadas y con RLS, pero **ningún archivo de `src/` las consulta**: no hay
-> chat en la aplicación. No es lo mismo que una feature dormida que se pueda
-> activar tal cual, porque el esquema sí está expuesto por PostgREST y la anon
-> key es pública, así que cualquier hueco de RLS es explotable sin que nadie
-> use la feature. Eso fue justo lo que pasó: la 014 dejó dos políticas de
-> `messages` con una comparación tautológica que permitía leer e inyectar
-> mensajes en conversaciones ajenas, y nadie lo notó porque no hay UI que lo
-> delatara. Lo corrige la `019`, que está escrita pero pendiente de aplicar.
-> Antes de construir el chat sobre este esquema, aplicar la 019.
-> Detalle en `supabase/BASELINE.md`.
+> **Nota sobre "sin interfaz".** `push_subscriptions` está creada y con RLS,
+> pero **ningún archivo de `src/` la consulta**. No es lo mismo que una feature
+> dormida que se pueda activar tal cual, porque el esquema sí está expuesto por
+> PostgREST y la anon key es pública, así que cualquier hueco de RLS es
+> explotable sin que nadie use la feature.
+>
+> El módulo de mensajería fue exactamente ese caso y terminó borrado: la 014
+> dejó dos políticas de `messages` con una comparación tautológica que permitía
+> leer e inyectar mensajes en conversaciones ajenas, y nadie lo notó porque no
+> había UI que lo delatara. La 017 y la 019 lo corrigieron sobre el papel, pero
+> mientras el esquema siga publicado el riesgo sigue ahí, así que la 028 borró
+> `conversations`, `conversation_participants` y `messages` (vacías, sin código
+> y con 11 políticas). Antes de construir un chat hay que empezar por el modelo
+> de datos, no por las políticas. Detalle en `supabase/BASELINE.md`.
+>
+> El mismo género de error costó caro en `profiles_with_metrics`, y ahí sí
+> había UI: la 023 creó una vista con `p.*` y le dio `GRANT SELECT`, pero
+> **una vista se ejecuta con los permisos de su propietario**, de modo que las
+> políticas RLS de `profiles` no se aplicaban y la vista devolvía los 12
+> perfiles a cualquier alumno, con email, teléfono y datos del tutor. La 027 la
+> recrea con `security_invoker = true`. Cualquier vista nueva necesita ese
+> atributo, y merece una comprobación contando filas con la sesión de un
+> alumno, no leyendo el `CREATE VIEW`.
+
 
 ### Seguridad (RLS)
 
@@ -134,10 +143,13 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 - La migración `017_security_corrections.sql` (aplicada el 2026-09-25) endurece cinco cosas más: las políticas de lectura de `course_tasks`, `course_forms` y `course_materials` solo exponen contenido de cursos en los que el alumno está matriculado, antes permitían leer cursos ajenos; `conversation_participants` gana un trigger `BEFORE UPDATE` que impide mover la participación a otra conversación; la política "User delete own messages" estaba declarada `FOR UPDATE` y ahora hay un `DELETE` real; y las notificaciones recibidas y el perfil quedan inmutables salvo `read` y los campos de identidad respectivamente. Detalle en `supabase/BASELINE.md`.
 - El campo `profiles.role` está protegido por el trigger `trg_protect_profiles_role`: solo un admin puede modificarlo (con bypass para service_role y contextos sin HTTP).
 - El trigger `handle_new_user` crea el perfil tras el registro forzando siempre `role = 'student'`.
-- La tabla `notifications` está publicada en `supabase_realtime`; en producción se habilitó a mano desde el panel y la migración `018_realtime_notifications.sql` está escrita pero pendiente de aplicar, para que el historial del scheme describa la base real. Sin esa publicación, la suscripción de `useSupabaseUserNotifications` no recibe eventos y las notificaciones in-app solo se actualizan al recargar. La 018 es idempotente: envuelve su sentencia en un `DO $$` que consulta `pg_publication_tables` antes de ejecutar el `ALTER PUBLICATION`. No toca `REPLICA IDENTITY`, porque la identidad por defecto basta para un filtro que compara el registro nuevo.
+- La tabla `notifications` está publicada en `supabase_realtime` desde la migración `018_realtime_notifications.sql` (aplicada). Sin esa publicación, la suscripción de `useSupabaseUserNotifications` no recibe eventos y las notificaciones in-app solo se actualizan al recargar. La 018 es idempotente: envuelve su sentencia en un `DO $$` que consulta `pg_publication_tables` antes de ejecutar el `ALTER PUBLICATION`. No toca `REPLICA IDENTITY`, porque la identidad por defecto basta para un filtro que compara el registro nuevo.
 - Storage `payment-proofs`: cada estudiante solo accede a los comprobantes de su propia carpeta (`(storage.foldername(name))[1] = auth.uid()::text`).
-- La migración `019_fix_messaging_rls_policies.sql` (escrita, pendiente de aplicar) corrige las dos políticas de `messages` que la 014 dejó tautológicas por una columna sin qualificar dentro de un subquery, lo que en PostgreSQL se resuelve al scope interno. Permitía leer los mensajes de todas las conversaciones e insertar en conversaciones ajenas, sin necesidad de interfaz porque PostgREST expone el esquema. La 016 ya había arreglado los RPC, pero no estas dos políticas.
-- La migración `020_integrity_constraints.sql` (escrita, pendiente de aplicar) añade CHECK `NOT VALID` en `form_answers` (como mucho un valor por respuesta), `practice_sessions` (como mucho una referencia de tarea) y `practice_sessions.metronome_bpm` (rango 20-300). No mueven datos ni cambian el modelo: los triggers de 013/016 siguen siendo los dueños de la lógica de negocio.
+- La migración `019_fix_messaging_rls_policies.sql` (aplicada, y después superada) corregía las dos políticas de `messages` que la 014 dejó tautológicas por una columna sin qualificar dentro de un subquery, lo que en PostgreSQL se resuelve al scope interno. Permitía leer los mensajes de todas las conversaciones e insertar en conversaciones ajenas, sin necesidad de interfaz porque PostgREST expone el esquema. La 028 borró las tablas, así que ya no hay nada que proteger ahí.
+- La migración `020_integrity_constraints.sql` (aplicada) añade CHECK `NOT VALID` en `form_answers` (como mucho un valor por respuesta), `practice_sessions` (como mucho una referencia de tarea) y `practice_sessions.metronome_bpm` (rango 20-300). No mueven datos ni cambian el modelo: los triggers de 013/016 siguen siendo los dueños de la lógica de negocio.
+- La 021 unificó `tasks` y `course_tasks` en una sola tabla, con un CHECK `assignments_context_xor` que obliga a que una tarea tenga **exactamente** uno de `course_id` o `student_id`. Esa exclusividad es la razón de que el progreso de una tarea de curso viva en `checklist_progress` y no en la tarea, y de que el feed tenga que traer las dos clases de tarea en lugar de filtrar por `student_id`.
+- La 024 introduce `is_enrolled_in(course_id)` y reescribe nueve políticas para que la pertenencia a un curso se compruebe siempre contra esa función, en lugar de repetir un `EXISTS` sobre `course_enrollments` en cada política.
+- La 027 recrea `profiles_with_metrics` con `security_invoker = true` y elimina las políticas que dejaban al alumno escribir `student_metrics` y su propia fila de `profiles`. Los detalles y las mediciones están en la nota de arriba y en `supabase/BASELINE.md`.
 
 > Nota: el JWT `role` de Supabase siempre es `authenticated`; el rol de aplicación vive únicamente en la tabla `profiles`.
 

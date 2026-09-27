@@ -69,7 +69,7 @@ const sections = [
     content: [
       'Uso respetuoso y profesional en todas las interacciones dentro de la plataforma.',
       'Prohibido: contenido ilegal, ofensivo, discriminatorio, acoso, spam, ingeniería inversa, acceso no autorizado.',
-      'El contenido compartido en la plataforma (tareas, mensajes, archivos) debe ser propio o debidamente licenciado.',
+      'El contenido compartido en la plataforma (tareas y materiales del curso) debe ser propio o debidamente licenciado.',
       'Violaciones pueden resultar en suspensión inmediata y acciones legales correspondientes.',
     ],
   },

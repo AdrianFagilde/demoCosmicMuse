@@ -11,6 +11,15 @@ const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 const Login = React.lazy(() => import('./views/pages/login/Login'))
 const Register = React.lazy(() => import('./views/pages/register/Register'))
 
+// Las legales van FUERA de RequireAuth a proposito: el consentimiento de
+// Register y el pie/login enlazan a ellas, y con la sesion cerrada el
+// RequireAuth las rebotaba a /login. Un visitante sin cuenta no puede
+// leer la politica que dice aceptar.
+const PrivacyPolicy = React.lazy(() => import('./views/legal/PrivacyPolicy'))
+const TermsAndConditions = React.lazy(() => import('./views/legal/TermsAndConditions'))
+const CookiePolicy = React.lazy(() => import('./views/legal/CookiePolicy'))
+const RefundPolicy = React.lazy(() => import('./views/legal/RefundPolicy'))
+
 const RequireAuth = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
   if (loading) {
@@ -41,6 +50,10 @@ const App = () => {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-conditions" element={<TermsAndConditions />} />
+              <Route path="/cookie-policy" element={<CookiePolicy />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
               <Route
                 path="/*"
                 element={

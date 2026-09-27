@@ -12,13 +12,13 @@ conviene no confundir:
 
 ## Estado a 2026-09-27
 
-**Las 26 migraciones están aplicadas** y el historial remoto está sincronizado
-con el repositorio: `001`–`026` presentes en ambos lados, sin entradas fantasma.
+**Las 28 migraciones están aplicadas** y el historial remoto está sincronizado
+con el repositorio: `001`–`028` presentes en ambos lados, sin entradas fantasma.
 
 ```
 supabase migration list --linked
 Local | Remote
-  001..026 | 001..026   (cuadran)
+  001..028 | 001..028   (cuadran)
 ```
 
 Las secciones «Cómo se aplicó la 017» y las que describen la aplicación manual de
@@ -62,6 +62,68 @@ La política que creó la 024 llamaba `is_enrolled_in(form_id)`, pero esa funci�
 espera un **course_id**. Como el UUID de un formulario nunca coincide con el de
 un curso, la condición era siempre falsa y el alumno no podía leer ni insertar
 entregas. Ahora resuelve el curso a través de `course_forms`.
+
+### Fuga de PII en `profiles_with_metrics` (027)
+
+La 023 creó `profiles_with_metrics` con `p.*` y le dio `GRANT SELECT` a
+`authenticated`, pero **una vista se ejecuta con los permisos de su propietario,
+no de quien la consulta**. Las políticas RLS de `profiles` no se aplicaban al
+leerla, así que la tabla `student_metrics` que iba a proteger acababa de ser un
+puente para saltarse el RLS de `profiles`.
+
+Medido antes de arreglarlo, con la sesión de una alumna:
+
+| Lectura | Filas |
+| --- | --- |
+| `profiles` (RLS) | 3 |
+| `profiles_with_metrics` | **12 de 12** |
+
+Las 9 filas de más eran de otros alumnos y admins, con `email`, `phone`,
+`birth_date`, `guardian_name` y `guardian_phone`. La alumna podía leer
+`admin@cosmomusic.com`. RLS estaba bien; lo que fallaba era que la vista se
+ejecutaba por encima de él.
+
+La 027 la recrea con `security_invoker = true`, que hace que sí se apliquen las
+políticas de las tablas subyacentes. Medido después: 3 filas, igual que `profiles`.
+
+> **Lección**: `GRANT SELECT` sobre una vista no es un permiso de lectura de sus
+> filas, es un permiso de lectura *con los ojos del dueño*. Para que una vista
+> respete RLS hay que crearla `WITH (security_invoker = true)` (PostgreSQL 15+),
+> y conviene comprobarlo midiendo filas, no leyendo la definición.
+
+### Escrituras de estudiante que nadie usa (027)
+
+`authenticated` tiene `GRANT` de INSERT/UPDATE sobre **todas** las columnas de
+`profiles` y `student_metrics` (los `GRANT ALL` por defecto de Supabase), así
+que el único freno es RLS. Y dejaban pasar dos escrituras que la app nunca
+ejecuta:
+
+- `Student update own metrics`: la alumna podía hacer `PATCH` de su fila y
+  ponerse `progress = 100` y `attendance = 100` sin dar una sola clase. Lo
+  escribe el admin desde `StudentDetail.jsx`, que además está gateado por rol.
+- `Student own profile update`: podía reescribirse `teacher`, `level`,
+  `instrument` o `status`. **Ningún** componente actualiza `profiles`; solo se
+  leen `id, full_name` y `id, full_name, email`.
+
+Se borran las dos políticas en vez de recortarlas. Si algún día hace falta
+editar el perfil propio, hay que permitirlo columna a columna de forma
+explícita. La lectura del propio perfil se mantiene pero pasa de `TO public` a
+`TO authenticated`.
+
+### Mensajería sin interfaz (028)
+
+`conversations`, `conversation_participants` y `messages` seguían en pie «por si
+acaso», con 0 filas, 6 claves foráneas y **11 políticas RLS** protegiendo datos
+inexistentes. Los hooks `useSupabaseMessaging` y `useSupabasePushNotifications`
+ya se habían eliminado en la 016 por no tener consumidor.
+
+Comprobado antes de borrar: las tres tablas vacías, ninguna FK ajena apuntando
+al grupo, ninguna función de `public()` que las mencione. Un módulo sin
+interfaz sigue siendo superficie de ataque: `supabase.from('messages')` desde la
+consola del navegador basta.
+
+> Si se recupera el chat hay que rehacerlo sobre el modelo actual, no solo sus
+> políticas: durante un tiempo estuvo arreglado solo en el papel.
 
 
 ### Cómo se aplicó la 017
@@ -248,6 +310,8 @@ Si una migración se aplicó a mano y falló a medias, la única salida limpia e
 | `024_is_enrolled_in.sql`               | Función `is_enrolled_in()` y reescritura de 9 políticas RLS (idempotente)                                |
 | `025_repair_task_fks.sql`              | Reapunta las FK `task_id` a `tasks`, borra `course_tasks_legacy`, arregla `form_submissions` (idempotente) |
 | `026_drop_tasks_legacy_rename_constraints.sql` | Borra `tasks_legacy` y renombra las constraints de `tasks` a `tasks_*_fkey` (idempotente)      |
+| `027_secure_profiles_view_and_metrics.sql` | `profiles_with_metrics` con `security_invoker`; el alumno ya no escribe métricas ni su perfil (idempotente) |
+| `028_drop_messaging.sql`                 | Borra `conversations`, `conversation_participants` y `messages` (idempotente)                  |
 
 ## Qué corrige la 017
 

@@ -147,9 +147,9 @@ Cualquier ruta no declarada redirige a `/dashboard`.
 
 ## Nota sobre mensajería
 
-Las tablas de mensajería (`messages`, `conversation_participants`) y la Edge Function `send-push-notification` siguen existiendo, pero **no hay interfaz de chat en la app** y sus rutas fueron retiradas. La 017 corrige sus políticas RLS y bloquea la reasignación de participantes para que no sigan siendo explotables por API directa. Si se va a recuperar el chat, hay que rehacer la capa de cliente (los hooks `useSupabaseMessaging` y `useSupabasePushNotifications` se han eliminado por estar sin uso).
+**Las tablas de mensajería ya no existen.** La 028 borró `conversations`, `conversation_participants` y `messages`: estaban vacías, sin ningún archivo de `src/` que las consultara y con 11 políticas RLS protegiendo datos que no existían. Los hooks `useSupabaseMessaging` y `useSupabasePushNotifications` ya se habían eliminado antes, en la 016, por no tener consumidor. Durante un tiempo el módulo estuvo «arreglado» solo en el papel (la 017 y la 019 corrigieron sus políticas) mientras seguía siendo superficie de ataque por PostgREST; borrar el esquema es lo que lo cierra de verdad. Si algún día se recupera el chat, hay que rehacerlo sobre el modelo actual. Detalle en `supabase/BASELINE.md`.
 
-Lo mismo pasa con el push web: la Edge Function y la tabla `push_subscriptions` quedan desplegadas y endurecidas, pero **nada se suscribe**, porque el cliente que las usaba se eliminó. Por eso `VITE_VAPID_PUBLIC_KEY` ya no figura en `.env.example`: declararla habría sugerido un camino que no existe. `public/sw.js` sí sabe manejar los eventos `push` y `notificationclick`, así que la parte del service worker está lista; falta el registro de la suscripción. Recuperar cualquiera de las dos cosas implica rehacer su capa de cliente.
+La Edge Function `send-push-notification` y la tabla `push_subscriptions` sí siguen existiendo, y también están sin interfaz: **nada se suscribe**, porque el cliente que las usaba se eliminó. Por eso `VITE_VAPID_PUBLIC_KEY` ya no figura en `.env.example`: declararla habría sugerido un camino que no existe. `public/sw.js` sí sabe manejar los eventos `push` y `notificationclick`, así que la parte del service worker está lista; falta el registro de la suscripción.
 
 ## Documentación adicional
 

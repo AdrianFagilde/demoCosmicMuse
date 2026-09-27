@@ -29,16 +29,15 @@ const Users = React.lazy(() => import('./views/admin/Users'))
 const SendNotifications = React.lazy(() => import('./views/admin/SendNotifications'))
 const Notifications = React.lazy(() => import('./views/academy/Notifications'))
 
-// Legal pages (public)
-const PrivacyPolicy = React.lazy(() => import('./views/legal/PrivacyPolicy'))
-const TermsAndConditions = React.lazy(() => import('./views/legal/TermsAndConditions'))
-const CookiePolicy = React.lazy(() => import('./views/legal/CookiePolicy'))
-const RefundPolicy = React.lazy(() => import('./views/legal/RefundPolicy'))
-
 /**
  * Application Routes Configuration
  *
  * Defines the protected routes used by the academy application.
+ *
+ * Las rutas legales NO viven aqui: son publicas y se declaran en App.jsx,
+ * fuera del RequireAuth. Dejarlas tambien aqui las hacia inalcanzables
+ * (React Router gana la primera coincidencia) y colaba el documento legal
+ * dentro del shell autenticado.
  */
 export const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -69,12 +68,6 @@ export const routes = [
   },
   { path: '/notifications', name: 'Notificaciones', element: Notifications, roles: ['student'] },
   { path: '/my-profile', name: 'Mi perfil', element: MyProfile },
-
-  // Legal pages (public)
-  { path: '/privacy-policy', name: 'Política de Privacidad', element: PrivacyPolicy },
-  { path: '/terms-conditions', name: 'Términos y Condiciones', element: TermsAndConditions },
-  { path: '/cookie-policy', name: 'Política de Cookies', element: CookiePolicy },
-  { path: '/refund-policy', name: 'Política de Reembolso', element: RefundPolicy },
 ]
 
 export default routes

@@ -23,6 +23,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
+import useSupabaseCourses from '../../hooks/useSupabaseCourses'
 import RestrictedAccess from '../../components/RestrictedAccess'
 
 const StudentDetail = () => {
@@ -31,9 +32,23 @@ const StudentDetail = () => {
   const isAdmin = profile?.role === 'admin'
   const { getStudent, updateStudentMetrics, loading: studentsLoading } = useSupabaseStudents()
   const { tasks, addTask, changeTaskStatus, loading: tasksLoading } = useSupabaseTasks()
+  const { courses } = useSupabaseCourses()
 
   const student = getStudent(id)
-  const studentTasks = tasks.filter((t) => t.student_id === id)
+
+  // Las tareas de curso no tienen student_id (el CHECK
+  // assignments_context_xor obliga a que sea NULL cuando hay course_id),
+  // asi que el filtro por student_id las dejaba fuera y el admin veia una
+  // lista incompleta sin avisar. Las de este alumno son las suyas mas las
+  // de los cursos en los que esta matriculado.
+  const studentCourseIds = new Set(
+    courses
+      .filter((c) => (c.course_enrollments || []).some((e) => String(e.student_id) === String(id)))
+      .map((c) => c.id),
+  )
+  const studentTasks = tasks.filter(
+    (t) => String(t.student_id) === String(id) || studentCourseIds.has(t.course_id),
+  )
 
   const [localProgress, setLocalProgress] = useState(student?.progress || 0)
   const [localAttendance, setLocalAttendance] = useState(student?.attendance || 0)
@@ -194,6 +209,7 @@ const StudentDetail = () => {
                   <CTableHead>
                     <CTableRow>
                       <CTableHeaderCell>Título</CTableHeaderCell>
+                      <CTableHeaderCell>Origen</CTableHeaderCell>
                       <CTableHeaderCell>Entrega</CTableHeaderCell>
                       <CTableHeaderCell>Estado</CTableHeaderCell>
                       <CTableHeaderCell>Acciones</CTableHeaderCell>
@@ -203,25 +219,45 @@ const StudentDetail = () => {
                     {studentTasks.map((t) => (
                       <CTableRow key={t.id}>
                         <CTableDataCell>{t.title}</CTableDataCell>
-                        <CTableDataCell>{t.due_date}</CTableDataCell>
-                        <CTableDataCell>{t.status}</CTableDataCell>
                         <CTableDataCell>
-                          <div className="d-flex gap-2">
-                            <CButton
-                              size="sm"
-                              color="info"
-                              onClick={() => changeTaskStatus(t.id, 'En progreso')}
-                            >
-                              En progreso
-                            </CButton>
-                            <CButton
-                              size="sm"
-                              color="success"
-                              onClick={() => changeTaskStatus(t.id, 'Completado')}
-                            >
-                              Completar
-                            </CButton>
-                          </div>
+                          {t.course_id ? t.course?.title || 'Curso' : 'Individual'}
+                        </CTableDataCell>
+                        <CTableDataCell>{t.due_date || '-'}</CTableDataCell>
+                        <CTableDataCell>
+                          {t.course_id ? (
+                            <span className="text-medium-emphasis">
+                              {t.checklist_total
+                                ? `${t.checklist_completed}/${t.checklist_total} completados`
+                                : 'Sin checklist'}
+                            </span>
+                          ) : (
+                            t.status || 'Pendiente'
+                          )}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          {/* En una tarea de curso el avance no lo marca
+                                status (que no pertenece al modelo) sino el
+                                checklist compartido, y lo escribe el alumno
+                                al marcar cada item. Un boton aqui
+                                escribiria un status que nadie lee. */}
+                          {t.course_id ? null : (
+                            <div className="d-flex gap-2">
+                              <CButton
+                                size="sm"
+                                color="info"
+                                onClick={() => changeTaskStatus(t.id, 'En progreso')}
+                              >
+                                En progreso
+                              </CButton>
+                              <CButton
+                                size="sm"
+                                color="success"
+                                onClick={() => changeTaskStatus(t.id, 'Completado')}
+                              >
+                                Completar
+                              </CButton>
+                            </div>
+                          )}
                         </CTableDataCell>
                       </CTableRow>
                     ))}

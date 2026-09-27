@@ -27,7 +27,6 @@ import CIcon from '@coreui/icons-react'
 import { cilPlus, cilTrash } from '@coreui/icons'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
-import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
 
 const emptyForm = {
@@ -43,7 +42,6 @@ const Courses = () => {
   const isAdmin = profile?.role === 'admin'
   const { courses, loading, error, createCourse, deleteCourse, fetchStudentCourseProgress } =
     useSupabaseCourses()
-  const { students } = useSupabaseStudents()
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [formError, setFormError] = useState('')
