@@ -82,7 +82,7 @@ const Register = () => {
     setSuccess('')
 
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden')
+      setError('Las contrasenas no coinciden')
       setLoading(false)
       return
     }
@@ -94,7 +94,7 @@ const Register = () => {
     }
 
     if (!phone) {
-      setError('El teléfono es obligatorio')
+      setError('El telefono es obligatorio')
       setLoading(false)
       return
     }
@@ -214,7 +214,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="email"
-                        placeholder="Correo electrónico"
+                        placeholder="Correo electronico"
                         autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -227,7 +227,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="tel"
-                        placeholder="Teléfono"
+                        placeholder="Telefono"
                         autoComplete="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
@@ -240,7 +240,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="password"
-                        placeholder="Contraseña (mínimo 6 caracteres)"
+                        placeholder="Contrasena (minimo 6 caracteres)"
                         autoComplete="new-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -254,7 +254,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="password"
-                        placeholder="Confirmar contraseña"
+                        placeholder="Confirmar contrasena"
                         autoComplete="new-password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -278,6 +278,18 @@ const Register = () => {
                         ))}
                       </CFormSelect>
                     </CInputGroup>
+                    <CInputGroup className="mb-4">
+                      <CInputGroupText>
+                        <CIcon icon={cilStar} />
+                      </CInputGroupText>
+                      <CFormSelect value={level} onChange={(e) => setLevel(e.target.value)}>
+                        <option value="">Nivel (opcional)</option>
+                        <option value="Principiante">Principiante</option>
+                        <option value="Intermedio">Intermedio</option>
+                        <option value="Avanzado">Avanzado</option>
+                      </CFormSelect>
+                    </CInputGroup>
+
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
                         <CIcon icon={cilStar} />
@@ -326,7 +338,7 @@ const Register = () => {
                           </CInputGroupText>
                           <CFormInput
                             type="tel"
-                            placeholder="Teléfono del representante"
+                            placeholder="Telefono del representante"
                             value={guardianPhone}
                             onChange={(e) => setGuardianPhone(e.target.value)}
                             required
@@ -334,6 +346,86 @@ const Register = () => {
                         </CInputGroup>
                       </>
                     )}
+
+                    <fieldset
+                      className="border p-3 rounded bg-light mb-4"
+                      aria-labelledby="consent-legend"
+                    >
+                      <legend id="consent-legend" className="fw-semibold small">
+                        Consentimientos
+                      </legend>
+                      <div className="mt-3">
+                        <div className="form-check mb-3">
+                          <input
+                            type="checkbox"
+                            className={`form-check-input ${!consents.privacy ? 'is-invalid' : ''}`}
+                            id="consent-privacy"
+                            checked={consents.privacy || false}
+                            onChange={(e) =>
+                              setConsents((prev) => ({ ...prev, privacy: e.target.checked }))
+                            }
+                            required
+                            aria-describedby="consent-privacy-desc"
+                          />
+                          <label className="form-check-label fw-normal" htmlFor="consent-privacy">
+                            He leido y acepto la{' '}
+                            <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">
+                              Politica de Privacidad
+                            </a>{' '}
+                            <span className="text-danger">*</span>
+                          </label>
+                          <div id="consent-privacy-desc" className="form-text">
+                            Como recopilamos, usamos y protegemos sus datos personales.
+                          </div>
+                        </div>
+
+                        <div className="form-check mb-3">
+                          <input
+                            type="checkbox"
+                            className={`form-check-input ${!consents.terms ? 'is-invalid' : ''}`}
+                            id="consent-terms"
+                            checked={consents.terms || false}
+                            onChange={(e) =>
+                              setConsents((prev) => ({ ...prev, terms: e.target.checked }))
+                            }
+                            required
+                            aria-describedby="consent-terms-desc"
+                          />
+                          <label className="form-check-label" htmlFor="consent-terms">
+                            Acepto los{' '}
+                            <a href="/terms-conditions" target="_blank" rel="noopener noreferrer">
+                              Terminos y Condiciones
+                            </a>{' '}
+                            <span className="text-danger">*</span>
+                          </label>
+                          <div id="consent-terms-desc" className="form-text">
+                            Reglas de uso de la plataforma, pagos, clases y conducta.
+                          </div>
+                        </div>
+
+                        <div className="form-check mb-3">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="consent-cookies"
+                            checked={consents.cookies || false}
+                            onChange={(e) =>
+                              setConsents((prev) => ({ ...prev, cookies: e.target.checked }))
+                            }
+                            aria-describedby="consent-cookies-desc"
+                          />
+                          <label className="form-check-label" htmlFor="consent-cookies">
+                            Acepto el uso de cookies segun la{' '}
+                            <a href="/cookie-policy" target="_blank" rel="noopener noreferrer">
+                              Politica de Cookies
+                            </a>
+                          </label>
+                          <div id="consent-cookies-desc" className="form-text">
+                            Uso de cookies esenciales, funcionales y de preferencias.
+                          </div>
+                        </div>
+                      </div>
+                    </fieldset>
 
                     <CRow>
                       <CCol xs={6}>
@@ -359,7 +451,7 @@ const Register = () => {
                 <CCardBody className="text-center">
                   <TrebleClef size={210} color="#ffffff" className="treble-watermark" />
                   <Vinyl size={180} color="#ffffff" className="vinyl-watermark" />
-                  <StaffDivider caption="tu música empieza acá" className="mt-2 mb-4" />
+                  <StaffDivider caption="tu musica empieza aca" className="mt-2 mb-4" />
                   <div className="position-relative">
                     <h2>Por que registrarte?</h2>
                     <p className="text-start">

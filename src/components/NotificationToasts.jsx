@@ -94,9 +94,17 @@ const NotificationToasts = () => {
   }, [loading, notifications, unreadCount])
 
   return (
-    <CToaster placement="top-end">
+    <CToaster placement="top-end" role="status" aria-live="polite" aria-atomic="true">
       {toasts.map((toast) => (
-        <CToast key={toast.key} autohide delay={toast.delay} onClose={() => removeToast(toast.key)}>
+        <CToast
+          key={toast.key}
+          autohide
+          delay={toast.delay}
+          onClose={() => removeToast(toast.key)}
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
           <CToastHeader closeButton>
             <CIcon icon={cilBell} className="text-primary me-2" />
             <strong className="me-auto">{toast.title}</strong>

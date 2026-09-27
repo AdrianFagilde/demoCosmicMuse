@@ -58,8 +58,19 @@ const ProgressRing = ({
     <div
       className={`progress-ring ${className}`}
       style={{ width: size, height: size, position: 'relative' }}
+      role="img"
+      aria-label={`Progreso: ${clampedProgress}%`}
     >
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={`Progreso: ${clampedProgress}%`}
+        aria-valuenow={clampedProgress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <circle
           cx={size / 2}
           cy={size / 2}

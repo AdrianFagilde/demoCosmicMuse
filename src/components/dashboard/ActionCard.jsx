@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import CIcon from '@coreui/icons-react'
 import { cilCalendar, cilMusicNote, cilBook, cilArrowRight, cilClock } from '@coreui/icons'
 import { getUrgency } from '../../utils/dates'
 import ProgressRing from './ProgressRing'
 
-const ActionCard = ({ task, onClick }) => {
+const ActionCard = ({ task, onClick, isActive = false }) => {
   const urgency = getUrgency(task.due_date)
   // `color` es el nombre de CoreUI ('danger', 'warning'...) y `hex` el valor
   // real. Las reglas de este componente son CSS plano, no clases de CoreUI:
@@ -13,15 +13,32 @@ const ActionCard = ({ task, onClick }) => {
   // sin color de urgencia.
   const tone = urgency.hex
   const instrumentColor = task.instrument_color || '#6366f1'
+  const [isFocused, setIsFocused] = React.useState(false)
+
+  const handleKeyDown = (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+      e.preventDefault()
+      onClick()
+    }
+  }
 
   return (
     <div
-      className={`action-card ${urgency.variant}`}
+      className={`action-card ${urgency.variant} ${isFocused ? 'focused' : ''}`}
       style={{ '--action-color': tone }}
       onClick={onClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+      aria-pressed={isActive}
+      aria-label={`${task.title}, ${urgency.label}, progreso ${task.progress || 0}%`}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+          e.preventDefault()
+          onClick()
+        }
+      }}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
     >
       <div className="d-flex align-items-start gap-3">
         <div className="action-icon">

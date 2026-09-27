@@ -54,7 +54,11 @@ const Login = () => {
                     <h1>Login</h1>
                     <p className="text-body-secondary">Bienvenido a Cosmic Muse</p>
                     <StaffDivider caption="empieza a componer" className="mt-2 mb-4" />
-                    {error && <CAlert color="danger">{error}</CAlert>}
+                    {error && (
+                      <CAlert color="danger" role="alert" id="login-error">
+                        {error}
+                      </CAlert>
+                    )}
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
@@ -65,6 +69,8 @@ const Login = () => {
                         autoComplete="email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
+                        aria-describedby={error ? 'login-error' : undefined}
+                        aria-invalid={!!error}
                       />
                     </CInputGroup>
                     <CInputGroup className="mb-4">
@@ -77,6 +83,8 @@ const Login = () => {
                         autoComplete="current-password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
+                        aria-describedby={error ? 'login-error' : undefined}
+                        aria-invalid={!!error}
                       />
                     </CInputGroup>
                     <CRow>
@@ -107,8 +115,18 @@ const Login = () => {
                 style={{ width: '44%' }}
               >
                 <CCardBody className="text-center">
-                  <TrebleClef size={210} color="#ffffff" className="treble-watermark" />
-                  <Vinyl size={180} color="#ffffff" className="vinyl-watermark" />
+                  <TrebleClef
+                    size={210}
+                    color="#ffffff"
+                    className="treble-watermark"
+                    aria-hidden="true"
+                  />
+                  <Vinyl
+                    size={180}
+                    color="#ffffff"
+                    className="vinyl-watermark"
+                    aria-hidden="true"
+                  />
                   <div>
                     <h2>Cosmic Muse</h2>
                     <p className="text-start">
