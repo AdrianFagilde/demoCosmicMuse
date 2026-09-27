@@ -69,7 +69,7 @@ const StudentDetail = () => {
 
   if (!student) {
     return (
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardBody>
           <h4>Estudiante no encontrado</h4>
           <p>El estudiante solicitado no existe.</p>
@@ -109,7 +109,7 @@ const StudentDetail = () => {
     <>
       <CRow className="mb-4">
         <CCol md={4} className="mb-3">
-          <CCard>
+          <CCard className="app-card">
             <CCardHeader>Perfil de {student.full_name}</CCardHeader>
             <CCardBody>
               <div className="d-flex align-items-center gap-3 mb-3">
@@ -174,7 +174,7 @@ const StudentDetail = () => {
           </CCard>
         </CCol>
         <CCol md={8} className="mb-3">
-          <CCard>
+          <CCard className="app-card">
             <CCardHeader>Tareas de {student.full_name}</CCardHeader>
             <CCardBody>
               <div className="mb-3">

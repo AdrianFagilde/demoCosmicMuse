@@ -210,7 +210,7 @@ const CourseDetailAdmin = ({
         <CIcon icon={cilArrowLeft} className="me-1" /> Volver a cursos
       </CButton>
 
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <span className="fw-bold">{course.title}</span>
           <CButton
@@ -253,7 +253,7 @@ const CourseDetailAdmin = ({
       />
 
       {/* Tareas */}
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardHeader>Tareas del curso (arrastra para ordenar)</CCardHeader>
         <CCardBody>
           {course.course_tasks.length === 0 ? (
@@ -311,7 +311,7 @@ const CourseDetailAdmin = ({
       </CCard>
 
       {/* Contenido del curso */}
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardHeader>Contenido del curso (materiales para estudiantes)</CCardHeader>
         <CCardBody>
           {(course.course_materials || []).length === 0 ? (
@@ -387,7 +387,7 @@ const CourseDetailAdmin = ({
       </CCard>
 
       {/* Cuestionarios */}
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardHeader>
           Cuestionarios del curso (arrastra para ordenar · los generales sin tarea)
         </CCardHeader>
@@ -440,7 +440,7 @@ const CourseDetailAdmin = ({
       </CCard>
 
       {/* Progreso por estudiante */}
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardHeader>Progreso del curso</CCardHeader>
         <CCardBody>
           {course.enrolled_profiles.length === 0 ? (

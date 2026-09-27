@@ -136,7 +136,7 @@ const CourseDetail = () => {
         <CButton as={Link} to="/courses" color="secondary" variant="outline" className="mb-3">
           <CIcon icon={cilArrowLeft} className="me-1" /> Volver a cursos
         </CButton>
-        <CCard className="border-danger">
+        <CCard className="app-card app-card-bordered app-card-danger">
           <CCardBody className="text-danger">{loadError}</CCardBody>
         </CCard>
       </>

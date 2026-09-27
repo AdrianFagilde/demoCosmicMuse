@@ -281,7 +281,7 @@ const Tasks = () => {
     <>
       <CRow className="mb-4">
         <CCol>
-          <CCard>
+          <CCard className="app-card">
             <CCardHeader>Tareas</CCardHeader>
             <CCardBody>
               <p>
@@ -297,7 +297,7 @@ const Tasks = () => {
       {isAdmin && (
         <CRow className="mb-4">
           <CCol>
-            <CCard>
+            <CCard className="app-card">
               <CCardHeader>Crear nueva tarea</CCardHeader>
               <CCardBody>
                 <CForm onSubmit={handleAddTask}>
@@ -410,7 +410,7 @@ const Tasks = () => {
       {!isAdmin && (
         <CRow className="mb-4">
           <CCol md={3} sm={6} className="mb-3">
-            <CCard className="h-100 text-center">
+            <CCard className="app-card h-100 text-center">
               <CCardBody className="py-3">
                 <div className="fs-3 fw-bold text-primary">{stats.total}</div>
                 <div className="text-medium-emphasis small">Total tareas</div>
@@ -418,7 +418,7 @@ const Tasks = () => {
             </CCard>
           </CCol>
           <CCol md={3} sm={6} className="mb-3">
-            <CCard className="h-100 text-center">
+            <CCard className="app-card h-100 text-center">
               <CCardBody className="py-3">
                 <div className="fs-3 fw-bold text-warning">{stats.pending}</div>
                 <div className="text-medium-emphasis small">Pendientes</div>
@@ -426,7 +426,7 @@ const Tasks = () => {
             </CCard>
           </CCol>
           <CCol md={3} sm={6} className="mb-3">
-            <CCard className="h-100 text-center">
+            <CCard className="app-card h-100 text-center">
               <CCardBody className="py-3">
                 <div className="fs-3 fw-bold text-info">{stats.inProgress}</div>
                 <div className="text-medium-emphasis small">En progreso</div>
@@ -434,7 +434,7 @@ const Tasks = () => {
             </CCard>
           </CCol>
           <CCol md={3} sm={6} className="mb-3">
-            <CCard className="h-100 text-center">
+            <CCard className="app-card h-100 text-center">
               <CCardBody className="py-3">
                 <div className="fs-3 fw-bold text-success">{stats.completed}</div>
                 <div className="text-medium-emphasis small">Completadas</div>
@@ -444,7 +444,7 @@ const Tasks = () => {
         </CRow>
       )}
 
-      <CCard>
+      <CCard className="app-card">
         <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-3">
           <span>{isAdmin ? 'Tareas asignadas' : 'Tus tareas'}</span>
           <div className="d-flex flex-wrap gap-2">

@@ -45,7 +45,7 @@ const CourseDetailStudent = ({
       <CIcon icon={cilArrowLeft} className="me-1" /> Volver a cursos
     </CButton>
 
-    <CCard className="mb-4">
+    <CCard className="app-card mb-4">
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <span className="fw-bold">{course.title}</span>
         <CBadge color={myStats.percent >= 100 ? 'success' : 'info'}>{myStats.percent}%</CBadge>
@@ -63,7 +63,7 @@ const CourseDetailStudent = ({
     </CCard>
 
     {(course.course_materials || []).length > 0 && (
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardHeader>Contenido del curso</CCardHeader>
         <CCardBody>
           <MaterialList materials={course.course_materials} readOnly />
@@ -72,7 +72,7 @@ const CourseDetailStudent = ({
     )}
 
     {(course.course_forms || []).some((f) => !f.task_id) && (
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardHeader>Cuestionarios del curso</CCardHeader>
         <CCardBody>
           {course.course_forms
@@ -120,7 +120,7 @@ const CourseDetailStudent = ({
     )}
 
     {course.course_tasks.length === 0 ? (
-      <CCard>
+      <CCard className="app-card">
         <CCardBody className="text-center text-medium-emphasis">
           Tu profesor todavía no ha publicado tareas en este curso.
         </CCardBody>
@@ -138,7 +138,7 @@ const CourseDetailStudent = ({
         )
 
         return (
-          <CCard key={task.id} className="mb-3">
+          <CCard key={task.id} className="app-card mb-3">
             <CCardHeader className="d-flex justify-content-between align-items-center">
               <span className="fw-semibold">{task.title}</span>
               <div className="d-flex align-items-center gap-2">

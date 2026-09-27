@@ -135,7 +135,7 @@ const Lessons = () => {
     <>
       <CRow className="mb-4">
         <CCol md={3} sm={6}>
-          <CCard className="h-100">
+          <CCard className="app-card h-100">
             <CCardBody>
               <div className="text-medium-emphasis small">Total clases</div>
               <div className="fs-3 fw-semibold">{lessons.length}</div>
@@ -143,7 +143,7 @@ const Lessons = () => {
           </CCard>
         </CCol>
       </CRow>
-      <CCard>
+      <CCard className="app-card">
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <span>Clases programadas</span>
           <CButton color="primary" size="sm" onClick={openCreate}>

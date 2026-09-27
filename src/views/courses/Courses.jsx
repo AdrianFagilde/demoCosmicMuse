@@ -113,7 +113,7 @@ const Courses = () => {
     <>
       <CRow className="mb-4">
         <CCol>
-          <CCard>
+          <CCard className="app-card">
             <CCardHeader>Cursos</CCardHeader>
             <CCardBody>
               <p>
@@ -135,7 +135,7 @@ const Courses = () => {
       {error && (
         <CRow className="mb-4">
           <CCol>
-            <CCard className="border-danger">
+            <CCard className="app-card app-card-bordered app-card-danger">
               <CCardBody className="text-danger">
                 No se pudieron cargar los cursos: {error.message}
               </CCardBody>
@@ -152,14 +152,14 @@ const Courses = () => {
             </div>
           ) : isAdmin ? (
             courses.length === 0 ? (
-              <CCard>
+              <CCard className="app-card">
                 <CCardBody className="text-center text-medium-emphasis">
                   Todavía no hay cursos. Crea el primero con el botón "Nuevo curso".
                 </CCardBody>
               </CCard>
             ) : (
               courses.map((course) => (
-                <CCard key={course.id} className="mb-3">
+                <CCard key={course.id} className="app-card mb-3">
                   <CCardHeader className="d-flex justify-content-between align-items-center">
                     <span className="fw-semibold">{course.title}</span>
                     <span>
@@ -197,7 +197,7 @@ const Courses = () => {
               ))
             )
           ) : courses.length === 0 ? (
-            <CCard>
+            <CCard className="app-card">
               <CCardBody className="text-center text-medium-emphasis">
                 No estás inscrito en ningún curso todavía. Cuando tu profesor te inscriba, lo verás
                 aquí.
@@ -213,7 +213,7 @@ const Courses = () => {
               ).length
               const percent = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0
               return (
-                <CCard key={course.id} className="mb-3">
+                <CCard key={course.id} className="app-card mb-3">
                   <CCardHeader className="d-flex justify-content-between align-items-center">
                     <span className="fw-semibold">{course.title}</span>
                     <CBadge color={percent >= 100 ? 'success' : 'info'}>{percent}%</CBadge>

@@ -62,7 +62,7 @@ const Payments = () => {
     <>
       <CRow className="mb-4">
         <CCol>
-          <CCard>
+          <CCard className="app-card">
             <CCardHeader>Pagos</CCardHeader>
             <CCardBody>
               <p>
@@ -107,7 +107,7 @@ const Payments = () => {
       {activeTab === 'payments' && (
         <CRow className="mb-4">
           <CCol md={4}>
-            <CCard>
+            <CCard className="app-card">
               <CCardHeader>Saldo por estudiante</CCardHeader>
               <CCardBody>
                 <table className="table table-borderless mb-0">
@@ -137,7 +137,7 @@ const Payments = () => {
             </CCard>
           </CCol>
           <CCol md={8}>
-            <CCard>
+            <CCard className="app-card">
               <CCardHeader>Registrar nuevo pago</CCardHeader>
               <CCardBody>
                 <PaymentForm studentOptions={studentOptions} onSubmit={addPayment} />

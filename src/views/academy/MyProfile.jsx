@@ -175,7 +175,7 @@ const MyProfile = () => {
       )}
       <CRow className="mb-4">
         <CCol md={4} className="mb-3">
-          <CCard>
+          <CCard className="app-card">
             <CCardHeader>Mi informacion</CCardHeader>
             <CCardBody>
               <div className="d-flex flex-column align-items-center text-center mb-3">
@@ -212,7 +212,7 @@ const MyProfile = () => {
           </CCard>
         </CCol>
         <CCol md={8} className="mb-3">
-          <CCard className="mb-3">
+          <CCard className="app-card mb-3">
             <CCardHeader>Foto de perfil</CCardHeader>
             <CCardBody>
               <div className="d-flex align-items-center gap-3">
@@ -260,7 +260,7 @@ const MyProfile = () => {
               </div>
             </CCardBody>
           </CCard>
-          <CCard>
+          <CCard className="app-card">
             <CCardHeader>Editar perfil</CCardHeader>
             <CCardBody>
               <CFormInput
@@ -300,7 +300,7 @@ const MyProfile = () => {
               </CButton>
             </CCardBody>
           </CCard>
-          <CCard className="mt-3">
+          <CCard className="app-card mt-3">
             <CCardHeader>Proximas clases</CCardHeader>
             <CCardBody>
               {loading ? (

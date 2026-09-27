@@ -18,7 +18,7 @@ const Notifications = () => {
   }
 
   return (
-    <CCard>
+    <CCard className="app-card">
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <span>Mis notificaciones</span>
         <div className="d-flex align-items-center gap-3">

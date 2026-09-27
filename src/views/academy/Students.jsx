@@ -118,7 +118,7 @@ const Students = () => {
       <div data-build-version={buildHash} style={{ display: 'none' }} />
       <CRow className="mb-4">
         <CCol md={3} sm={6} className="mb-3">
-          <CCard className="h-100">
+          <CCard className="app-card h-100">
             <CCardBody>
               <div className="text-medium-emphasis small">Estudiantes activos</div>
               <div className="fs-3 fw-semibold">
@@ -131,7 +131,7 @@ const Students = () => {
           </CCard>
         </CCol>
       </CRow>
-      <CCard>
+      <CCard className="app-card">
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <span>Perfiles</span>
           <div className="d-flex align-items-center gap-3">
