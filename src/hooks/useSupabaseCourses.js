@@ -13,7 +13,7 @@ const useSupabaseCourses = () => {
   const fetchCourses = useCallback(async () => {
     const { data, error: fetchError } = await supabase
       .from('courses')
-      .select('*, course_tasks(id, task_checklist_items(id)), course_enrollments(student_id)')
+      .select('*, tasks!course_id(id, task_checklist_items(id)), course_enrollments(student_id)')
       .order('created_at', { ascending: false })
     if (fetchError) {
       setError(fetchError)
@@ -36,7 +36,7 @@ const useSupabaseCourses = () => {
       .from('courses')
       .select(
         `*,
-        course_tasks(*),
+        tasks!course_id(*),
         course_materials(*),
         course_forms(*, form_questions(*)),
         course_enrollments(student_id)`,
@@ -48,7 +48,7 @@ const useSupabaseCourses = () => {
       return { detail: null, error: fetchError }
     }
     let itemsByTask = {}
-    const taskIds = (data.course_tasks || []).map((t) => t.id)
+    const taskIds = (data.tasks || []).map((t) => t.id)
     if (taskIds.length > 0) {
       const { data: items, error: itemsError } = await supabase
         .from('task_checklist_items')
@@ -75,7 +75,7 @@ const useSupabaseCourses = () => {
     return {
       detail: {
         ...data,
-        course_tasks: (data.course_tasks || []).sort(byPosition).map((t) => ({
+        course_tasks: (data.tasks || []).sort(byPosition).map((t) => ({
           ...t,
           task_checklist_items: itemsByTask[t.id] || [],
         })),
@@ -177,12 +177,12 @@ const useSupabaseCourses = () => {
   }, [])
 
   const addTask = useCallback(async (course, taskData) => {
-    const position = (course.course_tasks || []).reduce(
+    const position = (course.tasks || []).reduce(
       (max, t) => Math.max(max, (t.position ?? 0) + 1),
       0,
     )
     const { data, error: insertError } = await supabase
-      .from('course_tasks')
+      .from('tasks')
       .insert({
         course_id: course.id,
         title: taskData.title,
@@ -210,10 +210,7 @@ const useSupabaseCourses = () => {
   }, [])
 
   const updateTask = useCallback(async (taskId, updates) => {
-    const { error: updateError } = await supabase
-      .from('course_tasks')
-      .update(updates)
-      .eq('id', taskId)
+    const { error: updateError } = await supabase.from('tasks').update(updates).eq('id', taskId)
     if (updateError) {
       console.error('[Courses] Update task error:', updateError.message, updateError)
       return false
@@ -222,7 +219,7 @@ const useSupabaseCourses = () => {
   }, [])
 
   const deleteTask = useCallback(async (taskId) => {
-    const { error: deleteError } = await supabase.from('course_tasks').delete().eq('id', taskId)
+    const { error: deleteError } = await supabase.from('tasks').delete().eq('id', taskId)
     if (deleteError) {
       console.error('[Courses] Delete task error:', deleteError.message, deleteError)
       return false
@@ -232,7 +229,7 @@ const useSupabaseCourses = () => {
 
   const reorderTasks = useCallback(async (orderedIds) => {
     const updates = orderedIds.map((taskId, index) =>
-      supabase.from('course_tasks').update({ position: index }).eq('id', taskId),
+      supabase.from('tasks').update({ position: index }).eq('id', taskId),
     )
     const results = await Promise.all(updates)
     const failed = results.find((r) => r.error)
