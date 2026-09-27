@@ -5,7 +5,7 @@ import useSupabaseQuery from './useSupabaseQuery'
 const useSupabaseStudents = () => {
   const fetchStudents = useCallback(async () => {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('profiles_with_metrics')
       .select('*')
       .eq('role', 'student')
       .order('full_name')
@@ -31,14 +31,12 @@ const useSupabaseStudents = () => {
 
   const updateStudentMetrics = useCallback(
     async (id, progress, attendance) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          progress: Number(progress),
-          attendance: Number(attendance),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
+      const { error } = await supabase.from('student_metrics').upsert({
+        student_id: id,
+        progress: Number(progress),
+        attendance: Number(attendance),
+        updated_at: new Date().toISOString(),
+      })
       if (!error) {
         setStudents((prev) =>
           prev.map((s) =>
