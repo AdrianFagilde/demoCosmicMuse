@@ -1,7 +1,7 @@
 # Baseline de la base de datos
 
-Estado del esquema de Supabase, verificado tras aplicar la migración
-`017_security_corrections.sql`. Sirve para dos cosas distintas, que conviene
+Estado del esquema de Supabase a 2026-09-26, con `018_realtime_notifications.sql`
+escrita pero **pendiente de aplicar**. Sirve para dos cosas distintas, que conviene
 no confundir:
 
 - **Detectar drift**: comprobar que las migraciones describen la base entera.
@@ -11,10 +11,12 @@ no confundir:
   genera a voluntad con el comando de más abajo y no está versionado; las
   migraciones ya son la fuente de verdad del esquema.
 
-## Estado a 2026-09-25
+## Estado a 2026-09-26
 
-No hay drift: las 17 migraciones describen el esquema completo. Se comparó el
-inventario de tablas y coinciden exactamente, 26 en `public`.
+Las 17 primeras migraciones describen el esquema completo: 26 tablas declaradas en
+migraciones, 26 en producción. El inventario de tablas cuadra, pero eso no
+demuestra que cuadren columnas, índices, políticas ni triggers; para cerrarlo del
+todo, `supabase db diff --linked` debería devolver vacío.
 
 ```
 schemas presentes : auth, extensions, public, realtime, storage,
@@ -22,9 +24,12 @@ schemas presentes : auth, extensions, public, realtime, storage,
 tablas en public  : 26 declaradas en migraciones, 26 en producción
 ```
 
-Que cuadren las tablas no demuestra que cuadren columnas, índices, políticas ni
-triggers. Para cerrarlo del todo, `supabase db diff --linked` debería devolver
-vacío.
+Queda una discrepancia conocida y sin resolver: la 018 existe en el repositorio
+pero no está en el historial de la base, así que `supabase db diff` la propondrá
+hasta que se aplique. La tabla `notifications` ya está publicada en
+`supabase_realtime` en producción (habilitada a mano desde el panel), de modo que
+no es un fallo visible para la app: solo el historial del scheme está
+desalineado. Ver «Cómo se aplica la 018».
 
 ### Cómo se aplicó la 017
 
@@ -41,6 +46,40 @@ ON CONFLICT (version) DO NOTHING;
 Equivale a `supabase migration repair --status applied 17 --linked`. Si
 alguna vez se repite, ese es el procedimiento. Ojo: `db push` **no** es
 equivalente, intentaría aplicar el fichero entero otra vez.
+
+### Cómo se aplica la 018
+
+**Todavía no se ha aplicado.** Pasos, en este orden:
+
+1. Pegar `supabase/migrations/018_realtime_notifications.sql` en el SQL Editor y
+   ejecutarlo, o `supabase db push` si el proyecto está enlazado. Es
+   idempotente (ver más abajo), así que aplicarla dos veces no rompe nada; si la
+   tabla ya está publicada, la migración no hace nada y solo avisa con un NOTICE.
+2. Registrar el historial, porque ni el SQL Editor ni una ejecución manual
+   añaden la entrada:
+
+```sql
+INSERT INTO supabase_migrations.schema_migrations (version, name, statements)
+VALUES ('18', 'realtime_notifications', ARRAY[]::text[])
+ON CONFLICT (version) DO NOTHING;
+```
+
+Equivale a `supabase migration repair --status applied 18 --linked`. Aquí sí
+que `db push` es la vía correcta en el paso 1, a diferencia de la 017, porque al
+ser idempotente no hay riesgo de reejecutar algo destructivo.
+
+Comprobación, de solo lectura y sin riesgo en el SQL Editor:
+
+```sql
+SELECT pubname, schemaname, tablename
+FROM pg_publication_tables
+WHERE pubname = 'supabase_realtime'
+  AND tablename = 'notifications';
+```
+
+Una fila significa que está publicada. Cero filas significa que las
+notificaciones in-app no llegan en vivo, aunque la campana y los toasts
+parezcan funcionar: se estarían actualizando solo al recargar.
 
 ## Detectar drift
 
@@ -78,9 +117,9 @@ aislado.
 ## Orden de aplicación y estado
 
 Las migraciones se aplican **una vez**, en orden numérico, y el CLI las
-registra. No son idempotentes por diseño y no deberían serlo: que una
-migración "se pueda repetir" no es una garantía, es una casualidad de cómo
-estuvo escrita.
+registra. Salvo la 018, que es idempotente por diseño, no son idempotentes y
+no deberían serlo: que una migración "se pueda repetir" no es una garantía, es
+una casualidad de cómo estuvo escrita.
 
 La 017 es el ejemplo de por qué. Su `CREATE OR REPLACE FUNCTION` sobre
 `get_next_badges` declaraba un tipo de retorno distinto al que ya tenía, y
@@ -88,12 +127,19 @@ PostgreSQL aborta con `42P13` sin aviso previo. Las nueve sentencias
 anteriores del fichero ya se habían aplicado. Reejecutar no habría
 "arreglado" nada.
 
+La 018 es el contraejemplo deliberado: envuelve su única sentencia en un
+`DO $$ ... $$` que consulta `pg_publication_tables` antes de tocar nada, de
+modo que repetirla es inofensivo. La razón de que sea segura es que no
+contiene ninguna operación irreversible ni dependiente del orden; si alguna
+migración futura necesita el mismo tratamiento, el patrón es ese, no el
+`CREATE OR REPLACE` a pelo.
+
 Si una migración se aplicó a mano y falló a medias, la única salida limpia es
 `BEGIN`/`COMMIT` alrededor del fichero completo, o deshacerla a mano.
 
 | Migración                            | Contenido                                                                                                |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `001_initial_schema.sql`             | Tablas base: `profiles`, `lessons`, `tasks`, `payments`, `notifications`; RLS inicial; `handle_new_user` |
+| `001_initial_schema.sql`             | Tablas base: `profiles`, `lessons`, `tasks`, `payments`, `payment_reminders`, `notification_log`, `instruments`; RLS inicial; `handle_new_user` |
 | `002_add_guardian_fields.sql`        | Datos de tutor/guardian en `profiles`                                                                    |
 | `003_add_avatar.sql`                 | Columna de avatar en `profiles`                                                                          |
 | `004_rls_self_insert.sql`            | Permite el auto-insert del perfil propio                                                                 |
@@ -110,6 +156,7 @@ Si una migración se aplicó a mano y falló a medias, la única salida limpia e
 | `015_student_practice_dashboard.sql` | Vista de datos para el dashboard de práctica                                                             |
 | `016_security_fixes.sql`             | Endurecimiento de los RPC de mensajería y de práctica, anti-spam en notificaciones, límites de XP |
 | `017_security_corrections.sql`       | Correcciones de la auditoría actual (ver abajo)                                                          |
+| `018_realtime_notifications.sql`     | Publica `notifications` en `supabase_realtime` (idempotente)                                              |
 
 ## Qué corrige la 017
 
@@ -152,6 +199,22 @@ Si una migración se aplicó a mano y falló a medias, la única salida limpia e
    `CREATE OR REPLACE`. Ese borrador además devolvía un resumen de
    gamificación en vez de las siguientes insignias, con lo que el nombre
    dejaba de describir lo que hacía.
+
+## Qué hace la 018
+
+No corrige un fallo de seguridad: cierra una deriva entre el esquema
+versionado y la base real. `useSupabaseUserNotifications` se suscribe a
+`postgres_changes` sobre `public.notifications` filtrando por `recipient_id`,
+pero ninguna migración publicaba esa tabla, así que la suscripción no
+recibía nada. Se había arreglado habilitándola a mano desde el panel de
+Supabase, lo que hacía que `supabase db diff` no puddle detectarla: no es una
+tabla ni una columna, es un miembro de una publicación.
+
+La consecuencia de que faltara era silenciosa. La campana del header, los
+toasts y la bandeja seguían funcionando; solorecebían las actualizaciones
+por otras vías (recargar la página, marcar algo como leído), así que nada
+parecía roto. Por eso la comprobación de la sección anterior es de solo
+lectura y se puede pegar en el SQL Editor sin riesgo.
 
 ## Verificación tras aplicar
 
