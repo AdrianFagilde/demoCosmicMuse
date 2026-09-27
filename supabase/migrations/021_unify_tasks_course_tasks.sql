@@ -172,12 +172,24 @@ WHERE NOT EXISTS (
 -- =============================================
 -- 8. REEMPLAZAR TABLAS ANTIGUAS
 -- =============================================
+-- Primero, eliminar FKs en practice_sessions que referencian las tablas antiguas
+ALTER TABLE public.practice_sessions
+  DROP CONSTRAINT IF EXISTS practice_sessions_task_id_fkey,
+  DROP CONSTRAINT IF EXISTS practice_sessions_course_task_id_fkey;
+
 -- Renombrar tablas legacy a _legacy
 ALTER TABLE IF EXISTS public.tasks RENAME TO tasks_legacy;
 ALTER TABLE IF EXISTS public.course_tasks RENAME TO course_tasks_legacy;
 
 -- Renombrar assignments -> tasks (nombre final elegido)
 ALTER TABLE IF EXISTS public.assignments RENAME TO tasks;
+
+-- Recrear FKs en practice_sessions apuntando a la nueva tabla unificada tasks
+ALTER TABLE public.practice_sessions
+  ADD CONSTRAINT practice_sessions_task_id_fkey
+  FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE SET NULL,
+  ADD CONSTRAINT practice_sessions_course_task_id_fkey
+  FOREIGN KEY (course_task_id) REFERENCES public.tasks(id) ON DELETE SET NULL;
 
 -- Actualizar FK en task_checklist_items para apuntar a tasks (ya lo hace por ID)
 -- Las constraints existentes en course_tasks_legacy se mantienen pero ya no se usan.
