@@ -21,13 +21,19 @@ const StudentDetail = React.lazy(() => import('./views/academy/StudentDetail'))
 const Tasks = React.lazy(() => import('./views/academy/Tasks'))
 const Courses = React.lazy(() => import('./views/courses/Courses'))
 const CourseDetail = React.lazy(() => import('./views/courses/CourseDetail'))
-const CourseFormFill = React.lazy(() => import('./views/courses/CourseFormFill'))
+const CourseFormFill = React.lazy(() => import('./views/courses/CourseDetail'))
 const MyProfile = React.lazy(() => import('./views/academy/MyProfile'))
 const Payments = React.lazy(() => import('./views/academy/Payments'))
 const Lessons = React.lazy(() => import('./views/academy/Lessons'))
 const Users = React.lazy(() => import('./views/admin/Users'))
 const SendNotifications = React.lazy(() => import('./views/admin/SendNotifications'))
 const Notifications = React.lazy(() => import('./views/academy/Notifications'))
+
+// Legal pages (public)
+const PrivacyPolicy = React.lazy(() => import('./views/legal/PrivacyPolicy'))
+const TermsAndConditions = React.lazy(() => import('./views/legal/TermsAndConditions'))
+const CookiePolicy = React.lazy(() => import('./views/legal/CookiePolicy'))
+const RefundPolicy = React.lazy(() => import('./views/legal/RefundPolicy'))
 
 /**
  * Application Routes Configuration
@@ -63,6 +69,12 @@ export const routes = [
   },
   { path: '/notifications', name: 'Notificaciones', element: Notifications, roles: ['student'] },
   { path: '/my-profile', name: 'Mi perfil', element: MyProfile },
+
+  // Legal pages (public)
+  { path: '/privacy-policy', name: 'Política de Privacidad', element: PrivacyPolicy },
+  { path: '/terms-conditions', name: 'Términos y Condiciones', element: TermsAndConditions },
+  { path: '/cookie-policy', name: 'Política de Cookies', element: CookiePolicy },
+  { path: '/refund-policy', name: 'Política de Reembolso', element: RefundPolicy },
 ]
 
 export default routes
