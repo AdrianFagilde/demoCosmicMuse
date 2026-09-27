@@ -13,11 +13,18 @@
 ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS lesson_start TIMESTAMPTZ;
 
 -- 2. Backfill: combinar lesson_date + lesson_time asumiendo UTC
--- Si los datos están en hora local (ej. México UTC-6), cambia:
---   SET lesson_start = (lesson_date + lesson_time) AT TIME ZONE 'America/Mexico_City'
-UPDATE public.lessons
-SET lesson_start = (lesson_date + lesson_time) AT TIME ZONE 'UTC'
-WHERE lesson_start IS NULL;
+-- Solo si las columnas originales existen (migración no aplicada aún)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lessons' AND column_name = 'lesson_date'
+  ) THEN
+    UPDATE public.lessons
+    SET lesson_start = (lesson_date + lesson_time) AT TIME ZONE 'UTC'
+    WHERE lesson_start IS NULL;
+  END IF;
+END $$;
 
 -- 3. NOT NULL + índice
 ALTER TABLE public.lessons ALTER COLUMN lesson_start SET NOT NULL;
