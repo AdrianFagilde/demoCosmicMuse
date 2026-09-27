@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CCard, CCardBody, CCardHeader, CCol, CRow, CButton } from '@coreui/react'
 import {
   ResponsiveContainer,
@@ -94,6 +95,10 @@ import { buildHash } from '../../utils/version'
 const Dashboard = () => {
   const { user, profile } = useAuth()
   const isStudent = profile?.role === 'student'
+  // Navegacion del router, no window.location.href: una recarga completa
+  // tiraba la sesion restaurada en AuthContext y volvia a montar el canal de
+  // Realtime de notificaciones en cada salto.
+  const navigate = useNavigate()
   const { students, getSummary } = useSupabaseStudents()
   const { tasks } = useSupabaseTasks()
   const { courses, fetchStudentCourseProgress } = useSupabaseCourses()
@@ -260,10 +265,10 @@ const Dashboard = () => {
               courses={enrolledCourses}
               myProgressRows={myProgressRows}
               onViewCourse={(courseId) => {
-                window.location.href = `/courses/${courseId}`
+                navigate(`/courses/${courseId}`)
               }}
               onViewAll={() => {
-                window.location.href = '/courses'
+                navigate('/courses')
               }}
             />
           </CCol>
@@ -282,7 +287,7 @@ const Dashboard = () => {
                   <button
                     className="btn btn-sm btn-outline-primary"
                     onClick={() => {
-                      window.location.href = '/tasks'
+                      navigate('/tasks')
                     }}
                     type="button"
                   >
@@ -297,7 +302,7 @@ const Dashboard = () => {
                       key={task.id}
                       task={{ ...task, instrument_color: getInstrumentColor(profile?.instrument) }}
                       onClick={() => {
-                        window.location.href = '/tasks'
+                        navigate('/tasks')
                       }}
                     />
                   ))
@@ -376,7 +381,10 @@ const Dashboard = () => {
                 <button
                   className="btn btn-outline-light btn-sm"
                   onClick={() => {
-                    window.location.href = '/lessons'
+                    // /lessons es routes.js `roles: ['admin']`: un alumno que
+                    // llegaba ahi era expulsado a /dashboard por AppContent. La
+                    // tabla "Proximas clases" del alumno vive en /my-profile.
+                    navigate('/my-profile')
                   }}
                   type="button"
                 >
