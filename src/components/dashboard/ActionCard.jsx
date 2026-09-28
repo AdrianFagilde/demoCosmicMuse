@@ -42,7 +42,7 @@ const ActionCard = ({ task, onClick }) => {
     >
       <div className="d-flex align-items-start gap-3">
         <div className="action-icon">
-          <CIcon icon={cilMusicNote} size="lg" />
+          <CIcon icon={cilMusicNote} size="lg" aria-hidden="true" />
         </div>
         <div className="flex-grow-1 action-card-body">
           <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
@@ -62,13 +62,13 @@ const ActionCard = ({ task, onClick }) => {
                 padding: '2px 6px',
               }}
             >
-              <CIcon icon={cilCalendar} size="xs" />
+              <CIcon icon={cilCalendar} size="xs" aria-hidden="true" />
               {urgency.label}
             </span>
           </div>
           {task.course?.title && (
             <div className="d-flex align-items-center gap-1 text-medium-emphasis small mb-2">
-              <CIcon icon={cilBook} size="xs" />
+              <CIcon icon={cilBook} size="xs" aria-hidden="true" />
               <span className="text-truncate" style={{ maxWidth: '200px' }}>
                 {task.course.title}
               </span>
@@ -102,6 +102,7 @@ const ActionCard = ({ task, onClick }) => {
           size="lg"
           className="text-medium-emphasis flex-shrink-0 mt-1"
           style={{ opacity: 0.5 }}
+          aria-hidden="true"
         />
       </div>
     </div>

@@ -41,17 +41,27 @@ const AppSidebar = () => {
       visible={sidebarShow}
     >
       <CSidebarHeader className="border-bottom">
-        <CSidebarBrand to="/">
-          <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} />
-          <CIcon customClassName="sidebar-brand-narrow" icon={sygnet} height={32} />
+        <CSidebarBrand to="/" aria-label="Cosmic Muse, ir al panel principal">
+          <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} aria-hidden="true" />
+          <CIcon
+            customClassName="sidebar-brand-narrow"
+            icon={sygnet}
+            height={32}
+            aria-hidden="true"
+          />
         </CSidebarBrand>
-        <CCloseButton className="d-lg-none" dark onClick={() => setSidebarShow(false)} />
+        <CCloseButton
+          className="d-lg-none"
+          dark
+          onClick={() => setSidebarShow(false)}
+          aria-label="Cerrar el menú lateral"
+        />
       </CSidebarHeader>
       <div className="sidebar-user d-flex align-items-center gap-2 px-3 py-3">
         {profile?.avatar_url ? (
-          <CAvatar src={profile.avatar_url} size="md" />
+          <CAvatar src={profile.avatar_url} size="md" aria-hidden="true" />
         ) : (
-          <CAvatar className="sidebar-user-avatar" size="md">
+          <CAvatar className="sidebar-user-avatar" size="md" aria-hidden="true">
             {initials}
           </CAvatar>
         )}
@@ -64,7 +74,10 @@ const AppSidebar = () => {
       </div>
       <AppSidebarNav items={navigation} />
       <CSidebarFooter className="border-top d-none d-lg-flex">
-        <CSidebarToggler onClick={toggleSidebarUnfoldable} />
+        <CSidebarToggler
+          onClick={toggleSidebarUnfoldable}
+          aria-label="Contraer o desplegar el menú lateral"
+        />
       </CSidebarFooter>
     </CSidebar>
   )

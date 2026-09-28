@@ -188,7 +188,7 @@ const Users = () => {
                 <CTableRow key={user.id}>
                   <CTableDataCell>
                     <div className="d-flex align-items-center gap-2">
-                      <CIcon icon={cilUser} className="text-medium-emphasis" />
+                      <CIcon icon={cilUser} className="text-medium-emphasis" aria-hidden="true" />
                       {user.full_name}
                     </div>
                   </CTableDataCell>
@@ -236,8 +236,9 @@ const Users = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(user)}
+                        aria-label={`Eliminar a ${user.full_name}`}
                       >
-                        <CIcon icon={cilTrash} />
+                        <CIcon icon={cilTrash} aria-hidden="true" />
                       </CButton>
                     )}
                   </CTableDataCell>

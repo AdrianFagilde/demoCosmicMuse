@@ -43,8 +43,14 @@ const NotificationBell = () => {
 
   return (
     <CDropdown variant="nav-item" placement="bottom-end">
-      <CDropdownToggle caret={false} className="position-relative px-2">
-        <CIcon icon={cilBell} size="lg" />
+      {/* Sin aria-label el nombre accesible del toggle era literalmente el
+          numero del badge ("3"), porque el svg ya viene aria-hidden. */}
+      <CDropdownToggle
+        caret={false}
+        className="position-relative px-2"
+        aria-label={unreadCount > 0 ? `Notificaciones, ${unreadCount} sin leer` : 'Notificaciones'}
+      >
+        <CIcon icon={cilBell} size="lg" aria-hidden="true" />
         {unreadCount > 0 && (
           <CBadge
             color="danger"

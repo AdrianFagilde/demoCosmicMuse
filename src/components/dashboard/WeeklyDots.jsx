@@ -36,11 +36,11 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
   if (!hasData) {
     return (
       <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center text-center py-4">
-        <CIcon icon={cilClock} size="xl" className="text-medium-emphasis mb-2" />
+        <CIcon icon={cilClock} size="xl" className="text-medium-emphasis mb-2" aria-hidden="true" />
         <div className="fw-semibold mb-1">Sin práctica esta semana</div>
         <div className="text-medium-emphasis small mb-3">Comienza tu racha hoy</div>
         <button className="btn btn-primary btn-sm" onClick={onStartPractice} type="button">
-          <CIcon icon={cilFire} className="me-1" size="sm" /> Primera sesión
+          <CIcon icon={cilFire} className="me-1" size="sm" aria-hidden="true" /> Primera sesión
         </button>
       </div>
     )
@@ -50,7 +50,7 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
     <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <span className="fw-semibold d-flex align-items-center gap-2">
-          <CIcon icon={cilClock} className="text-info" size="lg" />
+          <CIcon icon={cilClock} className="text-info" size="lg" aria-hidden="true" />
           Semana
         </span>
         <div className="d-flex align-items-center gap-3 text-medium-emphasis small">
@@ -59,7 +59,11 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
         </div>
       </div>
 
-      <div className="weekly-dots" role="img" aria-label="Práctica semanal">
+      {/* role="img" + aria-label escondia los hijos, asi que el desglose por
+          dia solo vivia en atributos title, que los lectores de pantalla no
+          anuncian. El grafico visual queda como decoracion y los datos van en
+          una lista oculta con la misma informacion. */}
+      <div className="weekly-dots" aria-hidden="true">
         {chartData.map((d, i) => (
           <div key={d.date} className="weekly-dot" style={{ '--dot-color': instrumentColor }}>
             <div
@@ -87,9 +91,21 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
         ))}
       </div>
 
+      <ul className="visually-hidden">
+        <li>
+          Práctica semanal: {totalMinutes} minutos en total, {activeDays} de 7 días con práctica.
+        </li>
+        {chartData.map((d) => (
+          <li key={d.date}>
+            {d.dayFull} {d.date}: {d.minutes} minutos, {d.sessions} sesiones
+            {d.isToday ? ' (hoy)' : ''}.
+          </li>
+        ))}
+      </ul>
+
       <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
         <button className="btn btn-outline-primary btn-sm" onClick={onStartPractice} type="button">
-          <CIcon icon={cilFire} className="me-1" size="sm" /> Practicar
+          <CIcon icon={cilFire} className="me-1" size="sm" aria-hidden="true" /> Practicar
         </button>
         <div className="text-medium-emphasis small">Meta: 30 min/día</div>
       </div>

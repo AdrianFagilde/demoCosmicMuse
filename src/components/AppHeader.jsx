@@ -27,6 +27,9 @@ const AppHeader = () => {
   const { colorMode, setColorMode } = useColorModes('cosmo-music-theme')
   const { sidebarShow, setSidebarShow } = useApp()
 
+  const colorModeLabel =
+    colorMode === 'dark' ? 'Oscuro' : colorMode === 'auto' ? 'Automático' : 'Claro'
+
   useEffect(() => {
     const handleScroll = () => {
       headerRef.current &&
@@ -40,8 +43,11 @@ const AppHeader = () => {
   return (
     <CHeader position="sticky" className="app-header mb-4 p-0" ref={headerRef}>
       <CContainer className="app-header-bar border-bottom px-4" fluid>
-        <CHeaderToggler onClick={() => setSidebarShow(!sidebarShow)}>
-          <CIcon icon={cilMenu} size="lg" />
+        <CHeaderToggler
+          onClick={() => setSidebarShow(!sidebarShow)}
+          aria-label="Mostrar u ocultar el menú lateral"
+        >
+          <CIcon icon={cilMenu} size="lg" aria-hidden="true" />
         </CHeaderToggler>
         <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
@@ -55,8 +61,8 @@ const AppHeader = () => {
             <NotificationBell />
           </CNavItem>
           <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilList} size="lg" />
+            <CNavLink href="#" aria-label="Ver lista de actividades">
+              <CIcon icon={cilList} size="lg" aria-hidden="true" />
             </CNavLink>
           </CNavItem>
         </CHeaderNav>
@@ -65,13 +71,13 @@ const AppHeader = () => {
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
           <CDropdown variant="nav-item" placement="bottom-end">
-            <CDropdownToggle caret={false}>
+            <CDropdownToggle caret={false} aria-label={`Tema: ${colorModeLabel}. Cambiar tema`}>
               {colorMode === 'dark' ? (
-                <CIcon icon={cilMoon} size="lg" />
+                <CIcon icon={cilMoon} size="lg" aria-hidden="true" />
               ) : colorMode === 'auto' ? (
-                <CIcon icon={cilContrast} size="lg" />
+                <CIcon icon={cilContrast} size="lg" aria-hidden="true" />
               ) : (
-                <CIcon icon={cilSun} size="lg" />
+                <CIcon icon={cilSun} size="lg" aria-hidden="true" />
               )}
             </CDropdownToggle>
             <CDropdownMenu>
@@ -82,7 +88,7 @@ const AppHeader = () => {
                 type="button"
                 onClick={() => setColorMode('light')}
               >
-                <CIcon className="me-2" icon={cilSun} size="lg" /> Light
+                <CIcon className="me-2" icon={cilSun} size="lg" aria-hidden="true" /> Claro
               </CDropdownItem>
               <CDropdownItem
                 active={colorMode === 'dark'}
@@ -91,7 +97,7 @@ const AppHeader = () => {
                 type="button"
                 onClick={() => setColorMode('dark')}
               >
-                <CIcon className="me-2" icon={cilMoon} size="lg" /> Dark
+                <CIcon className="me-2" icon={cilMoon} size="lg" aria-hidden="true" /> Oscuro
               </CDropdownItem>
               <CDropdownItem
                 active={colorMode === 'auto'}
@@ -100,7 +106,8 @@ const AppHeader = () => {
                 type="button"
                 onClick={() => setColorMode('auto')}
               >
-                <CIcon className="me-2" icon={cilContrast} size="lg" /> Auto
+                <CIcon className="me-2" icon={cilContrast} size="lg" aria-hidden="true" />{' '}
+                Automático
               </CDropdownItem>
             </CDropdownMenu>
           </CDropdown>

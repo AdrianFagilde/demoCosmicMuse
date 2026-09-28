@@ -147,7 +147,7 @@ const Lessons = () => {
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <span>Clases programadas</span>
           <CButton color="primary" size="sm" onClick={openCreate}>
-            <CIcon icon={cilPlus} className="me-1" /> Nueva clase
+            <CIcon icon={cilPlus} className="me-1" aria-hidden="true" /> Nueva clase
           </CButton>
         </CCardHeader>
         <CCardBody>
@@ -192,16 +192,18 @@ const Lessons = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => openEdit(lesson)}
+                      aria-label={`Editar la clase del ${lesson.student?.full_name || 'estudiante'}`}
                     >
-                      <CIcon icon={cilPencil} />
+                      <CIcon icon={cilPencil} aria-hidden="true" />
                     </CButton>
                     <CButton
                       color="danger"
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(lesson.id)}
+                      aria-label={`Eliminar la clase del ${lesson.student?.full_name || 'estudiante'}`}
                     >
-                      <CIcon icon={cilTrash} />
+                      <CIcon icon={cilTrash} aria-hidden="true" />
                     </CButton>
                   </CTableDataCell>
                 </CTableRow>

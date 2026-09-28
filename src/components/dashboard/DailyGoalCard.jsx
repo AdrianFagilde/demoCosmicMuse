@@ -24,20 +24,20 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
               background: 'rgba(255,255,255,0.2)',
             }}
           >
-            <CIcon icon={cilSpeedometer} size="lg" color="white" />
+            <CIcon icon={cilSpeedometer} size="lg" color="white" aria-hidden="true" />
           </div>
           <div>
             <div className="fw-bold" style={{ fontSize: '1rem' }}>
               Meta diaria
             </div>
-            <div className="text-white-50 small">{DAILY_GOAL_MINUTES} min de práctica</div>
+            <div className="text-body-secondary small">{DAILY_GOAL_MINUTES} min de práctica</div>
           </div>
         </div>
         <div className="text-end">
           <div className="fw-bold" style={{ fontSize: '1.15rem' }}>
             {isComplete ? '✓ Completada' : `${remaining} min`}
           </div>
-          <div className="text-white-50 small">
+          <div className="text-body-secondary small">
             {practiceMinutesToday} / {DAILY_GOAL_MINUTES} min
           </div>
         </div>
@@ -65,12 +65,12 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
             type="button"
             style={{ padding: '8px 12px', fontWeight: 600 }}
           >
-            <CIcon icon={cilFire} className="me-2" />
+            <CIcon icon={cilFire} className="me-2" aria-hidden="true" />
             {isComplete ? '¡Meta lograda!' : 'Practicar ahora'}
           </button>
-          <div className="d-flex align-items-center gap-3 text-white-50 small">
+          <div className="d-flex align-items-center gap-3 text-body-secondary small">
             <div className="d-flex align-items-center gap-1">
-              <CIcon icon={cilFire} size="sm" />
+              <CIcon icon={cilFire} size="sm" aria-hidden="true" />
               <span className="fw-bold">{streak} días</span>
             </div>
           </div>
@@ -80,9 +80,9 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
       {isComplete && (
         <div className="mt-3 p-3 rounded" style={{ background: 'rgba(255,255,255,0.15)' }}>
           <div className="d-flex align-items-center justify-content-center gap-2">
-            <CIcon icon={cilCheck} size="lg" />
+            <CIcon icon={cilCheck} size="lg" aria-hidden="true" />
             <span className="fw-semibold">¡Meta completada! Gran trabajo hoy.</span>
-            <CIcon icon={cilCheck} size="lg" />
+            <CIcon icon={cilCheck} size="lg" aria-hidden="true" />
           </div>
         </div>
       )}

@@ -44,11 +44,16 @@ const AppHeaderDropdown = () => {
 
   return (
     <CDropdown variant="nav-item">
-      <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
+      <CDropdownToggle
+        placement="bottom-end"
+        className="py-0 pe-0"
+        caret={false}
+        aria-label="Menú de cuenta"
+      >
         {avatarUrl ? (
-          <CAvatar src={avatarUrl} size="md" />
+          <CAvatar src={avatarUrl} size="md" aria-hidden="true" />
         ) : (
-          <CAvatar color="primary" size="md">
+          <CAvatar color="primary" size="md" aria-hidden="true">
             {initials}
           </CAvatar>
         )}
@@ -57,9 +62,9 @@ const AppHeaderDropdown = () => {
         <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">
           <div className="d-flex align-items-center gap-2 py-1">
             {avatarUrl ? (
-              <CAvatar src={avatarUrl} size="sm" />
+              <CAvatar src={avatarUrl} size="sm" aria-hidden="true" />
             ) : (
-              <CAvatar color="primary" size="sm">
+              <CAvatar color="primary" size="sm" aria-hidden="true">
                 {initials}
               </CAvatar>
             )}
@@ -67,7 +72,7 @@ const AppHeaderDropdown = () => {
           </div>
         </CDropdownHeader>
         <CDropdownItem disabled>
-          <CIcon icon={cilUser} className="me-2" />
+          <CIcon icon={cilUser} className="me-2" aria-hidden="true" />
           {profile?.role === 'admin' ? 'Administrador' : 'Estudiante'}
         </CDropdownItem>
         <CDropdownDivider />
@@ -76,11 +81,11 @@ const AppHeaderDropdown = () => {
           type="button"
           style={{ cursor: 'pointer' }}
         >
-          <CIcon icon={cilSettings} className="me-2" />
+          <CIcon icon={cilSettings} className="me-2" aria-hidden="true" />
           Perfil
         </CDropdownItem>
         <CDropdownItem onClick={handleLogout} type="button" style={{ cursor: 'pointer' }}>
-          <CIcon icon={cilLockLocked} className="me-2" />
+          <CIcon icon={cilLockLocked} className="me-2" aria-hidden="true" />
           Cerrar sesión
         </CDropdownItem>
       </CDropdownMenu>

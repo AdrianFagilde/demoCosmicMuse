@@ -167,6 +167,7 @@ const TermsAndConditions = () => {
                   icon={section.icon}
                   className="text-primary"
                   style={{ fontSize: '1.25rem', flexShrink: 0 }}
+                  aria-hidden="true"
                 />
                 <h4 className="mb-0 fw-semibold">{section.title}</h4>
               </div>

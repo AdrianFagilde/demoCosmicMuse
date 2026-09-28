@@ -121,7 +121,7 @@ const Courses = () => {
               </p>
               {isAdmin && (
                 <CButton color="primary" onClick={handleOpenCreate}>
-                  <CIcon icon={cilPlus} className="me-1" />
+                  <CIcon icon={cilPlus} className="me-1" aria-hidden="true" />
                   Nuevo curso
                 </CButton>
               )}
@@ -187,8 +187,9 @@ const Courses = () => {
                       color="danger"
                       variant="outline"
                       onClick={() => handleDelete(course.id)}
+                      aria-label={`Eliminar el curso ${course.title}`}
                     >
-                      <CIcon icon={cilTrash} />
+                      <CIcon icon={cilTrash} aria-hidden="true" />
                     </CButton>
                   </CCardFooter>
                 </CCard>

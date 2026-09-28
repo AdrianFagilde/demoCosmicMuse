@@ -61,7 +61,7 @@ const Login = () => {
                     )}
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilUser} />
+                        <CIcon icon={cilUser} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormInput
                         type="email"
@@ -75,7 +75,7 @@ const Login = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
+                        <CIcon icon={cilLockLocked} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormInput
                         type="password"

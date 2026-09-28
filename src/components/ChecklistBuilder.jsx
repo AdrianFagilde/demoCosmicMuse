@@ -33,14 +33,21 @@ const SortableItem = ({ item, onDelete }) => {
       <span
         {...attributes}
         {...listeners}
+        aria-label={`Reordenar ${item.label}`}
         className="text-medium-emphasis"
         style={{ cursor: 'grab', touchAction: 'none' }}
       >
-        <CIcon icon={cilMenu} />
+        <CIcon icon={cilMenu} aria-hidden="true" />
       </span>
       <span className="flex-grow-1">{item.label}</span>
-      <CButton size="sm" color="danger" variant="outline" onClick={() => onDelete(item.id)}>
-        <CIcon icon={cilTrash} />
+      <CButton
+        size="sm"
+        color="danger"
+        variant="outline"
+        onClick={() => onDelete(item.id)}
+        aria-label={`Eliminar ${item.label}`}
+      >
+        <CIcon icon={cilTrash} aria-hidden="true" />
       </CButton>
     </CListGroupItem>
   )
@@ -86,8 +93,14 @@ const ChecklistBuilder = ({ items, onChange }) => {
           }}
           placeholder="Ítem del checklist y presiona Enter..."
         />
-        <CButton type="button" color="primary" variant="outline" onClick={handleAdd}>
-          <CIcon icon={cilPlus} />
+        <CButton
+          type="button"
+          color="primary"
+          variant="outline"
+          onClick={handleAdd}
+          aria-label="Añadir ítem al checklist"
+        >
+          <CIcon icon={cilPlus} aria-hidden="true" />
         </CButton>
       </CInputGroup>
       {items.length > 0 && (

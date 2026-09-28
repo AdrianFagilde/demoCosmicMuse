@@ -293,7 +293,12 @@ const Dashboard = () => {
             <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <span className="fw-semibold d-flex align-items-center gap-2">
-                  <CIcon icon={cilMusicNote} className="text-primary" size="lg" />
+                  <CIcon
+                    icon={cilMusicNote}
+                    className="text-primary"
+                    size="lg"
+                    aria-hidden="true"
+                  />
                   Ahora mismo
                 </span>
                 {urgentTasks.length > 4 && (
@@ -321,7 +326,7 @@ const Dashboard = () => {
                   ))
                 ) : (
                   <div className="text-center text-medium-emphasis py-3">
-                    <CIcon icon={cilMusicNote} size="lg" className="mb-2" />
+                    <CIcon icon={cilMusicNote} size="lg" className="mb-2" aria-hidden="true" />
                     <div className="fw-semibold mb-1">¡Todo al día!</div>
                     <div className="small mb-2">No tienes tareas urgentes</div>
                     <button
@@ -329,7 +334,8 @@ const Dashboard = () => {
                       onClick={() => practice.startPractice({})}
                       type="button"
                     >
-                      <CIcon icon={cilMediaPlay} className="me-1" size="sm" /> Práctica libre
+                      <CIcon icon={cilMediaPlay} className="me-1" size="sm" aria-hidden="true" />{' '}
+                      Práctica libre
                     </button>
                   </div>
                 )}
@@ -351,7 +357,7 @@ const Dashboard = () => {
             <div
               className="app-card app-card-compact h-100 d-flex flex-column justify-content-center"
               style={{
-                background: 'linear-gradient(135deg, var(--cui-primary) 0%, #5c6bc0 100%)',
+                background: 'linear-gradient(135deg, var(--cui-primary) 0%, #4251aa 100%)',
                 color: 'white',
               }}
             >
@@ -360,13 +366,13 @@ const Dashboard = () => {
                   className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
                   style={{ width: 44, height: 44, background: 'rgba(255,255,255,0.2)' }}
                 >
-                  <CIcon icon={cilCalendar} size="xl" color="white" />
+                  <CIcon icon={cilCalendar} size="xl" color="white" aria-hidden="true" />
                 </div>
                 <div className="flex-grow-1">
                   {hasNextLesson ? (
                     <>
                       <div className="fw-bold">Próxima clase</div>
-                      <div className="text-white-50 small">
+                      <div className="text-white small">
                         {new Date(profile.next_lesson).toLocaleString('es-ES', {
                           weekday: 'long',
                           month: 'short',
@@ -376,13 +382,13 @@ const Dashboard = () => {
                         })}
                       </div>
                       {profile?.teacher && (
-                        <div className="text-white-50 small">Con {profile.teacher}</div>
+                        <div className="text-white small">Con {profile.teacher}</div>
                       )}
                     </>
                   ) : (
                     <>
                       <div className="fw-bold">Próxima clase</div>
-                      <div className="text-white-50 small">Aún no tenés clase programada</div>
+                      <div className="text-white small">Aún no tenés clase programada</div>
                     </>
                   )}
                 </div>
@@ -410,14 +416,14 @@ const Dashboard = () => {
             <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="fw-semibold d-flex align-items-center gap-2">
-                  <CIcon icon={cilFire} className="text-danger" size="lg" />
+                  <CIcon icon={cilFire} className="text-danger" size="lg" aria-hidden="true" />
                   Racha
                 </span>
                 <div className="text-medium-emphasis small">{streakDays} días seguidos</div>
               </div>
               <div className="d-flex align-items-center gap-3">
                 <div className="action-icon" style={{ '--action-color': '#ef4444' }}>
-                  <CIcon icon={cilFire} size="xl" />
+                  <CIcon icon={cilFire} size="xl" aria-hidden="true" />
                 </div>
                 <div>
                   <div className="fw-bold" style={{ fontSize: '1.25rem' }}>

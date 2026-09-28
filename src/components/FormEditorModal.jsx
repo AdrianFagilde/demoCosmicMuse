@@ -176,7 +176,7 @@ const FormEditorModal = ({
           <div className="d-flex justify-content-between align-items-center mb-2">
             <CFormLabel className="fw-semibold mb-0">Preguntas (arrastra para ordenar)</CFormLabel>
             <CButton size="sm" color="primary" variant="outline" onClick={handleAddQuestion}>
-              <CIcon icon={cilPlus} className="me-1" /> Pregunta
+              <CIcon icon={cilPlus} className="me-1" aria-hidden="true" /> Pregunta
             </CButton>
           </div>
           <FormBuilder questions={questions} onChange={setQuestions} />

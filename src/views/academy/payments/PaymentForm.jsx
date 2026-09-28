@@ -146,7 +146,7 @@ const PaymentForm = ({ studentOptions, onSubmit }) => {
           <CFormLabel htmlFor="proofUpload">Comprobante</CFormLabel>
           <CInputGroup>
             <CInputGroupText>
-              <CIcon icon={cilCloudUpload} />
+              <CIcon icon={cilCloudUpload} aria-hidden="true" />
             </CInputGroupText>
             <CFormInput
               id="proofUpload"
@@ -170,7 +170,7 @@ const PaymentForm = ({ studentOptions, onSubmit }) => {
         </CCol>
         <CCol className="text-end">
           <CButton type="submit" color="primary" disabled={saving}>
-            <CIcon icon={cilPlus} className="me-2" />
+            <CIcon icon={cilPlus} className="me-2" aria-hidden="true" />
             {saving ? 'Registrando...' : 'Registrar pago'}
           </CButton>
         </CCol>

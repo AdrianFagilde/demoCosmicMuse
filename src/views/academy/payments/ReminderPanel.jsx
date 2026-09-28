@@ -176,7 +176,8 @@ const ReminderPanel = ({
                     </CCol>
                     <CCol className="text-end">
                       <CButton type="submit" color="success">
-                        <CIcon icon={cilBell} className="me-2" /> Agregar recordatorio
+                        <CIcon icon={cilBell} className="me-2" aria-hidden="true" /> Agregar
+                        recordatorio
                       </CButton>
                     </CCol>
                   </CRow>
@@ -230,7 +231,7 @@ const ReminderPanel = ({
                                   )
                                 }}
                               >
-                                <CIcon icon={cilSend} className="me-1" />{' '}
+                                <CIcon icon={cilSend} className="me-1" aria-hidden="true" />{' '}
                                 {sendingId === reminder.id ? 'Enviando…' : 'Enviar ahora'}
                               </CButton>
                               {onUpdateReminder && (

@@ -24,6 +24,12 @@ const NODE_ICONS = {
   default: cilMusicNote,
 }
 
+const NODE_STATE_LABEL = {
+  completed: 'Completado',
+  current: 'En curso',
+  locked: 'Bloqueado',
+}
+
 const JourneyPath = ({ courses, myProgressRows, onViewCourse, onViewAll }) => {
   const pathNodes = useMemo(() => {
     if (!courses?.length)
@@ -96,11 +102,11 @@ const JourneyPath = ({ courses, myProgressRows, onViewCourse, onViewAll }) => {
     <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center">
       <div className="d-flex justify-content-between align-items-center mb-3 px-2">
         <span className="fw-semibold d-flex align-items-center gap-2">
-          <CIcon icon={cilBook} className="text-primary" size="lg" />
+          <CIcon icon={cilBook} className="text-primary" size="lg" aria-hidden="true" />
           Mi camino musical
         </span>
         <button className="btn btn-sm btn-outline-primary" onClick={onViewAll} type="button">
-          <CIcon icon={cilStar} className="me-1" size="sm" /> Ver todo
+          <CIcon icon={cilStar} className="me-1" size="sm" aria-hidden="true" /> Ver todo
         </button>
       </div>
 
@@ -123,14 +129,22 @@ const JourneyPath = ({ courses, myProgressRows, onViewCourse, onViewAll }) => {
               }}
             >
               {node.type === 'completed' ? (
-                <CIcon icon={cilCheck} size="xl" color="white" />
+                <CIcon icon={cilCheck} size="xl" color="white" aria-hidden="true" />
               ) : node.type === 'current' ? (
-                <CIcon icon={node.icon} size="xl" color="white" />
+                <CIcon icon={node.icon} size="xl" color="white" aria-hidden="true" />
               ) : (
-                <CIcon icon={cilBan} size="xl" color="var(--cui-text-muted)" />
+                <CIcon icon={cilBan} size="xl" color="var(--cui-text-muted)" aria-hidden="true" />
               )}
             </div>
-            <div className="journey-node-label">{node.label}</div>
+            <div className="journey-node-label">
+              {node.label}
+              {/* El icono y el color de fondo eran el unico aviso de si el
+                  curso estaba completado, en curso o bloqueado. Con el icono
+                  oculto hace falta el estado en texto para no perderlo. */}
+              {NODE_STATE_LABEL[node.type] && (
+                <span className="visually-hidden">. {NODE_STATE_LABEL[node.type]}</span>
+              )}
+            </div>
             {node.sub && <div className="journey-node-sub">{node.sub}</div>}
             {node.type !== 'locked' && node.totalItems > 0 && (
               <div className="journey-node-sub">

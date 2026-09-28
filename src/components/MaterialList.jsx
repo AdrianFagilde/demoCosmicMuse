@@ -56,14 +56,15 @@ const MaterialRow = ({ material, readOnly, onDelete }) => {
         <span
           {...attributes}
           {...listeners}
+          aria-label={`Reordenar ${material.title}`}
           className="text-medium-emphasis"
           style={{ cursor: 'grab', touchAction: 'none' }}
         >
-          <CIcon icon={cilMenu} />
+          <CIcon icon={cilMenu} aria-hidden="true" />
         </span>
       )}
       <span className="text-medium-emphasis mt-1">
-        <CIcon icon={meta.icon} />
+        <CIcon icon={meta.icon} aria-hidden="true" />
       </span>
       <div className="flex-grow-1">
         <div className="fw-semibold d-flex align-items-center gap-2">
@@ -85,13 +86,29 @@ const MaterialRow = ({ material, readOnly, onDelete }) => {
         )}
       </div>
       {material.type === 'file' && (
-        <CButton size="sm" color="primary" variant="outline" onClick={handleDownload}>
+        <CButton
+          size="sm"
+          color="primary"
+          variant="outline"
+          onClick={handleDownload}
+          aria-label={
+            downloading
+              ? 'Descargando el archivo'
+              : `Descargar ${material.file_name || 'el archivo'}`
+          }
+        >
           {downloading ? <CSpinner size="sm" /> : 'Descargar'}
         </CButton>
       )}
       {!readOnly && onDelete && (
-        <CButton size="sm" color="danger" variant="outline" onClick={() => onDelete(material)}>
-          <CIcon icon={cilTrash} />
+        <CButton
+          size="sm"
+          color="danger"
+          variant="outline"
+          onClick={() => onDelete(material)}
+          aria-label={`Eliminar ${material.title}`}
+        >
+          <CIcon icon={cilTrash} aria-hidden="true" />
         </CButton>
       )}
     </div>

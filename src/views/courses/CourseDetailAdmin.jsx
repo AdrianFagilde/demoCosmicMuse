@@ -214,7 +214,7 @@ const CourseDetailAdmin = ({
   return (
     <>
       <CButton as={Link} to="/courses" color="secondary" variant="outline" className="mb-3">
-        <CIcon icon={cilArrowLeft} className="me-1" /> Volver a cursos
+        <CIcon icon={cilArrowLeft} className="me-1" aria-hidden="true" /> Volver a cursos
       </CButton>
 
       <CCard className="app-card mb-4">
@@ -235,7 +235,7 @@ const CourseDetailAdmin = ({
               setShowEditMeta(true)
             }}
           >
-            <CIcon icon={cilPencil} className="me-1" /> Editar curso
+            <CIcon icon={cilPencil} className="me-1" aria-hidden="true" /> Editar curso
           </CButton>
         </CCardHeader>
         <CCardBody>
@@ -312,7 +312,7 @@ const CourseDetailAdmin = ({
               aria-label="Título de la nueva tarea"
             />
             <CInputGroupText>
-              <CIcon icon={cilCalendar} size="sm" />
+              <CIcon icon={cilCalendar} size="sm" aria-hidden="true" />
             </CInputGroupText>
             <CFormInput
               className="task-due-date"
@@ -321,8 +321,14 @@ const CourseDetailAdmin = ({
               onChange={(e) => setNewTaskDueDate(e.target.value)}
               aria-label="Fecha de entrega (opcional)"
             />
-            <CButton type="button" color="primary" onClick={handleAddTask} disabled={addingTask}>
-              {addingTask ? <CSpinner size="sm" /> : <CIcon icon={cilPlus} />}
+            <CButton
+              type="button"
+              color="primary"
+              onClick={handleAddTask}
+              disabled={addingTask}
+              aria-label="Añadir la tarea"
+            >
+              {addingTask ? <CSpinner size="sm" /> : <CIcon icon={cilPlus} aria-hidden="true" />}
             </CButton>
           </CInputGroup>
         </CCardBody>
@@ -452,7 +458,7 @@ const CourseDetailAdmin = ({
             className="mt-3"
             onClick={() => setFormEditorTarget({ form: null, taskId: null, taskTitle: '' })}
           >
-            <CIcon icon={cilPlus} className="me-1" /> Nuevo cuestionario general
+            <CIcon icon={cilPlus} className="me-1" aria-hidden="true" /> Nuevo cuestionario general
           </CButton>
         </CCardBody>
       </CCard>

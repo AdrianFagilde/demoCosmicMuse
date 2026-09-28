@@ -25,7 +25,7 @@ const Notifications = () => {
           {unreadCount > 0 && <CBadge color="primary">{unreadCount} sin leer</CBadge>}
           {unreadCount > 0 && (
             <CButton color="link" size="sm" onClick={markAllAsRead}>
-              <CIcon icon={cilCheckAlt} className="me-1" /> Marcar todo leido
+              <CIcon icon={cilCheckAlt} className="me-1" aria-hidden="true" /> Marcar todo leído
             </CButton>
           )}
         </div>

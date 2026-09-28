@@ -5,7 +5,13 @@
 $cosmic-navy: #161a3c;
 $cosmic-purple: #712771;
 $cosmic-cyan: #16c1d6;
-$cosmic-magenta: #b42d75;
+// Variantes oscurecidas para superficies con texto blanco. El tono original
+// queda por debajo de 7:1 en su extremo claro (#b42d75 = 5.88:1, #16c1d6 = 2.18:1)
+// y por eso el texto blanco sobre el gradiente no alcanzaba ni AA.
+$cosmic-magenta: #9f2867;
+$cosmic-cyan-dark: #0b616c;
+$cosmic-purple-light: #88388c;
+$cosmic-magenta-light: #a12666;
 
 @use '@coreui/coreui/scss/coreui' as * with (
   $enable-deprecation-messages: false,
@@ -83,6 +89,48 @@ $cosmic-magenta: #b42d75;
   // Medidas de lectura. El texto largo sin medida se vuelve ilegible.
   --measure-legal: 68ch;
   --measure-form: 34rem;
+
+  // Contraste de texto (WCAG AAA >= 7:1). Los valores base de CoreUI usan
+  // rgba(37, 42.92, 54.02, 0.681) y dan solo 5.08:1 sobre blanco, asi que
+  // --cui-secondary-color / --cui-medium-emphasis / --cui-tertiary-color se
+  // sustituyen por grises solidos medidos en cada tema.
+  --app-text-muted: #414650; // 9.47:1 sobre blanco, 8.63:1 sobre #f4f4f7, 8.05:1 sobre #ececf1
+  --app-text-secondary: #454a54; // 8.90:1 sobre blanco, 8.10:1 sobre #f4f4f7, 7.56:1 sobre #ececf1
+  --app-text-on-brand: #ffffff; // unico tono que alcanza AAA sobre los gradientes
+  --cui-secondary-color: var(--app-text-muted);
+  --cui-medium-emphasis: var(--app-text-muted);
+  --cui-tertiary-color: var(--app-text-secondary);
+
+  // Colores de estado como texto. Los de CoreUI fallan AAA como texto claro:
+  // info daba 1.85:1, warning 1.57:1, success 2.97:1, danger 6.00:1. Estos son
+  // los tonos mas claros de cada matiz que aun dan 7:1 sobre los tres fondos
+  // claros que usa la app (#fff, #f4f4f7, #ececf1). Las utilidades .text-*
+  // leen el triple -rgb, asi que hay que redefinirlo tambien.
+  --cui-danger: #8d235b; // 7.07:1
+  --cui-danger-rgb: 141, 35, 91;
+  --cui-info: #0a565f; // 7.11:1
+  --cui-info-rgb: 10, 86, 95;
+  --cui-success: #105b24; // 7.01:1
+  --cui-success-rgb: 16, 91, 36;
+  --cui-warning: #684803; // 7.09:1
+  --cui-warning-rgb: 104, 72, 3;
+}
+
+// AAA sobre fondo oscuro: los grises suben de luminosidad y los colores de
+// estado tambien, porque sobre $cosmic-navy (#161a3c) primary daba 1.79:1,
+// danger 2.38:1 y success 4.82:1. Info y warning ya pasaban y no se tocan.
+[data-coreui-theme='dark'] {
+  --app-text-muted: #dfe2e8; // 11.67:1 sobre #212631, 12.97:1 sobre #161a3c
+  --app-text-secondary: #aeb2bf; // 7.16:1 sobre #212631, 7.95:1 sobre #161a3c
+  --cui-secondary-color: var(--app-text-muted);
+  --cui-medium-emphasis: var(--app-text-muted);
+  --cui-tertiary-color: var(--app-text-secondary);
+  --cui-primary: #d88fd8; // 7.09:1
+  --cui-primary-rgb: 216, 143, 216;
+  --cui-danger: #e28dba; // 7.02:1
+  --cui-danger-rgb: 226, 141, 186;
+  --cui-success: #21c24c; // 7.13:1
+  --cui-success-rgb: 33, 194, 76;
 }
 
 // =============================================
@@ -534,12 +582,14 @@ h6,
   --cui-sidebar-bg: var(--uniform-primary-bg);
   --cui-sidebar-color: #ffffff;
   --cui-sidebar-brand-bg: rgba(255, 255, 255, 0.06);
-  --cui-sidebar-nav-link-color: rgba(255, 255, 255, 0.78);
+  // 0.78 daba 6.37:1 contra el extremo claro del gradiente (#712771), por debajo
+  // de 7:1. 0.87 da 7.52:1. Los titulos estaban en 0.55 (4.42:1).
+  --cui-sidebar-nav-link-color: rgba(255, 255, 255, 0.87);
   --cui-sidebar-nav-link-hover-color: #ffffff;
   --cui-sidebar-nav-link-hover-bg: rgba(255, 255, 255, 0.07);
   --cui-sidebar-nav-link-active-color: #ffffff;
   --cui-sidebar-nav-link-active-bg: rgba(255, 255, 255, 0.14);
-  --cui-sidebar-nav-title-color: rgba(255, 255, 255, 0.55);
+  --cui-sidebar-nav-title-color: rgba(255, 255, 255, 0.87);
   --cui-sidebar-toggler-bg: rgba(255, 255, 255, 0.1);
 }
 
@@ -567,7 +617,8 @@ h6,
 
 .sidebar-user-role {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  // Era rgba(255, 255, 255, 0.6) = 4.42:1 sobre el extremo claro del gradiente.
+  color: rgba(255, 255, 255, 0.87);
 }
 
 .sidebar-narrow,
@@ -662,13 +713,20 @@ h6,
     inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 
   .kpi-label {
-    color: rgba(255, 255, 255, 0.8);
+    color: #ffffff;
     font-size: 0.875rem;
   }
 
   .kpi-subtext {
-    color: rgba(255, 255, 255, 0.72);
+    color: #ffffff;
     font-size: 0.8125rem;
+  }
+
+  // La jerarquia se marca con tamano y peso, no con opacidad: sobre un gradiente
+  // de marca cualquier blanco translucido baja de 7:1.
+  .kpi-label,
+  .kpi-subtext {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
   }
 
   .kpi-icon {
@@ -679,15 +737,16 @@ h6,
 }
 
 .kpi-card--purple {
-  background: linear-gradient(135deg, #{$cosmic-purple} 0%, #9a3f9e 100%);
+  background: linear-gradient(135deg, #{$cosmic-purple} 0%, #{$cosmic-purple-light} 100%);
 }
 
 .kpi-card--cyan {
-  background: linear-gradient(135deg, #0f97ab 0%, #{$cosmic-cyan} 100%);
+  // Los dos extremos pasan AAA: el original #0f97ab daba 3.48:1 y #16c1d6 2.18:1.
+  background: linear-gradient(135deg, #064a55 0%, #{$cosmic-cyan-dark} 100%);
 }
 
 .kpi-card--magenta {
-  background: linear-gradient(135deg, #{$cosmic-magenta} 0%, #d44a92 100%);
+  background: linear-gradient(135deg, #{$cosmic-magenta} 0%, #{$cosmic-magenta-light} 100%);
 }
 
 .kpi-card--navy {
@@ -706,7 +765,7 @@ h6,
   }
 
   .welcome-text {
-    color: rgba(255, 255, 255, 0.82);
+    color: #ffffff;
     margin-bottom: 0;
   }
 }

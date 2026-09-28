@@ -71,7 +71,7 @@ const PaymentHistory = ({ payments, onViewProof }) => {
                           disabled={loadingProofId === payment.id}
                           onClick={() => handleViewProof(payment)}
                         >
-                          <CIcon icon={cilExternalLink} className="me-1" />
+                          <CIcon icon={cilExternalLink} className="me-1" aria-hidden="true" />
                           {loadingProofId === payment.id
                             ? 'Abriendo...'
                             : payment.proof_name || 'Ver comprobante'}

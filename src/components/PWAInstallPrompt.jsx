@@ -94,13 +94,18 @@ const PWAInstallPrompt = () => {
       <CModal visible={showPrompt} onClose={handleDismiss} centered>
         <CModalHeader closeButton>
           <CModalTitle className="d-flex align-items-center gap-2">
-            <CIcon icon={cilMobile} className="text-primary" />
+            <CIcon icon={cilMobile} className="text-primary" aria-hidden="true" />
             Instalar Cosmic Muse
           </CModalTitle>
         </CModalHeader>
         <CModalBody>
           <div className="text-center py-3">
-            <CIcon icon={cilCloudDownload} size="xl" className="text-primary mb-3" />
+            <CIcon
+              icon={cilCloudDownload}
+              size="xl"
+              className="text-primary mb-3"
+              aria-hidden="true"
+            />
             <h5>Instalar en iOS</h5>
             <p className="text-medium-emphasis small mb-4">
               Para instalar la app en tu iPhone o iPad:
@@ -109,8 +114,8 @@ const PWAInstallPrompt = () => {
               <ol className="mb-0">
                 <li className="mb-2">
                   Toca el botón <strong>Compartir</strong>{' '}
-                  <CIcon icon={cilCloudDownload} size="sm" className="ms-1" /> en la barra de
-                  navegación
+                  <CIcon icon={cilCloudDownload} size="sm" className="ms-1" aria-hidden="true" /> en
+                  la barra de navegación
                 </li>
                 <li className="mb-2">
                   Desplázate hacia abajo y selecciona <strong>"Añadir a pantalla de inicio"</strong>
@@ -124,7 +129,7 @@ const PWAInstallPrompt = () => {
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" variant="outline" onClick={handleDismiss}>
-            <CIcon icon={cilX} className="me-1" />
+            <CIcon icon={cilX} className="me-1" aria-hidden="true" />
             Entendido
           </CButton>
         </CModalFooter>
@@ -137,12 +142,12 @@ const PWAInstallPrompt = () => {
     <CModal visible={showPrompt} onClose={handleDismiss} centered>
       <CModalHeader closeButton>
         <CModalTitle className="d-flex align-items-center gap-2">
-          <CIcon icon={cilCloudDownload} className="text-primary" />
+          <CIcon icon={cilCloudDownload} className="text-primary" aria-hidden="true" />
           Instalar Cosmic Muse
         </CModalTitle>
       </CModalHeader>
       <CModalBody className="text-center py-3">
-        <CIcon icon={cilCloudDownload} size="xl" className="text-primary mb-3" />
+        <CIcon icon={cilCloudDownload} size="xl" className="text-primary mb-3" aria-hidden="true" />
         <h5>¿Quieres instalar la app?</h5>
         <p className="text-medium-emphasis small mb-4">
           Accede más rápido, funciona offline y recibe notificaciones push.
@@ -150,11 +155,11 @@ const PWAInstallPrompt = () => {
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" variant="outline" onClick={handleDismiss}>
-          <CIcon icon={cilX} className="me-1" />
+          <CIcon icon={cilX} className="me-1" aria-hidden="true" />
           Ahora no
         </CButton>
         <CButton color="primary" onClick={handleInstall}>
-          <CIcon icon={cilCloudDownload} className="me-1" />
+          <CIcon icon={cilCloudDownload} className="me-1" aria-hidden="true" />
           Instalar
         </CButton>
       </CModalFooter>

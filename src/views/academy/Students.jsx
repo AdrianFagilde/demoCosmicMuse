@@ -125,7 +125,8 @@ const Students = () => {
                 {students.filter((s) => s.status === 'Activo').length}
               </div>
               <div className="text-body-secondary mt-2 d-flex align-items-center">
-                <CIcon icon={cilPeople} className="me-2" /> Total registrado: {students.length}
+                <CIcon icon={cilPeople} className="me-2" aria-hidden="true" /> Total registrado:{' '}
+                {students.length}
               </div>
             </CCardBody>
           </CCard>
@@ -137,7 +138,7 @@ const Students = () => {
           <div className="d-flex align-items-center gap-3">
             <span className="text-medium-emphasis small">{filtered.length} resultado(s)</span>
             <CButton color="primary" size="sm" onClick={openCreate}>
-              <CIcon icon={cilPlus} className="me-1" /> Agregar estudiante
+              <CIcon icon={cilPlus} className="me-1" aria-hidden="true" /> Agregar estudiante
             </CButton>
           </div>
         </CCardHeader>
@@ -149,7 +150,7 @@ const Students = () => {
                 placeholder="Buscar por nombre, instrumento o profesor..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                prepend={<CIcon icon={cilSearch} />}
+                prepend={<CIcon icon={cilSearch} aria-hidden="true" />}
               />
             </CCol>
             <CCol md={4} sm={12}>

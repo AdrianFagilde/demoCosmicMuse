@@ -212,8 +212,8 @@ const SendNotifications = () => {
 
               <div className="text-end">
                 <CButton color="primary" onClick={handleSend} disabled={sending}>
-                  <CIcon icon={cilSend} className="me-1" />
-                  {sending ? 'Enviando...' : 'Enviar notificacion'}
+                  <CIcon icon={cilSend} className="me-1" aria-hidden="true" />
+                  {sending ? 'Enviando...' : 'Enviar notificación'}
                 </CButton>
               </div>
             </CCardBody>

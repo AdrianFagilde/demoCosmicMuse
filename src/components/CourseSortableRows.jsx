@@ -37,7 +37,7 @@ export const SortableTaskRow = ({
     <CCard ref={setNodeRef} style={baseStyle(transform, transition, isDragging)} className="mb-2">
       <CCardBody className="d-flex align-items-center gap-2 py-2 sortable-row">
         <span {...dragHandleProps(attributes, listeners, `Reordenar ${task.title}`)}>
-          <CIcon icon={cilMenu} />
+          <CIcon icon={cilMenu} aria-hidden="true" />
         </span>
         <div className="flex-grow-1 sortable-row-label">
           <LinkifiedText className="fw-semibold" text={task.title} />
@@ -60,15 +60,27 @@ export const SortableTaskRow = ({
           </>
         ) : (
           <CButton size="sm" color="primary" variant="outline" onClick={onAddForm}>
-            <CIcon icon={cilPlus} className="me-1" /> Formulario
+            <CIcon icon={cilPlus} className="me-1" aria-hidden="true" /> Formulario
           </CButton>
         )}
         {task.due_date && <CBadge color="warning text-dark">Entrega: {task.due_date}</CBadge>}
-        <CButton size="sm" color="primary" variant="outline" onClick={() => onEdit(task)}>
-          <CIcon icon={cilPencil} />
+        <CButton
+          size="sm"
+          color="primary"
+          variant="outline"
+          onClick={() => onEdit(task)}
+          aria-label={`Editar ${task.title}`}
+        >
+          <CIcon icon={cilPencil} aria-hidden="true" />
         </CButton>
-        <CButton size="sm" color="danger" variant="outline" onClick={() => onDelete(task.id)}>
-          <CIcon icon={cilTrash} />
+        <CButton
+          size="sm"
+          color="danger"
+          variant="outline"
+          onClick={() => onDelete(task.id)}
+          aria-label={`Eliminar ${task.title}`}
+        >
+          <CIcon icon={cilTrash} aria-hidden="true" />
         </CButton>
       </CCardBody>
     </CCard>
@@ -83,7 +95,7 @@ export const SortableFormRow = ({ form, taskLabel, onEdit, onViewResponses, onDe
     <CCard ref={setNodeRef} style={baseStyle(transform, transition, isDragging)} className="mb-2">
       <CCardBody className="d-flex align-items-center gap-3 py-2 sortable-row">
         <span {...dragHandleProps(attributes, listeners, `Reordenar ${form.title}`)}>
-          <CIcon icon={cilMenu} />
+          <CIcon icon={cilMenu} aria-hidden="true" />
         </span>
         <div className="flex-grow-1 sortable-row-label">
           <div className="fw-semibold">{form.title}</div>
@@ -95,11 +107,23 @@ export const SortableFormRow = ({ form, taskLabel, onEdit, onViewResponses, onDe
         <CButton size="sm" color="primary" variant="outline" onClick={onViewResponses}>
           Respuestas
         </CButton>
-        <CButton size="sm" color="primary" variant="outline" onClick={onEdit}>
-          <CIcon icon={cilPencil} />
+        <CButton
+          size="sm"
+          color="primary"
+          variant="outline"
+          onClick={onEdit}
+          aria-label={`Editar ${form.title}`}
+        >
+          <CIcon icon={cilPencil} aria-hidden="true" />
         </CButton>
-        <CButton size="sm" color="danger" variant="outline" onClick={onDelete}>
-          <CIcon icon={cilTrash} />
+        <CButton
+          size="sm"
+          color="danger"
+          variant="outline"
+          onClick={onDelete}
+          aria-label={`Eliminar ${form.title}`}
+        >
+          <CIcon icon={cilTrash} aria-hidden="true" />
         </CButton>
       </CCardBody>
     </CCard>
@@ -122,7 +146,7 @@ export const StudentSortableChecklistItem = ({ item, checked, onChange, disabled
             no se renderiza y useSortable queda deshabilitado. */}
         {!disabled && (
           <span {...dragHandleProps(attributes, listeners, `Reordenar ${item.label}`)}>
-            <CIcon icon={cilMenu} />
+            <CIcon icon={cilMenu} aria-hidden="true" />
           </span>
         )}
         <CFormCheck

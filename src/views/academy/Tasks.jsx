@@ -478,7 +478,7 @@ const Tasks = () => {
             {!isAdmin && (
               <CInputGroup size="sm" style={{ minWidth: 250 }}>
                 <CInputGroupText>
-                  <CIcon icon={cilFilter} />
+                  <CIcon icon={cilFilter} aria-hidden="true" />
                 </CInputGroupText>
                 <CFormInput
                   type="text"
@@ -634,7 +634,7 @@ const Tasks = () => {
                               size="sm"
                               onClick={() => handleStatusChange(task.id, 'En progreso')}
                             >
-                              <CIcon icon={cilPencil} className="me-1" />
+                              <CIcon icon={cilPencil} className="me-1" aria-hidden="true" />
                               En progreso
                             </CButton>
                             <CButton
@@ -642,11 +642,11 @@ const Tasks = () => {
                               size="sm"
                               onClick={() => handleStatusChange(task.id, 'Completado')}
                             >
-                              <CIcon icon={cilCheckCircle} className="me-1" />
+                              <CIcon icon={cilCheckCircle} className="me-1" aria-hidden="true" />
                               Completar
                             </CButton>
                             <CButton color="danger" size="sm" onClick={() => handleDelete(task.id)}>
-                              <CIcon icon={cilTrash} className="me-1" />
+                              <CIcon icon={cilTrash} className="me-1" aria-hidden="true" />
                               Eliminar
                             </CButton>
                           </div>

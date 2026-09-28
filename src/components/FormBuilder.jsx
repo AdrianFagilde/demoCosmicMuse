@@ -64,10 +64,11 @@ const SortableQuestionCard = ({ question, index, onChange, onDelete }) => {
           <span
             {...attributes}
             {...listeners}
+            aria-label={`Reordenar ${question.question_text || `pregunta ${index + 1}`}`}
             className="text-medium-emphasis mt-2"
             style={{ cursor: 'grab', touchAction: 'none' }}
           >
-            <CIcon icon={cilMenu} />
+            <CIcon icon={cilMenu} aria-hidden="true" />
           </span>
           <div className="flex-grow-1">
             <CRow className="g-2 mb-2">
@@ -114,15 +115,16 @@ const SortableQuestionCard = ({ question, index, onChange, onDelete }) => {
                           color="danger"
                           variant="outline"
                           onClick={() => removeOption(optionIndex)}
+                          aria-label={`Eliminar la opción ${optionIndex + 1}`}
                         >
-                          <CIcon icon={cilTrash} />
+                          <CIcon icon={cilTrash} aria-hidden="true" />
                         </CButton>
                       </CInputGroup>
                     </CListGroupItem>
                   ))}
                 </CListGroup>
                 <CButton size="sm" color="primary" variant="outline" onClick={addOption}>
-                  <CIcon icon={cilPlus} className="me-1" /> Agregar opción
+                  <CIcon icon={cilPlus} className="me-1" aria-hidden="true" /> Agregar opción
                 </CButton>
               </>
             )}
@@ -137,8 +139,14 @@ const SortableQuestionCard = ({ question, index, onChange, onDelete }) => {
               />
             </div>
           </div>
-          <CButton size="sm" color="danger" variant="outline" onClick={() => onDelete(question.id)}>
-            <CIcon icon={cilTrash} />
+          <CButton
+            size="sm"
+            color="danger"
+            variant="outline"
+            onClick={() => onDelete(question.id)}
+            aria-label={`Eliminar la pregunta ${index + 1}`}
+          >
+            <CIcon icon={cilTrash} aria-hidden="true" />
           </CButton>
         </div>
       </CCardBody>

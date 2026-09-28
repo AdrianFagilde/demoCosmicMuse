@@ -176,14 +176,14 @@ const MyProfile = () => {
       <CRow className="mb-4">
         <CCol md={4} className="mb-3">
           <CCard className="app-card">
-            <CCardHeader>Mi informacion</CCardHeader>
+            <CCardHeader>Mi información</CCardHeader>
             <CCardBody>
               <div className="d-flex flex-column align-items-center text-center mb-3">
                 <div className="position-relative mb-3">
                   {currentAvatar ? (
-                    <CAvatar src={currentAvatar} size="xl" />
+                    <CAvatar src={currentAvatar} size="xl" aria-hidden="true" />
                   ) : (
-                    <CAvatar color="primary" size="xl">
+                    <CAvatar color="primary" size="xl" aria-hidden="true">
                       {profile.full_name
                         .split(' ')
                         .map((word) => word[0])
@@ -217,13 +217,23 @@ const MyProfile = () => {
             <CCardBody>
               <div className="d-flex align-items-center gap-3">
                 {currentAvatar ? (
-                  <CAvatar src={currentAvatar} size="lg" style={{ flexShrink: 0 }} />
+                  <CAvatar
+                    src={currentAvatar}
+                    size="lg"
+                    style={{ flexShrink: 0 }}
+                    aria-hidden="true"
+                  />
                 ) : (
                   <div
                     className="rounded-circle d-flex align-items-center justify-content-center bg-body-secondary overflow-hidden"
                     style={{ width: '72px', height: '72px', flexShrink: 0 }}
                   >
-                    <CIcon icon={cilUser} size="xl" className="text-body-secondary" />
+                    <CIcon
+                      icon={cilUser}
+                      size="xl"
+                      className="text-body-secondary"
+                      aria-hidden="true"
+                    />
                   </div>
                 )}
                 <div>
@@ -241,10 +251,10 @@ const MyProfile = () => {
                     htmlFor="avatarUpload"
                     style={{ cursor: 'pointer' }}
                   >
-                    <CIcon icon={cilCamera} className="me-1" />
+                    <CIcon icon={cilCamera} className="me-1" aria-hidden="true" />
                     Seleccionar foto
                   </CButton>
-                  <div className="text-body-secondary small mt-1">JPG, PNG o WebP. Max 2 MB.</div>
+                  <div className="text-body-secondary small mt-1">JPG, PNG o WebP. Máx 2 MB.</div>
                 </div>
                 {avatarFile && (
                   <CButton

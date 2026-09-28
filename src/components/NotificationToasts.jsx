@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
+import { CCloseButton, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
 import { cilBell } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
@@ -103,10 +103,18 @@ const NotificationToasts = () => {
     <CToaster placement="top-end" role="status" aria-live="polite" aria-atomic="false">
       {toasts.map((toast) => (
         <CToast key={toast.key} autohide delay={toast.delay} onClose={() => removeToast(toast.key)}>
-          <CToastHeader closeButton>
-            <CIcon icon={cilBell} className="text-primary me-2" />
+          {/* closeButton traía un CToastClose sin opciones, que hereda el
+              aria-label "Close" en inglés de CCloseButton y no se puede
+              sobrescribir desde CToastHeader. Se pone el cierre a mano. */}
+          <CToastHeader>
+            <CIcon icon={cilBell} className="text-primary me-2" aria-hidden="true" />
             <strong className="me-auto">{toast.title}</strong>
             <small className="text-body-secondary">{toast.meta}</small>
+            <CCloseButton
+              className="ms-2"
+              onClick={() => removeToast(toast.key)}
+              aria-label="Cerrar la notificación"
+            />
           </CToastHeader>
           {toast.notificationId ? (
             // role="button" sin tabIndex ni onKeyDown dejaba el cuerpo del

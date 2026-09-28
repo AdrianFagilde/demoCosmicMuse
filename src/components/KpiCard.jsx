@@ -11,7 +11,7 @@ const KpiCard = ({ color = 'purple', label, value, subtext, icon, md = 3, sm = 6
           <div className="fs-3 fw-semibold">{value}</div>
           <div className="kpi-subtext mt-2">{subtext}</div>
         </div>
-        {icon && <CIcon icon={icon} customClassName="kpi-icon" />}
+        {icon && <CIcon icon={icon} customClassName="kpi-icon" aria-hidden="true" />}
       </CCardBody>
     </CCard>
   </CCol>

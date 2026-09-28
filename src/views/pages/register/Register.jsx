@@ -205,7 +205,7 @@ const Register = () => {
                     {success && <CAlert color="success">{success}</CAlert>}
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilUser} />
+                        <CIcon icon={cilUser} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormInput
                         type="text"
@@ -218,7 +218,7 @@ const Register = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilUser} />
+                        <CIcon icon={cilUser} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormInput
                         type="date"
@@ -231,7 +231,7 @@ const Register = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilEnvelopeClosed} />
+                        <CIcon icon={cilEnvelopeClosed} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormInput
                         type="email"
@@ -244,7 +244,7 @@ const Register = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilPhone} />
+                        <CIcon icon={cilPhone} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormInput
                         type="tel"
@@ -257,7 +257,7 @@ const Register = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
+                        <CIcon icon={cilLockLocked} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormInput
                         type="password"
@@ -271,7 +271,7 @@ const Register = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
+                        <CIcon icon={cilLockLocked} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormInput
                         type="password"
@@ -285,7 +285,7 @@ const Register = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
-                        <CIcon icon={cilEducation} />
+                        <CIcon icon={cilEducation} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormSelect
                         value={instrument}
@@ -301,7 +301,7 @@ const Register = () => {
                     </CInputGroup>
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
-                        <CIcon icon={cilStar} />
+                        <CIcon icon={cilStar} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormSelect value={level} onChange={(e) => setLevel(e.target.value)}>
                         <option value="">Nivel (opcional)</option>
@@ -313,7 +313,7 @@ const Register = () => {
 
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
-                        <CIcon icon={cilStar} />
+                        <CIcon icon={cilStar} aria-hidden="true" />
                       </CInputGroupText>
                       <CFormSelect value={level} onChange={(e) => setLevel(e.target.value)}>
                         <option value="">Nivel (opcional)</option>
@@ -331,7 +331,7 @@ const Register = () => {
                         </h6>
                         <CInputGroup className="mb-3">
                           <CInputGroupText>
-                            <CIcon icon={cilUser} />
+                            <CIcon icon={cilUser} aria-hidden="true" />
                           </CInputGroupText>
                           <CFormInput
                             type="text"
@@ -343,7 +343,7 @@ const Register = () => {
                         </CInputGroup>
                         <CInputGroup className="mb-3">
                           <CInputGroupText>
-                            <CIcon icon={cilUser} />
+                            <CIcon icon={cilUser} aria-hidden="true" />
                           </CInputGroupText>
                           <CFormInput
                             type="text"
@@ -355,7 +355,7 @@ const Register = () => {
                         </CInputGroup>
                         <CInputGroup className="mb-4">
                           <CInputGroupText>
-                            <CIcon icon={cilPhone} />
+                            <CIcon icon={cilPhone} aria-hidden="true" />
                           </CInputGroupText>
                           <CFormInput
                             type="tel"
