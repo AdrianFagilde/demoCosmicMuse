@@ -275,13 +275,15 @@ h6,
 }
 
 // =============================================
-// Artistic - Ornamental fine frames (same palette)
+// Ornamento: opt-in (regla 3 del estándar)
+//
+// El marco de esquinas se aplica a .kpi-card y a las piezas de marca con arte
+// propio. Ya no a "toda tarjeta salvo estas seis", que obligaba a mantener una
+// lista de excepciones a mano y convertía cada superficie nueva en un caso
+// especial. Un modal o una tarjeta de contenido corriente no llevan adorno.
 // =============================================
 
-.card:not(.welcome-banner):not(.streak-card):not(.xp-card):not(.practice-card):not(.tasks-card):not(
-    .next-lesson-card
-  ),
-.modal-content {
+.kpi-card {
   position: relative;
 
   &::before,
@@ -291,7 +293,7 @@ h6,
     width: 18px;
     height: 18px;
     pointer-events: none;
-    border: 0 solid rgba($cosmic-purple, 0.65);
+    border: 0 solid rgba(255, 255, 255, 0.7);
   }
 
   &::before {
@@ -302,8 +304,8 @@ h6,
     border-top-left-radius: 2px;
     background: radial-gradient(
       circle at 2px 2px,
-      rgba($cosmic-purple, 0.8) 0 1.5px,
-      rgba($cosmic-purple, 0.35) 1.5px 2.5px,
+      rgba(255, 255, 255, 0.85) 0 1.5px,
+      rgba(255, 255, 255, 0.35) 1.5px 2.5px,
       transparent 3px
     );
   }
@@ -316,42 +318,19 @@ h6,
     border-bottom-right-radius: 2px;
     background: radial-gradient(
       circle at 16px 16px,
-      rgba($cosmic-purple, 0.8) 0 1.5px,
-      rgba($cosmic-purple, 0.35) 1.5px 2.5px,
+      rgba(255, 255, 255, 0.85) 0 1.5px,
+      rgba(255, 255, 255, 0.35) 1.5px 2.5px,
       transparent 3px
     );
   }
 }
 
+// Acento de marca del modal: un anillo fino de 1px. No forma parte del sistema
+// de marcos de esquina, asi que sobrevive a la regla 3.
 .modal-content {
   box-shadow:
     var(--cui-modal-box-shadow, 0 0.25rem 0.75rem rgba(0, 0, 0, 0.5)),
     inset 0 0 0 1px rgba($cosmic-purple, 0.18);
-}
-
-.kpi-card {
-  &::before,
-  &::after {
-    border-color: rgba(255, 255, 255, 0.7);
-  }
-
-  &::before {
-    background: radial-gradient(
-      circle at 2px 2px,
-      rgba(255, 255, 255, 0.85) 0 1.5px,
-      rgba(255, 255, 255, 0.35) 1.5px 2.5px,
-      transparent 3px
-    );
-  }
-
-  &::after {
-    background: radial-gradient(
-      circle at 16px 16px,
-      rgba(255, 255, 255, 0.85) 0 1.5px,
-      rgba(255, 255, 255, 0.35) 1.5px 2.5px,
-      transparent 3px
-    );
-  }
 }
 
 // =============================================
