@@ -22,7 +22,12 @@ const Tasks = React.lazy(() => import('./views/academy/Tasks'))
 const TaskDetail = React.lazy(() => import('./views/academy/TaskDetail'))
 const Courses = React.lazy(() => import('./views/courses/Courses'))
 const CourseDetail = React.lazy(() => import('./views/courses/CourseDetail'))
-const CourseFormFill = React.lazy(() => import('./views/courses/CourseDetail'))
+// OJO: esta ruta NO es el shell de CourseDetail. Es su propio componente, que
+// lee { courseId, formId } de useParams(). Durante un tiempo apuntaba a
+// CourseDetail, que solo lee `id`, asi que el parametro le llegaba undefined y
+// la consulta salia como id=eq.undefined con un 400 de Postgres. CourseDetail
+// se queda en /courses/:id, que es su unica ruta.
+const CourseFormFill = React.lazy(() => import('./views/courses/CourseFormFill'))
 const MyProfile = React.lazy(() => import('./views/academy/MyProfile'))
 const Payments = React.lazy(() => import('./views/academy/Payments'))
 const Lessons = React.lazy(() => import('./views/academy/Lessons'))

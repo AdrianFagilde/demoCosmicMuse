@@ -280,7 +280,7 @@ const CourseFormFill = () => {
         >
           Volver al curso
         </CButton>
-        <CCard className="border-danger">
+        <CCard className="app-card app-card-bordered app-card-danger">
           <CCardBody className="text-danger">{loadError}</CCardBody>
         </CCard>
       </>
@@ -299,7 +299,7 @@ const CourseFormFill = () => {
         ← Volver al curso
       </CButton>
 
-      <CCard className="mb-4">
+      <CCard className="app-card mb-4">
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <span className="fw-bold">{form.title}</span>
           {savedAt ? (
@@ -325,7 +325,7 @@ const CourseFormFill = () => {
         </CCardBody>
       </CCard>
 
-      <CCard>
+      <CCard className="app-card">
         <CCardBody>
           <CForm onSubmit={handleSubmit}>
             {sortedQuestions.map((question, index) => (

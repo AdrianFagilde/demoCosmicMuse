@@ -38,6 +38,16 @@ const useSupabaseCourses = () => {
   }, [fetchCourses])
 
   const fetchCourseDetail = useCallback(async (courseId) => {
+    // Sin id la consulta sale literalmente como id=eq.undefined y Postgres
+    // responde 400 con un 22P02 ("invalid input syntax for type uuid") que no
+    // le dice nada al usuario. Se corta antes de tocar la red: una URL mal
+    // escrita no es un fallo de base de datos.
+    if (!courseId) {
+      return {
+        detail: null,
+        error: { message: 'La dirección no incluye el identificador del curso.' },
+      }
+    }
     const { data, error: fetchError } = await supabase
       .from('courses')
       .select(
