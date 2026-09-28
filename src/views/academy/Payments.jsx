@@ -110,29 +110,31 @@ const Payments = () => {
             <CCard className="app-card">
               <CCardHeader>Saldo por estudiante</CCardHeader>
               <CCardBody>
-                <table className="table table-borderless mb-0">
-                  <thead>
-                    <tr>
-                      <th>Estudiante</th>
-                      <th>Total pagado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {studentBalances.length === 0 && (
+                <div className="table-responsive">
+                  <table className="table table-borderless mb-0">
+                    <thead>
                       <tr>
-                        <td colSpan={2} className="text-center text-body-secondary py-4">
-                          No hay estudiantes registrados.
-                        </td>
+                        <th>Estudiante</th>
+                        <th>Total pagado</th>
                       </tr>
-                    )}
-                    {studentBalances.map((student) => (
-                      <tr key={student.id}>
-                        <td>{student.name}</td>
-                        <td>${student.totalPaid.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {studentBalances.length === 0 && (
+                        <tr>
+                          <td colSpan={2} className="text-center text-body-secondary py-4">
+                            No hay estudiantes registrados.
+                          </td>
+                        </tr>
+                      )}
+                      {studentBalances.map((student) => (
+                        <tr key={student.id}>
+                          <td>{student.name}</td>
+                          <td>${student.totalPaid.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </CCardBody>
             </CCard>
           </CCol>

@@ -273,6 +273,13 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
+/* `min-w-0` is a Bootstrap utility that CoreUI does not ship. Without a real
+   min-width: 0 the flex item keeps min-width: auto and its truncated children
+   push long task titles past the viewport. */
+.action-card-body {
+  min-width: 0;
+}
+
 .action-card.urgent-overdue {
   border-left: 3px solid #ef4444;
 }

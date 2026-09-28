@@ -445,7 +445,7 @@ const Register = () => {
                 </CCardBody>
               </CCard>
               <CCard
-                className="text-white bg-primary py-5 login-side-panel"
+                className="text-white bg-primary py-5 login-side-panel d-none d-lg-flex"
                 style={{ width: '44%' }}
               >
                 <CCardBody className="text-center">

@@ -591,39 +591,41 @@ const Dashboard = () => {
                   ? 'Tus tareas, incluidas las de los cursos en los que estás inscrito.'
                   : 'Las últimas tareas registradas en la academia.'}
               </div>
-              <table className="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Título</th>
-                    <th>{isStudent ? 'Curso' : 'Estudiante'}</th>
-                    <th>Entrega</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTasks.map((task) => (
-                    <tr key={task.id}>
-                      <td>{task.title}</td>
-                      <td>
-                        {isStudent ? task.course?.title || '—' : task.profiles?.full_name || '—'}
-                      </td>
-                      <td>{task.due_date || '—'}</td>
-                      <td>
-                        {isCourseTask(task)
-                          ? `${task.checklist_completed ?? 0}/${task.checklist_total ?? 0} checklist`
-                          : task.status}
-                      </td>
-                    </tr>
-                  ))}
-                  {recentTasks.length === 0 && (
+              <div className="table-responsive">
+                <table className="table table-striped">
+                  <thead>
                     <tr>
-                      <td colSpan={4} className="text-center text-medium-emphasis">
-                        No hay tareas registradas todavía.
-                      </td>
+                      <th>Título</th>
+                      <th>{isStudent ? 'Curso' : 'Estudiante'}</th>
+                      <th>Entrega</th>
+                      <th>Estado</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {recentTasks.map((task) => (
+                      <tr key={task.id}>
+                        <td>{task.title}</td>
+                        <td>
+                          {isStudent ? task.course?.title || '—' : task.profiles?.full_name || '—'}
+                        </td>
+                        <td>{task.due_date || '—'}</td>
+                        <td>
+                          {isCourseTask(task)
+                            ? `${task.checklist_completed ?? 0}/${task.checklist_total ?? 0} checklist`
+                            : task.status}
+                        </td>
+                      </tr>
+                    ))}
+                    {recentTasks.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="text-center text-medium-emphasis">
+                          No hay tareas registradas todavía.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </CCardBody>
           </CCard>
         </CCol>

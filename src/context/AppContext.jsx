@@ -3,7 +3,9 @@ import React, { createContext, useCallback, useContext, useState } from 'react'
 const AppContext = createContext(null)
 
 export const AppProvider = ({ children }) => {
-  const [sidebarShow, setSidebarShow] = useState(true)
+  // CoreUI renders the sidebar as a full-screen fixed overlay below 992px,
+  // so it must start hidden or it covers the content on every mobile load.
+  const [sidebarShow, setSidebarShow] = useState(false)
   const [sidebarUnfoldable, setSidebarUnfoldable] = useState(false)
 
   const toggleSidebar = useCallback(() => {

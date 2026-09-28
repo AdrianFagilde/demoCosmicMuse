@@ -44,7 +44,7 @@ const ActionCard = ({ task, onClick }) => {
         <div className="action-icon">
           <CIcon icon={cilMusicNote} size="lg" />
         </div>
-        <div className="flex-grow-1 min-w-0">
+        <div className="flex-grow-1 action-card-body">
           <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
             <span className="fw-semibold text-truncate" style={{ maxWidth: '100%' }}>
               {task.title}

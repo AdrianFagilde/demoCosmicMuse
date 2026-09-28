@@ -59,7 +59,11 @@ const NotificationBell = () => {
       </CDropdownToggle>
       <CDropdownMenu
         className="p-0"
-        style={{ width: '360px', maxHeight: '420px', overflow: 'auto' }}
+        style={{
+          width: 'min(360px, calc(100vw - 2rem))',
+          maxHeight: 'min(420px, 60vh)',
+          overflow: 'auto',
+        }}
       >
         <CDropdownHeader className="bg-body-secondary d-flex justify-content-between align-items-center">
           <span>Notificaciones</span>
