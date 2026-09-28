@@ -43,6 +43,12 @@ const Register = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  // El fieldset de consentimientos se copio de ConsentForm.jsx sin traerse su
+  // useState, y la vista reventaba con ReferenceError en el primer render.
+  const [consents, setConsents] = useState({})
+  // Sin esto el is-invalid se evaluaba contra un consent vacio y las dos
+  // casillas obligatorias salian en rojo antes de que el usuario tocara nada.
+  const [consentsTouched, setConsentsTouched] = useState(false)
   const navigate = useNavigate()
 
   const isMinor = useMemo(() => {
@@ -74,6 +80,11 @@ const Register = () => {
       }
     }
   }, [])
+
+  const handleConsentChange = (key, checked) => {
+    setConsentsTouched(true)
+    setConsents((prev) => ({ ...prev, [key]: checked }))
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -109,6 +120,14 @@ const Register = () => {
       birth_date: birthDate || undefined,
       phone: phone || undefined,
       level: level || undefined,
+      // Queda constancia de lo aceptado en auth.users.raw_user_meta_data, sin
+      // migracion. La fecha es implicita: es la del alta, auth.users.created_at.
+      // El trigger handle_new_user lee claves con nombre propio, asi que este
+      // objeto no se cuela en profiles.
+      consents: {
+        privacy: consents.privacy === true,
+        terms: consents.terms === true,
+      },
     }
 
     if (isMinor) {
@@ -358,12 +377,10 @@ const Register = () => {
                         <div className="form-check mb-3">
                           <input
                             type="checkbox"
-                            className={`form-check-input ${!consents.privacy ? 'is-invalid' : ''}`}
+                            className={`form-check-input ${consentsTouched && !consents.privacy ? 'is-invalid' : ''}`}
                             id="consent-privacy"
                             checked={consents.privacy || false}
-                            onChange={(e) =>
-                              setConsents((prev) => ({ ...prev, privacy: e.target.checked }))
-                            }
+                            onChange={(e) => handleConsentChange('privacy', e.target.checked)}
                             required
                             aria-describedby="consent-privacy-desc"
                           />
@@ -382,12 +399,10 @@ const Register = () => {
                         <div className="form-check mb-3">
                           <input
                             type="checkbox"
-                            className={`form-check-input ${!consents.terms ? 'is-invalid' : ''}`}
+                            className={`form-check-input ${consentsTouched && !consents.terms ? 'is-invalid' : ''}`}
                             id="consent-terms"
                             checked={consents.terms || false}
-                            onChange={(e) =>
-                              setConsents((prev) => ({ ...prev, terms: e.target.checked }))
-                            }
+                            onChange={(e) => handleConsentChange('terms', e.target.checked)}
                             required
                             aria-describedby="consent-terms-desc"
                           />
@@ -400,28 +415,6 @@ const Register = () => {
                           </label>
                           <div id="consent-terms-desc" className="form-text">
                             Reglas de uso de la plataforma, pagos, clases y conducta.
-                          </div>
-                        </div>
-
-                        <div className="form-check mb-3">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="consent-cookies"
-                            checked={consents.cookies || false}
-                            onChange={(e) =>
-                              setConsents((prev) => ({ ...prev, cookies: e.target.checked }))
-                            }
-                            aria-describedby="consent-cookies-desc"
-                          />
-                          <label className="form-check-label" htmlFor="consent-cookies">
-                            Acepto el uso de cookies segun la{' '}
-                            <a href="/cookie-policy" target="_blank" rel="noopener noreferrer">
-                              Politica de Cookies
-                            </a>
-                          </label>
-                          <div id="consent-cookies-desc" className="form-text">
-                            Uso de cookies esenciales, funcionales y de preferencias.
                           </div>
                         </div>
                       </div>

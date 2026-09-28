@@ -39,6 +39,11 @@ export default [
       // JSX) ni vite (no resuelve referencias), asi que se rompe en
       // produccion con "X is not defined". Esta regla lo para antes.
       'react/jsx-no-undef': 'error',
+      // jsx-no-undef solo mira nombres de etiquetas. Un identificador libre
+      // dentro de una expresion JSX (consents.privacy sin declarar) se
+      // escapa de ahi y revienta en runtime. Esta config no extiende
+      // eslint:recommended, asi que no-undef hay que encenderlo a mano.
+      'no-undef': 'error',
     },
   },
   eslintPluginPrettierRecommended,
