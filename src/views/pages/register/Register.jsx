@@ -43,8 +43,10 @@ const Register = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  // El fieldset de consentimientos se copio de ConsentForm.jsx sin traerse su
-  // useState, y la vista reventaba con ReferenceError en el primer render.
+  // El bloque de consentimientos se escribio aqui ademas de en un
+  // ConsentForm.jsx que nadie importaba, y la vista reventaba con
+  // ReferenceError en el primer render por usar consents sin declararlo.
+  // El componente duplicado se elimino; este es el unico sitio.
   const [consents, setConsents] = useState({})
   // Sin esto el is-invalid se evaluaba contra un consent vacio y las dos
   // casillas obligatorias salian en rojo antes de que el usuario tocara nada.
