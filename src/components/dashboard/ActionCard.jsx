@@ -46,6 +46,9 @@ const ActionCard = ({ task, onClick }) => {
         </div>
         <div className="flex-grow-1 action-card-body">
           <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+            {/* Sin LinkifiedText a proposito: la tarjeta es role="button", y
+                anadir un <a> dentro pondria un elemento interactivo dentro de
+                otro. Ademas el text-truncate cortaria la URL. */}
             <span className="fw-semibold text-truncate" style={{ maxWidth: '100%' }}>
               {task.title}
             </span>

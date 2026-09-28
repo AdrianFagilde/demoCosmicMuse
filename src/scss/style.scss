@@ -218,6 +218,13 @@ h6,
   max-width: min(170px, 42vw);
 }
 
+// Enlaces que detecta linkify en titulos y descripciones de tareas.
+// overflow-wrap evita que una URL larga estire una celda de tabla y fuerce
+// scroll horizontal en movil.
+.link-auto {
+  overflow-wrap: anywhere;
+}
+
 // =============================================
 // Artistic - Ornamental fine frames (same palette)
 // =============================================

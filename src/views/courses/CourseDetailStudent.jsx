@@ -15,6 +15,7 @@ import CIcon from '@coreui/icons-react'
 import { cilArrowLeft } from '@coreui/icons'
 import { StudentSortableChecklistItem } from '../../components/CourseSortableRows'
 import MaterialList from '../../components/MaterialList'
+import LinkifiedText from '../../components/LinkifiedText'
 import { isOverdue } from '../../utils/dates'
 
 /**
@@ -140,7 +141,7 @@ const CourseDetailStudent = ({
         return (
           <CCard key={task.id} className="app-card mb-3">
             <CCardHeader className="d-flex justify-content-between align-items-center">
-              <span className="fw-semibold">{task.title}</span>
+              <LinkifiedText className="fw-semibold" text={task.title} />
               <div className="d-flex align-items-center gap-2">
                 {task.due_date && (
                   <CBadge color="warning text-dark">Entrega: {task.due_date}</CBadge>
@@ -149,7 +150,11 @@ const CourseDetailStudent = ({
               </div>
             </CCardHeader>
             <CCardBody>
-              {task.description && <p className="mb-2">{task.description}</p>}
+              {task.description && (
+                <p className="mb-2">
+                  <LinkifiedText text={task.description} />
+                </p>
+              )}
               {(task.task_checklist_items || []).length === 0 ? (
                 <p className="text-medium-emphasis mb-0">Esta tarea no tiene checklist.</p>
               ) : (

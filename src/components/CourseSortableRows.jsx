@@ -3,6 +3,7 @@ import CIcon from '@coreui/icons-react'
 import { cilMenu, cilPencil, cilPlus, cilTrash } from '@coreui/icons'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import LinkifiedText from './LinkifiedText'
 
 const baseStyle = (transform, transition, isDragging) => ({
   transform: CSS.Transform.toString(transform),
@@ -39,8 +40,12 @@ export const SortableTaskRow = ({
           <CIcon icon={cilMenu} />
         </span>
         <div className="flex-grow-1 sortable-row-label">
-          <div className="fw-semibold">{task.title}</div>
-          {task.description && <small className="text-medium-emphasis">{task.description}</small>}
+          <LinkifiedText className="fw-semibold" text={task.title} />
+          {task.description && (
+            <small className="text-medium-emphasis">
+              <LinkifiedText text={task.description} />
+            </small>
+          )}
         </div>
         <CBadge color="info">{(task.task_checklist_items || []).length} checks</CBadge>
         {attachedForm ? (

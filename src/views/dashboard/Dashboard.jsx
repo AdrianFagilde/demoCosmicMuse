@@ -32,6 +32,7 @@ import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import useSupabasePractice from '../../hooks/useSupabasePractice'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
 import supabase from '../../lib/supabase'
+import LinkifiedText from '../../components/LinkifiedText'
 import KpiCard from '../../components/KpiCard'
 
 // New Duolingo-style components
@@ -604,7 +605,9 @@ const Dashboard = () => {
                   <tbody>
                     {recentTasks.map((task) => (
                       <tr key={task.id}>
-                        <td>{task.title}</td>
+                        <td>
+                          <LinkifiedText text={task.title} />
+                        </td>
                         <td>
                           {isStudent ? task.course?.title || '—' : task.profiles?.full_name || '—'}
                         </td>

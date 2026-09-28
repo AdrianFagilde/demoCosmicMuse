@@ -32,6 +32,7 @@ import {
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
+import LinkifiedText from '../../components/LinkifiedText'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import { isOverdue } from '../../utils/dates'
@@ -557,8 +558,11 @@ const Tasks = () => {
                   filteredAndSortedTasks.map((task) => (
                     <CTableRow key={task.id}>
                       <CTableDataCell>
-                        <div className="fw-semibold">{task.title}</div>
-                        <div className="text-medium-emphasis small">{task.description}</div>
+                        <LinkifiedText className="fw-semibold" text={task.title} />
+                        <LinkifiedText
+                          className="text-medium-emphasis small"
+                          text={task.description}
+                        />
                       </CTableDataCell>
                       {isAdmin && (
                         <CTableDataCell>{task.profiles?.full_name || '—'}</CTableDataCell>

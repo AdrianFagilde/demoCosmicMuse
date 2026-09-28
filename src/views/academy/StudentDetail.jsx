@@ -25,6 +25,7 @@ import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
 import RestrictedAccess from '../../components/RestrictedAccess'
+import LinkifiedText from '../../components/LinkifiedText'
 
 const StudentDetail = () => {
   const { id } = useParams()
@@ -218,7 +219,9 @@ const StudentDetail = () => {
                   <CTableBody>
                     {studentTasks.map((t) => (
                       <CTableRow key={t.id}>
-                        <CTableDataCell>{t.title}</CTableDataCell>
+                        <CTableDataCell>
+                          <LinkifiedText text={t.title} />
+                        </CTableDataCell>
                         <CTableDataCell>
                           {t.course_id ? t.course?.title || 'Curso' : 'Individual'}
                         </CTableDataCell>
