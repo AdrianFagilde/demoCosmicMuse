@@ -93,3 +93,78 @@
     0 2px 8px rgba(0, 0, 0, 0.06),
     0 1px 3px rgba(0, 0, 0, 0.04);
 }
+
+// =============================================
+// Tarjeta de contenido en modo oscuro: fondo blanco
+// =============================================
+//
+// En oscuro la tarjeta se queda en blanco, como en claro. El problema no es el
+// color en si, sino que hereda los tokens de texto del tema oscuro: si solo se
+// cambiase el fondo, --app-text-muted pasaria de #dfe2e8 a texto sobre blanco
+// y las 126 etiquetas .text-medium-emphasis que se corrigieron en el bloque
+// AAA de style.scss se volverian ilegibles (1.15:1). Por eso la tarjeta
+// REDECLARA los tokens de texto y de estado a sus valores claros.
+//
+// Los valores no se inventan aqui: son los mismos del bloque :root de
+// style.scss, con su contraste medido sobre blanco. Duplicarlos es lo que
+// permite que la tarjeta sea blanca sin tocar los tokens globales, que si
+// tienen que seguir siendo los claros-oscuros del tema.
+//
+// Se limita a .app-card y no a --cui-card-bg global a proposito: ese token lo
+// comparten los modales, los dropdowns del header y los overlays, que deben
+// seguir oscuros para poder separarse del sidebar y de la cabecera.
+[data-coreui-theme='dark'] .app-card {
+  background: #ffffff;
+  color: #212631;
+
+  // Texto (contrastes sobre blanco medidos en el bloque AAA de style.scss)
+  --app-text-muted: #414650; // 9.47:1
+  --app-text-secondary: #454a54; // 8.90:1
+  --cui-body-color: #212631;
+  --cui-secondary-color: var(--app-text-muted);
+  --cui-medium-emphasis: var(--app-text-muted);
+  --cui-tertiary-color: var(--app-text-secondary);
+
+  // Estados: los de dark son los claros (#d88fd8, #e28dba...) y sobre blanco
+  // darían 1.6:1 y 2.5:1. Vuelven a los oscuros, que dan 7:1 o mas.
+  --cui-primary: #712771; // 9.44:1
+  --cui-primary-rgb: 113, 39, 113;
+  --cui-danger: #8d235b; // 7.07:1
+  --cui-danger-rgb: 141, 35, 91;
+  --cui-info: #0a565f; // 7.11:1
+  --cui-info-rgb: 10, 86, 95;
+  --cui-success: #105b24; // 7.01:1
+  --cui-success-rgb: 16, 91, 36;
+  --cui-warning: #684803; // 7.09:1
+  --cui-warning-rgb: 104, 72, 3;
+
+  // Bordes, superficies intermedias y listas, que si no quedarian oscuro sobre
+  // blanco (el detalle de tarea y el constructor de checklist usan CListGroup
+  // dentro de la tarjeta).
+  --cui-card-border-color: #e3e6ed;
+  --cui-border-color: #e3e6ed;
+  --cui-secondary-bg: #e3e6ed;
+  --cui-tertiary-bg: #ececf1;
+  --cui-list-group-bg: #ffffff;
+  --cui-list-group-color: #212631;
+  --cui-list-group-border-color: #e3e6ed;
+  --cui-list-group-action-hover-bg: #f4f4f7;
+  --cui-list-group-action-active-bg: #ececf1;
+
+  // La sombra original es casi invisible sobre el fondo oscuro del tema; con
+  // fondo blanco vuelve a leerse como elevation.
+  box-shadow:
+    0 2px 8px rgba(22, 26, 60, 0.12),
+    0 1px 3px rgba(22, 26, 60, 0.08);
+}
+
+// Las cabeceras de color (.app-card-primary etc.) van en blanco sobre su
+// propio color de estado. Los estados ya re-declarados arriba son los oscuros,
+// asi que sin esto el texto blanco de la cabecera pasaria de 7:1 a ~2:1.
+[data-coreui-theme='dark'] .app-card-primary .card-header,
+[data-coreui-theme='dark'] .app-card-success .card-header,
+[data-coreui-theme='dark'] .app-card-info .card-header,
+[data-coreui-theme='dark'] .app-card-warning .card-header,
+[data-coreui-theme='dark'] .app-card-danger .card-header {
+  color: #ffffff;
+}
