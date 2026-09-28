@@ -95,76 +95,94 @@
 }
 
 // =============================================
-// Tarjeta de contenido en modo oscuro: fondo blanco
+// Tarjeta de contenido en modo oscuro
 // =============================================
 //
-// En oscuro la tarjeta se queda en blanco, como en claro. El problema no es el
-// color en si, sino que hereda los tokens de texto del tema oscuro: si solo se
-// cambiase el fondo, --app-text-muted pasaria de #dfe2e8 a texto sobre blanco
-// y las 126 etiquetas .text-medium-emphasis que se corrigieron en el bloque
-// AAA de style.scss se volverian ilegibles (1.15:1). Por eso la tarjeta
-// REDECLARA los tokens de texto y de estado a sus valores claros.
+// Relleno: #212631, que es --cui-gray-900 / --cui-dark del propio tema, no un
+// color inventado.
 //
-// Los valores no se inventan aqui: son los mismos del bloque :root de
-// style.scss, con su contraste medido sobre blanco. Duplicarlos es lo que
-// permite que la tarjeta sea blanca sin tocar los tokens globales, que si
-// tienen que seguir siendo los claros-oscuros del tema.
+// Por qué hace falta: --cui-card-bg es var(--cui-body-bg), y en oscuro el body
+// es #161a3c. Es decir, la tarjeta salía DEL MISMO COLOR que el fondo de
+// página y solo la separaba un rgba(255,255,255,.10) de 1px. Por eso el
+// detalle no se leía: no era un problema de contraste de texto, era que no
+// había superficie.
 //
-// Se limita a .app-card y no a --cui-card-bg global a proposito: ese token lo
+// La elevación va por el BORDE, no por el relleno, y es una decisión forzada
+// por la paleta: el navy del cuerpo es tan oscuro que cualquier relleno más
+// claro destruye el contraste del texto. Medido:
+//
+//   relleno    fill vs body   texto #aeb2bf
+//   #212631       1.11:1          7.16:1  <- elegido
+//   #242a3c       1.18:1          6.74:1
+//   #2a3040       1.28:1          6.22:1
+//   #323a49       1.47:1          5.40:1
+//
+// A partir de #242a3c el texto muted baja de AAA. Como el relleno solo aporta
+// 1.11:1, el borde hace el trabajo: #3d4557 se ve a 1.58:1 sobre el relleno y
+// 1.75:1 sobre el cuerpo. El borde de .app-card es `none` en claro, así que
+// aquí se declara solo en oscuro.
+//
+// Sobre #212631 los tokens de texto del tema oscuro siguen valiendo sin
+// tocar nada: --app-text-muted #dfe2e8 da 11.67:1 y --app-text-secondary
+// #aeb2bf da 7.16:1. Por eso este bloque NO los redeclara: la versión
+// anterior sí lo hacía porque sobre fondo blanco habría que darlos vuelta.
+//
+// Se limita a .app-card y no a --cui-card-bg global a propósito: ese token lo
 // comparten los modales, los dropdowns del header y los overlays, que deben
-// seguir oscuros para poder separarse del sidebar y de la cabecera.
+// seguir oscuros para separarse del sidebar y de la cabecera.
 [data-coreui-theme='dark'] .app-card {
-  background: #ffffff;
-  color: #212631;
+  background: #212631;
+  border: 1px solid #3d4557;
 
-  // Texto (contrastes sobre blanco medidos en el bloque AAA de style.scss)
-  --app-text-muted: #414650; // 9.47:1
-  --app-text-secondary: #454a54; // 8.90:1
-  --cui-body-color: #212631;
-  --cui-secondary-color: var(--app-text-muted);
-  --cui-medium-emphasis: var(--app-text-muted);
-  --cui-tertiary-color: var(--app-text-secondary);
+  // Estados: los de style.scss están medidos sobre el cuerpo #161a3c. La
+  // tarjeta es más clara, así que en su interior bajan a 6.3-6.5:1 y pierden
+  // AAA. Estos son los tonos equivalentes más cercanos al original (13-16% de
+  // mezcla hacia blanco) que vuelven a dar 7.2:1 o más:
+  //   primary #d88fd8 6.38:1 -> #dd9edd 7.22:1
+  //   danger  #e28dba 6.31:1 -> #e69dc4 7.20:1
+  //   success #21c24c 6.41:1 -> #45cc69 7.28:1
+  //   info    #20bacc 6.46:1 -> #3fc4d3 7.25:1
+  //   warning #eead20 7.67:1 -> sin cambio
+  // Sobre el cuerpo siguen dando 8.0-8.5:1, es decir suben en vez de bajar.
+  --cui-primary: #dd9edd;
+  --cui-primary-rgb: 221, 158, 221;
+  --cui-danger: #e69dc4;
+  --cui-danger-rgb: 230, 157, 196;
+  --cui-success: #45cc69;
+  --cui-success-rgb: 69, 204, 105;
+  --cui-info: #3fc4d3;
+  --cui-info-rgb: 63, 196, 211;
 
-  // Estados: los de dark son los claros (#d88fd8, #e28dba...) y sobre blanco
-  // darían 1.6:1 y 2.5:1. Vuelven a los oscuros, que dan 7:1 o mas.
-  --cui-primary: #712771; // 9.44:1
-  --cui-primary-rgb: 113, 39, 113;
-  --cui-danger: #8d235b; // 7.07:1
-  --cui-danger-rgb: 141, 35, 91;
-  --cui-info: #0a565f; // 7.11:1
-  --cui-info-rgb: 10, 86, 95;
-  --cui-success: #105b24; // 7.01:1
-  --cui-success-rgb: 16, 91, 36;
-  --cui-warning: #684803; // 7.09:1
-  --cui-warning-rgb: 104, 72, 3;
+  // El borde de la cabecera y del pie usa --cui-border-color, y el detalle de
+  // tarea y el constructor de checklist usan CListGroup dentro de la tarjeta.
+  // Sin esto la lista salía del color del cuerpo (#161a3c) y se leía como un
+  // hueco dentro de la tarjeta en vez de como filas.
+  --cui-card-border-color: #3d4557;
+  --cui-border-color: #3d4557;
+  --cui-list-group-bg: #212631;
+  --cui-list-group-color: var(--cui-body-color);
+  --cui-list-group-border-color: #3d4557;
+  --cui-list-group-action-hover-bg: #2a3040;
+  --cui-list-group-action-active-bg: #323a49;
 
-  // Bordes, superficies intermedias y listas, que si no quedarian oscuro sobre
-  // blanco (el detalle de tarea y el constructor de checklist usan CListGroup
-  // dentro de la tarjeta).
-  --cui-card-border-color: #e3e6ed;
-  --cui-border-color: #e3e6ed;
-  --cui-secondary-bg: #e3e6ed;
-  --cui-tertiary-bg: #ececf1;
-  --cui-list-group-bg: #ffffff;
-  --cui-list-group-color: #212631;
-  --cui-list-group-border-color: #e3e6ed;
-  --cui-list-group-action-hover-bg: #f4f4f7;
-  --cui-list-group-action-active-bg: #ececf1;
-
-  // La sombra original es casi invisible sobre el fondo oscuro del tema; con
-  // fondo blanco vuelve a leerse como elevation.
-  box-shadow:
-    0 2px 8px rgba(22, 26, 60, 0.12),
-    0 1px 3px rgba(22, 26, 60, 0.08);
+  // La sombra en claro está hecha para una superficie clara. En oscuro no se
+  // ve, así que la elevación la sostiene el borde de arriba y aquí solo queda
+  // un toque de sombra para el hover.
+  box-shadow: none;
 }
 
-// Las cabeceras de color (.app-card-primary etc.) van en blanco sobre su
-// propio color de estado. Los estados ya re-declarados arriba son los oscuros,
-// asi que sin esto el texto blanco de la cabecera pasaria de 7:1 a ~2:1.
+[data-coreui-theme='dark'] .app-card:hover {
+  border-color: #4a5468;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+// Cabecera de color (.app-card-primary, .app-card-success, ...): fondo en el
+// tono de estado y texto oscuro, no blanco. Con texto blanco sobre los tonos
+// claros de dark se quedaba en 1.7:1; #212631 sobre el nuevo tono da 7.2:1.
 [data-coreui-theme='dark'] .app-card-primary .card-header,
 [data-coreui-theme='dark'] .app-card-success .card-header,
 [data-coreui-theme='dark'] .app-card-info .card-header,
 [data-coreui-theme='dark'] .app-card-warning .card-header,
 [data-coreui-theme='dark'] .app-card-danger .card-header {
-  color: #ffffff;
+  color: #212631;
 }
