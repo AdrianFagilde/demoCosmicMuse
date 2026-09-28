@@ -36,10 +36,10 @@ la ocasión para ampliar la escala, no para escribir `13px`.
 Una sola tarjeta: `.app-card`, definida en `_card.scss` y cargada globalmente
 desde `style.scss`. Todo `CCard` de contenido lleva `app-card`, sin excepciones.
 
-`.dash-card` es exclusiva del dashboard, y el resto de decoración de dashboard
-(`journey-*`, `weekly-*`, `progress-ring`, `action-*`) vive en
-`components/dashboard/dashboard-styles.css`, que se importa solo desde
-`Dashboard.jsx`.
+`.app-card` es la única tarjeta. El dashboard usa exactamente las mismas clases; no
+existe un alias `.dash-card` desde este estándar. La decoración específica del
+dashboard (`journey-*`, `weekly-*`, `progress-ring`, `action-*`) sigue en
+`components/dashboard/dashboard-styles.css` (cargado solo desde `Dashboard.jsx`).
 
 Esto no es solo estética. `app-card` se usó durante mucho tiempo desde
 `dashboard-styles.css`, un fichero que solo se carga al entrar en el dashboard. Al

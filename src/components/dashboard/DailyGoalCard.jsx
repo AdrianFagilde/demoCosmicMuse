@@ -12,7 +12,7 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
   const isComplete = progress >= 100
 
   return (
-    <div className="daily-goal-card dash-card" style={{ '--daily-color': '#6366f1' }}>
+    <div className="daily-goal-card app-card" style={{ '--daily-color': '#6366f1' }}>
       <MusicNote className="daily-goal-note" size={34} color="#fff" />
       <div className="d-flex align-items-center justify-content-between mb-3">
         <div className="d-flex align-items-center gap-3">

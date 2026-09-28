@@ -48,6 +48,7 @@ $cosmic-magenta: #b42d75;
 );
 
 @use 'vendors/simplebar';
+@use './card';
 
 :root {
   --color-primary-dark: #{$cosmic-navy};
@@ -95,7 +96,7 @@ $cosmic-magenta: #b42d75;
 //
 // 2. TARJETA
 //    Una sola tarjeta: .app-card (ver scss/_card.scss), global. Todo CCard de
-//    contenido la lleva. .dash-card es exclusiva del dashboard.
+//    contenido la lleva. No existe un alias .dash-card; el dashboard usa .app-card.
 //
 // 3. ORNAMENTO
 //    Opt-in, nunca opt-out. Solo .kpi-card y las piezas de marca con arte propio.

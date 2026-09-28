@@ -1,0 +1,95 @@
+// =============================================
+// Contrato de tarjeta (regla 2 del estándar)
+//
+// Una sola tarjeta en toda la app. Este bloque vive en style.scss y por tanto en
+// el chunk global: cualquier CCard de contenido lleva app-card, venga de donde
+// venga la ruta.
+//
+// Antes vivía en components/dashboard/dashboard-styles.css, que solo se carga
+// desde Dashboard.jsx. Al entrar directamente a /courses o /students el CSS no
+// existía en el chunk y las tarjetas salían sin estilo. No se vuelve a mover
+// aquí nada que usen componentes compartidos.
+// =============================================
+
+.app-card {
+  border-radius: var(--cui-border-radius-xl);
+  border: none;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  background: var(--cui-card-bg);
+}
+
+.app-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.08),
+    0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+// Integración con CCardHeader / CCardFooter de CoreUI
+.app-card .card-header {
+  border-radius: var(--cui-border-radius-xl) var(--cui-border-radius-xl) 0 0;
+  border-bottom: 1px solid var(--cui-border-color);
+  background: transparent;
+}
+
+.app-card .card-footer {
+  border-radius: 0 0 var(--cui-border-radius-xl) var(--cui-border-radius-xl);
+  border-top: 1px solid var(--cui-border-color);
+  background: transparent;
+}
+
+.app-card-compact {
+  padding: var(--space-2);
+}
+
+.app-card-compact .card-body {
+  padding: var(--space-2);
+}
+
+// Variantes de color de cabecera
+.app-card-primary .card-header {
+  background: var(--cui-primary);
+  color: white;
+  border-bottom: none;
+}
+
+.app-card-success .card-header {
+  background: var(--cui-success);
+  color: white;
+  border-bottom: none;
+}
+
+.app-card-info .card-header {
+  background: var(--cui-info);
+  color: white;
+  border-bottom: none;
+}
+
+.app-card-warning .card-header {
+  background: var(--cui-warning);
+  color: white;
+  border-bottom: none;
+}
+
+.app-card-danger .card-header {
+  background: var(--cui-danger);
+  color: white;
+  border-bottom: none;
+}
+
+// Variante con borde, para estados de error y avisos
+.app-card-bordered {
+  border: 1px solid var(--cui-border-color);
+  box-shadow: none;
+}
+
+.app-card-bordered:hover {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+}

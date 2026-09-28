@@ -290,7 +290,7 @@ const Dashboard = () => {
         {/* ROW 2: Urgent actions + Weekly */}
         <CRow className="mb-3 g-3">
           <CCol lg={6} className="mb-0">
-            <div className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center">
+            <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <span className="fw-semibold d-flex align-items-center gap-2">
                   <CIcon icon={cilMusicNote} className="text-primary" size="lg" />
@@ -349,7 +349,7 @@ const Dashboard = () => {
         <CRow className="g-3 flex-grow-1">
           <CCol lg={6} className="mb-0">
             <div
-              className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center"
+              className="app-card app-card-compact h-100 d-flex flex-column justify-content-center"
               style={{
                 background: 'linear-gradient(135deg, var(--cui-primary) 0%, #5c6bc0 100%)',
                 color: 'white',
@@ -407,7 +407,7 @@ const Dashboard = () => {
             </div>
           </CCol>
           <CCol lg={6} className="mb-0">
-            <div className="dash-card dash-card-compact h-100 d-flex flex-column justify-content-center">
+            <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="fw-semibold d-flex align-items-center gap-2">
                   <CIcon icon={cilFire} className="text-danger" size="lg" />
