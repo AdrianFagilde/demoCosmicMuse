@@ -13,6 +13,7 @@ import CIcon from '@coreui/icons-react'
 import { cilBell } from '@coreui/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationContext'
+import { getNotificationTarget } from '../../utils/notificationRouting'
 
 const formatRelativeTime = (dateStr) => {
   const now = new Date()
@@ -39,6 +40,11 @@ const NotificationBell = () => {
     if (!notification.read) {
       await markAsRead(notification.id)
     }
+    // Marcar como leida no debe cancelar la navegacion: si la UPDATE falla,
+    // el alumnoClicked en la notificacion ya quedo persistido y el enlace a la
+    // tarea es lo que espera de este clic.
+    const target = getNotificationTarget(notification)
+    if (target) navigate(target)
   }
 
   return (

@@ -29,6 +29,7 @@ import {
   cilSortAscending,
   cilCalendar,
   cilFlagAlt,
+  cilChevronRight,
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
@@ -559,6 +560,19 @@ const Tasks = () => {
                     <CTableRow key={task.id}>
                       <CTableDataCell>
                         <LinkifiedText className="fw-semibold" text={task.title} />
+                        <div>
+                          {/* Enlace aparte y no sobre el titulo: LinkifiedText
+                              ya genera <a> para las URLs del texto y anidar un
+                              <a> dentro de otro <a> es HTML invalido. */}
+                          <Link
+                            to={`/tasks/${task.id}`}
+                            className="small text-decoration-none d-inline-flex align-items-center gap-1"
+                          >
+                            Ver detalle
+                            <CIcon icon={cilChevronRight} size="sm" aria-hidden="true" />
+                            <span className="visually-hidden">de {task.title}</span>
+                          </Link>
+                        </div>
                         <LinkifiedText
                           className="text-medium-emphasis small"
                           text={task.description}

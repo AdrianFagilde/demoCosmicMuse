@@ -210,6 +210,10 @@ const useSupabaseCourses = () => {
         recipients,
         title: 'Nueva tarea en tu curso',
         message: `${course.title}: ${taskData.title}`,
+        // Una unica tarea para todos los inscritos, asi que la referencia es
+        // la misma para cada notificacion.
+        referenceType: 'task',
+        referenceId: data.id,
       })
     }
     return data

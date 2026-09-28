@@ -1,8 +1,10 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { CBadge, CButton, CCard, CCardBody, CCardHeader, CSpinner } from '@coreui/react'
-import { cilCheckAlt } from '@coreui/icons'
+import { cilCheckAlt, cilChevronRight } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNotifications } from '../../context/NotificationContext'
+import { getNotificationTarget } from '../../utils/notificationRouting'
 import { formatDateTime } from '../../utils/format'
 
 const Notifications = () => {
@@ -41,30 +43,59 @@ const Notifications = () => {
           <div className="text-center text-medium-emphasis py-4">No tienes notificaciones.</div>
         ) : (
           <div className="list-group">
-            {notifications.map((n) => (
-              <div
-                key={n.id}
-                className={`list-group-item list-group-item-action ${!n.read ? 'bg-primary bg-opacity-10' : ''}`}
-                style={{ cursor: 'pointer' }}
-                onClick={() => !n.read && markAsRead(n.id)}
-              >
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div className="fw-semibold">{n.title}</div>
-                    <div className="small text-body-secondary">{n.message}</div>
-                    <div className="text-medium-emphasis mt-1" style={{ fontSize: '0.75rem' }}>
-                      {n.sender?.full_name ? `De: ${n.sender.full_name}` : ''} -{' '}
-                      {formatDateTime(n.created_at)}
+            {notifications.map((n) => {
+              const target = getNotificationTarget(n)
+              const handleClick = () => !n.read && markAsRead(n.id)
+              const inner = (
+                <>
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                      <div className="fw-semibold">{n.title}</div>
+                      <div className="small text-body-secondary">{n.message}</div>
+                      <div className="text-medium-emphasis mt-1" style={{ fontSize: '0.75rem' }}>
+                        {n.sender?.full_name ? `De: ${n.sender.full_name}` : ''} -{' '}
+                        {formatDateTime(n.created_at)}
+                      </div>
                     </div>
+                    {!n.read && (
+                      <CBadge color="primary" shape="pill" className="ms-2">
+                        Nuevo
+                      </CBadge>
+                    )}
                   </div>
-                  {!n.read && (
-                    <CBadge color="primary" shape="pill" className="ms-2">
-                      Nuevo
-                    </CBadge>
+                  {target && (
+                    <div className="d-flex align-items-center gap-1 mt-2 small text-primary">
+                      Ver tarea <CIcon icon={cilChevronRight} size="sm" aria-hidden="true" />
+                    </div>
                   )}
+                </>
+              )
+              const className = `list-group-item list-group-item-action ${
+                !n.read ? 'bg-primary bg-opacity-10' : ''
+              }`
+
+              // Con referencia la fila es un enlace de verdad: navegable con
+              // teclado y anunciable como tal. Sin referencia (notificaciones
+              // manuales y las anteriores a la 029) no hay destino, asi que
+              // sigue siendo un elemento no interactivo que solo marca leida.
+              if (target) {
+                return (
+                  <Link key={n.id} to={target} className={className} onClick={handleClick}>
+                    {inner}
+                  </Link>
+                )
+              }
+              return (
+                <div
+                  key={n.id}
+                  className={className}
+                  style={{ cursor: 'pointer' }}
+                  onClick={handleClick}
+                >
+                  {inner}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </CCardBody>

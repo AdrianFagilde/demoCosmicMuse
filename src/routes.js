@@ -19,6 +19,7 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Students = React.lazy(() => import('./views/academy/Students'))
 const StudentDetail = React.lazy(() => import('./views/academy/StudentDetail'))
 const Tasks = React.lazy(() => import('./views/academy/Tasks'))
+const TaskDetail = React.lazy(() => import('./views/academy/TaskDetail'))
 const Courses = React.lazy(() => import('./views/courses/Courses'))
 const CourseDetail = React.lazy(() => import('./views/courses/CourseDetail'))
 const CourseFormFill = React.lazy(() => import('./views/courses/CourseDetail'))
@@ -51,6 +52,9 @@ export const routes = [
   },
   { path: '/lessons', name: 'Clases', element: Lessons, roles: ['admin'] },
   { path: '/tasks', name: 'Tareas', element: Tasks },
+  // Sin `roles`: el detalle lo abren admin y alumno, cada uno con su parte.
+  // El RLS de `tasks` es el que decide que es visible, no la ruta.
+  { path: '/tasks/:id', name: 'Detalle de tarea', element: TaskDetail },
   { path: '/courses', name: 'Cursos', element: Courses },
   { path: '/courses/:id', name: 'Curso', element: CourseDetail },
   {

@@ -75,27 +75,36 @@ const useSupabaseTasks = () => {
       const studentIds = (taskData.studentIds || []).filter(Boolean)
       if (!studentIds.length) return false
 
-      const { error } = await supabase.from('tasks').insert(
-        studentIds.map((studentId) => ({
-          title: taskData.title,
-          description: taskData.description || '',
-          student_id: studentId,
-          assigned_by: taskData.assignedBy,
-          due_date: taskData.dueDate,
-          status: taskData.status || 'Pendiente',
-          progress: taskData.progress || 0,
-        })),
-      )
+      const { data: inserted, error } = await supabase
+        .from('tasks')
+        .insert(
+          studentIds.map((studentId) => ({
+            title: taskData.title,
+            description: taskData.description || '',
+            student_id: studentId,
+            assigned_by: taskData.assignedBy,
+            due_date: taskData.dueDate,
+            status: taskData.status || 'Pendiente',
+            progress: taskData.progress || 0,
+          })),
+        )
+        .select('id, student_id')
       if (error) {
         console.error('[Tasks] Error:', error.message, error)
         return false
       }
 
+      // Cada fila insertada es una tarea distinta, una por alumno, asi que la
+      // referencia viaja por destinatario. Si el SELECT devolviese menos filas
+      // de las insertadas se degrada a notificaciones sin referencia en vez de
+      // apuntarlas todas a la primera tarea.
+      const idByStudent = new Map((inserted || []).map((t) => [t.student_id, t.id]))
       await notifyInApp({
         senderId: taskData.assignedBy || null,
-        recipients: studentIds.map((id) => ({ id })),
+        recipients: studentIds.map((id) => ({ id, referenceId: idByStudent.get(id) || null })),
         title: 'Nueva tarea asignada',
         message: `Se te asignó la tarea: ${taskData.title}`,
+        referenceType: 'task',
       })
       await refetch()
       return true
