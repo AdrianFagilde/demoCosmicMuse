@@ -67,7 +67,55 @@ $cosmic-magenta: #b42d75;
   --uniform-primary-header-bg: #{$cosmic-purple};
   // Uniforme secundario: fondo del área de contenido
   --uniform-secondary-bg: #ffffff;
+
+  // Escala de espacio. Alineada con el mapa $spacers de Bootstrap para que
+  // --space-3 sea exactamente lo mismo que la utilidad mb-3 / p-3.
+  --space-1: 0.25rem; //  4px
+  --space-2: 0.5rem; //   8px
+  --space-3: 1rem; //    16px
+  --space-4: 1.5rem; //  24px
+  --space-5: 2rem; //    32px
+  --space-6: 3rem; //    48px
+
+  // Medidas de lectura. El texto largo sin medida se vuelve ilegible.
+  --measure-legal: 68ch;
+  --measure-form: 34rem;
 }
+
+// =============================================
+// Estándar de diseño
+// Ver src/scss/STANDARD.md para el detalle y el motivo de cada regla.
+// =============================================
+//
+// 1. ESPACIO
+//    Solo --space-1..4 dentro de tarjetas y formularios. --space-5/6 únicamente
+//    entre secciones de página. Nada de píxeles sueltos. No se usan utilidades
+//    m-*: el espacio va en gap y padding, nunca en margen exterior, que es lo que
+//    empuja los componentes entre sí en pantallas estrechas.
+//
+// 2. TARJETA
+//    Una sola tarjeta: .app-card (ver scss/_card.scss), global. Todo CCard de
+//    contenido la lleva. .dash-card es exclusiva del dashboard.
+//
+// 3. ORNAMENTO
+//    Opt-in, nunca opt-out. Solo .kpi-card y las piezas de marca con arte propio.
+//
+// 4. FORMULARIO
+//    Ritmo único: .form-block (ver scss/_form.scss). Separación --space-3 entre
+//    campos, inset --space-3, campos a mb-2 dentro de un bloque.
+//
+// 5. LECTURA
+//    --measure-legal para texto largo, --measure-form para auth. Móvil siempre
+//    con padding lateral.
+//
+// 6. SIN CORTES
+//    Prohibido height fijo donde el contenido pueda crecer: min-height + padding.
+//    overflow: hidden nunca como arreglo. Tablas con .table-responsive.
+//    Las animaciones de marca respetan prefers-reduced-motion.
+//
+// 7. TIPOGRAFÍA
+//    Utilidades fs-* y small de CoreUI. Los radios y colores salen de las
+//    variables --cui-* que CoreUI ya expone en :root; no se duplican aquí.
 
 body {
   background-color: var(--uniform-secondary-bg);
