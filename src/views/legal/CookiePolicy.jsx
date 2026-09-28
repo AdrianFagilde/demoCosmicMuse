@@ -52,7 +52,7 @@ const CookiePolicy = () => {
   const navigate = useNavigate()
 
   return (
-    <div className="container-fluid py-4">
+    <div className="legal-page py-4">
       <CRow className="mb-4">
         <CCol>
           <div className="d-flex justify-content-between align-items-center">
@@ -75,8 +75,8 @@ const CookiePolicy = () => {
           </div>
         </CCardHeader>
         <CCardBody>
-          <div className="mb-4">
-            <h4>1. Resumen</h4>
+          <div className="mb-4 pb-4 border-bottom last:border-0 last:pb-0">
+            <h4 className="mb-2 fw-semibold">1. Resumen</h4>
             <p>
               <strong>No utilizamos cookies.</strong> La aplicación no escribe ninguna cookie ni lee
               ninguna, y no incrusta servicios de terceros que puedan establecerlas. La
@@ -91,8 +91,8 @@ const CookiePolicy = () => {
             </p>
           </div>
 
-          <div className="mb-4">
-            <h4>2. Almacenamiento local que sí utilizamos</h4>
+          <div className="mb-4 pb-4 border-bottom last:border-0 last:pb-0">
+            <h4 className="mb-2 fw-semibold">2. Almacenamiento local que sí utilizamos</h4>
             <div className="table-responsive">
               <table className="table table-sm table-hover">
                 <thead>
@@ -134,8 +134,8 @@ const CookiePolicy = () => {
             </p>
           </div>
 
-          <div className="mb-4">
-            <h4>3. Categorías</h4>
+          <div className="mb-4 pb-4 border-bottom last:border-0 last:pb-0">
+            <h4 className="mb-2 fw-semibold">3. Categorías</h4>
             <ul>
               <li>
                 <strong>Esenciales:</strong> necesarias para el funcionamiento básico de la
@@ -156,8 +156,8 @@ const CookiePolicy = () => {
             </ul>
           </div>
 
-          <div className="mb-4">
-            <h4>4. Servicios de terceros</h4>
+          <div className="mb-4 pb-4 border-bottom last:border-0 last:pb-0">
+            <h4 className="mb-2 fw-semibold">4. Servicios de terceros</h4>
             <p>
               La aplicación no carga recursos de terceros: ni fuentes de tipografía desde servidores
               externos (se sirven desde el propio dominio), ni analítica, ni publicidad. Los iconos
@@ -171,8 +171,8 @@ const CookiePolicy = () => {
             </p>
           </div>
 
-          <div className="mb-4">
-            <h4>5. Cómo desactivarlo o eliminarlo</h4>
+          <div className="mb-4 pb-4 border-bottom last:border-0 last:pb-0">
+            <h4 className="mb-2 fw-semibold">5. Cómo desactivarlo o eliminarlo</h4>
             <p>
               Puede borrar el almacenamiento local desde la configuración de su navegador. Tenga en
               cuenta que <strong>eliminar el almacenamiento esencial cierra la sesión</strong> y
@@ -201,8 +201,8 @@ const CookiePolicy = () => {
             </p>
           </div>
 
-          <div className="mb-4">
-            <h4>6. Consentimiento</h4>
+          <div className="mb-4 pb-4 border-bottom last:border-0 last:pb-0">
+            <h4 className="mb-2 fw-semibold">6. Consentimiento</h4>
             <p>
               No hay cookies publicitarias ni de analítica, así que{' '}
               <strong>no necesitamos un banner de consentimiento</strong> ni mecanismos para
@@ -213,8 +213,8 @@ const CookiePolicy = () => {
             </p>
           </div>
 
-          <div className="mb-4">
-            <h4>7. Actualizaciones</h4>
+          <div className="mb-4 pb-4 border-bottom last:border-0 last:pb-0">
+            <h4 className="mb-2 fw-semibold">7. Actualizaciones</h4>
             <p>
               Podemos actualizar esta política para reflejar cambios en el uso de almacenamiento
               local. Le notificaremos cambios materiales mediante notificación en la plataforma o
@@ -222,8 +222,8 @@ const CookiePolicy = () => {
             </p>
           </div>
 
-          <div className="mb-4">
-            <h4>8. Contacto</h4>
+          <div className="mb-4 pb-4 border-bottom last:border-0 last:pb-0">
+            <h4 className="mb-2 fw-semibold">8. Contacto</h4>
             <p>
               Para consultas sobre esta política:{' '}
               <a href="mailto:privacidad@cosmicmuse.com">privacidad@cosmicmuse.com</a>

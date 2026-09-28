@@ -1,0 +1,24 @@
+// =============================================
+// Medidas de página (regla 5 del estándar)
+//
+// Sin max-width, un párrafo a 100% de ancho genera líneas de más de 120
+// caracteres y el ojo se pierde al volver al principio. Estas dos clases son el
+// límite de lectura; el padding lateral se mantiene siempre para que en móvil el
+// texto no llegue al borde de la pantalla.
+//
+// El ritmo interno de las secciones ya encaja con la escala sin necesidad de
+// una clase propia: mb-4 pb-4 border-bottom last:border-0 last:pb-0 equivale a
+// --space-4 de separación más --space-4 de aire antes del divisor.
+// =============================================
+
+.legal-page {
+  max-width: var(--measure-legal);
+  margin-inline: auto;
+  padding-inline: var(--space-3);
+}
+
+.auth-page {
+  max-width: var(--measure-form);
+  margin-inline: auto;
+  padding-inline: var(--space-3);
+}

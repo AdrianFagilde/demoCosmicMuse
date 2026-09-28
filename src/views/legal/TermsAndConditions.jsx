@@ -137,7 +137,7 @@ const TermsAndConditions = () => {
   const navigate = useNavigate()
 
   return (
-    <div className="container-fluid py-4">
+    <div className="legal-page py-4">
       <CRow className="mb-4">
         <CCol>
           <div className="d-flex justify-content-between align-items-center">
@@ -154,8 +154,8 @@ const TermsAndConditions = () => {
           <div className="d-flex justify-content-between align-items-center">
             <h4 className="mb-0">Términos y Condiciones</h4>
             <div className="text-end">
-              <small className="text-medium-emphasis d-block">Versión 1.0</small>
-              <small className="text-medium-emphasis">Actualizada: 27 de septiembre de 2026</small>
+              <small className="text-medium-emphasis d-block">Versión {version}</small>
+              <small className="text-medium-emphasis">Actualizada: {lastUpdated}</small>
             </div>
           </div>
         </CCardHeader>
