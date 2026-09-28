@@ -60,7 +60,7 @@ $cosmic-magenta: #b42d75;
   // Tipografía artística: Lexend en toda la app (títulos + acentos)
   --font-display:
     'Lexend Variable', 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-  --font-script: 'Lexend Variable', 'Lexend', 'Dancing Script', cursive;
+  --font-script: 'Dancing Script', 'Lexend Variable', 'Lexend', cursive;
 
   // Uniforme primario: sidebar + header
   --uniform-primary-bg: linear-gradient(180deg, #{$cosmic-navy} 0%, #{$cosmic-purple} 100%);

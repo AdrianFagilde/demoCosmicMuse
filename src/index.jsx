@@ -2,6 +2,12 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 
 import '@fontsource-variable/lexend/wght.css'
+// --font-script declara Dancing Script en style.scss pero la fuente no venia
+// de ningun sitio, asi que caia a `cursive` (Comic Sans en Windows). Solo el
+// subconjunto latin, que cubre los acentos del espanol, y los dos pesos que
+// necesitan los selectores que la usan.
+import '@fontsource/dancing-script/latin-400.css'
+import '@fontsource/dancing-script/latin-700.css'
 
 import { AppProvider } from './context/AppContext'
 
