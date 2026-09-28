@@ -1,0 +1,66 @@
+// =============================================
+// Ritmo de formulario (regla 4 del estándar)
+//
+// Antes coexistian cinco ritmos distintos en trece formularios: inset de 40px,
+// 16+16, 16+8, 16 mas gutter de rejilla y tope de 8px. .form-block fija uno.
+//
+// Separacion entre campos: --space-3
+// Inset del bloque:        --space-3
+// Campos dentro del bloque: mb-2
+// =============================================
+
+.form-block {
+  padding: var(--space-3);
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--cui-border-radius);
+  background-color: var(--cui-tertiary-bg);
+}
+
+.form-block > legend {
+  float: none;
+  width: auto;
+  padding: 0;
+  margin-bottom: var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--cui-body-color);
+}
+
+.form-block > legend + * {
+  margin-top: 0;
+}
+
+// El inset de CoreUI para .form-check es de 1.5em, que a 16px son 24px: el texto
+// de la etiqueta queda muy separado de su casilla. Se reduce a 1.25em.
+.form-block .form-check {
+  padding-inline-start: 1.25em;
+  margin-bottom: var(--space-3);
+}
+
+.form-block .form-check:last-child {
+  margin-bottom: 0;
+}
+
+// Descripcion de un checkbox. small + muted + interlineado corto: informa sin
+// competir con la etiqueta.
+.form-check-desc {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--cui-secondary-color);
+  margin-top: var(--space-1);
+}
+
+// Dos consentimientos en paralelo en cuanto hay ancho. En movil se apilan.
+@media (min-width: 768px) {
+  .consent-row {
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  .consent-row > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}

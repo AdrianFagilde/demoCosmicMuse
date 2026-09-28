@@ -93,7 +93,7 @@ const Register = () => {
     setSuccess('')
 
     if (password !== confirmPassword) {
-      setError('Las contrasenas no coinciden')
+      setError('Las contraseñas no coinciden')
       setLoading(false)
       return
     }
@@ -105,7 +105,7 @@ const Register = () => {
     }
 
     if (!phone) {
-      setError('El telefono es obligatorio')
+      setError('El teléfono es obligatorio')
       setLoading(false)
       return
     }
@@ -150,7 +150,7 @@ const Register = () => {
     }
 
     if (data.user?.identities?.length === 0) {
-      setError('Este correo ya esta registrado')
+      setError('Este correo ya está registrado')
       setLoading(false)
       return
     }
@@ -182,7 +182,7 @@ const Register = () => {
     if (data.session) {
       navigate('/dashboard')
     } else {
-      setSuccess('Cuenta creada. Ya puedes iniciar sesion.')
+      setSuccess('Cuenta creada. Ya puedes iniciar sesión.')
       navigateTimeoutRef.current = setTimeout(() => navigate('/login'), 2000)
     }
     setLoading(false)
@@ -233,7 +233,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="email"
-                        placeholder="Correo electronico"
+                        placeholder="Correo electrónico"
                         autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -246,7 +246,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="tel"
-                        placeholder="Telefono"
+                        placeholder="Teléfono"
                         autoComplete="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
@@ -259,7 +259,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="password"
-                        placeholder="Contrasena (minimo 6 caracteres)"
+                        placeholder="Contraseña (mínimo 6 caracteres)"
                         autoComplete="new-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -273,7 +273,7 @@ const Register = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="password"
-                        placeholder="Confirmar contrasena"
+                        placeholder="Confirmar contraseña"
                         autoComplete="new-password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -357,7 +357,7 @@ const Register = () => {
                           </CInputGroupText>
                           <CFormInput
                             type="tel"
-                            placeholder="Telefono del representante"
+                            placeholder="Teléfono del representante"
                             value={guardianPhone}
                             onChange={(e) => setGuardianPhone(e.target.value)}
                             required
@@ -366,15 +366,10 @@ const Register = () => {
                       </>
                     )}
 
-                    <fieldset
-                      className="border p-3 rounded bg-light mb-4"
-                      aria-labelledby="consent-legend"
-                    >
-                      <legend id="consent-legend" className="fw-semibold small">
-                        Consentimientos
-                      </legend>
-                      <div className="mt-3">
-                        <div className="form-check mb-3">
+                    <fieldset className="form-block mb-4" aria-labelledby="consent-legend">
+                      <legend id="consent-legend">Consentimientos</legend>
+                      <div className="consent-row">
+                        <div className="form-check">
                           <input
                             type="checkbox"
                             className={`form-check-input ${consentsTouched && !consents.privacy ? 'is-invalid' : ''}`}
@@ -384,19 +379,19 @@ const Register = () => {
                             required
                             aria-describedby="consent-privacy-desc"
                           />
-                          <label className="form-check-label fw-normal" htmlFor="consent-privacy">
-                            He leido y acepto la{' '}
+                          <label className="form-check-label" htmlFor="consent-privacy">
+                            He leído y acepto la{' '}
                             <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">
-                              Politica de Privacidad
+                              Política de Privacidad
                             </a>{' '}
                             <span className="text-danger">*</span>
                           </label>
-                          <div id="consent-privacy-desc" className="form-text">
-                            Como recopilamos, usamos y protegemos sus datos personales.
-                          </div>
+                          <span id="consent-privacy-desc" className="form-check-desc">
+                            Cómo recopilamos, usamos y protegemos sus datos personales.
+                          </span>
                         </div>
 
-                        <div className="form-check mb-3">
+                        <div className="form-check">
                           <input
                             type="checkbox"
                             className={`form-check-input ${consentsTouched && !consents.terms ? 'is-invalid' : ''}`}
@@ -409,13 +404,13 @@ const Register = () => {
                           <label className="form-check-label" htmlFor="consent-terms">
                             Acepto los{' '}
                             <a href="/terms-conditions" target="_blank" rel="noopener noreferrer">
-                              Terminos y Condiciones
+                              Términos y Condiciones
                             </a>{' '}
                             <span className="text-danger">*</span>
                           </label>
-                          <div id="consent-terms-desc" className="form-text">
+                          <span id="consent-terms-desc" className="form-check-desc">
                             Reglas de uso de la plataforma, pagos, clases y conducta.
-                          </div>
+                          </span>
                         </div>
                       </div>
                     </fieldset>
@@ -424,13 +419,13 @@ const Register = () => {
                       <CCol xs={6}>
                         <Link to="/login">
                           <CButton color="link" className="px-0">
-                            Ya tienes cuenta? Inicia sesion
+                            ¿Ya tienes cuenta? Inicia sesión
                           </CButton>
                         </Link>
                       </CCol>
                       <CCol xs={6} className="text-end">
                         <CButton color="primary" className="px-4" type="submit" disabled={loading}>
-                          {loading ? 'Creando cuenta...' : 'Registrarse'}
+                          {loading ? 'Creando cuenta…' : 'Registrarse'}
                         </CButton>
                       </CCol>
                     </CRow>
@@ -444,9 +439,9 @@ const Register = () => {
                 <CCardBody className="text-center">
                   <TrebleClef size={210} color="#ffffff" className="treble-watermark" />
                   <Vinyl size={180} color="#ffffff" className="vinyl-watermark" />
-                  <StaffDivider caption="tu musica empieza aca" className="mt-2 mb-4" />
+                  <StaffDivider caption="tu música empieza aquí" className="mt-2 mb-4" />
                   <div className="position-relative">
-                    <h2>Por que registrarte?</h2>
+                    <h2>¿Por qué registrarte?</h2>
                     <p className="text-start">
                       Accede a tus tareas y lecciones
                       <br />
@@ -457,7 +452,7 @@ const Register = () => {
                       Recibe recordatorios de pago
                       <br />
                       <br />
-                      Mantente al dia con tu instrumento
+                      Mantente al día con tu instrumento
                     </p>
                   </div>
                 </CCardBody>

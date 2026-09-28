@@ -65,11 +65,29 @@ Un ritmo, en `.form-block` (`_form.scss`):
 - Separación entre campos: `--space-3`
 - Inset del bloque: `--space-3`
 - Campos dentro de un bloque: `mb-2`
-- Leyenda: `small fw-semibold`
-- Descripción de un checkbox: `small text-body-secondary`, line-height 1.4
+- Leyenda: 0.875rem, peso 600
+- Descripción de un checkbox: `.form-check-desc` (0.75rem, muted, interlineado 1.4)
+
+`.form-block` sustituye al `fieldset className="border p-3 rounded bg-light"` que
+se usaba en Register. No es solo un cambio de aspecto: neutraliza el `float: left`
+y el `width: 100%` que el navegador aplica a `legend`, que es lo que descuadraba
+el bloque.
 
 Los labels de un mismo grupo se ponen todos igual. Si uno lleva `fw-normal` y otro
-no, es un descuido, no una intención.
+no, es un descuido, no una intención. En Register solo el de privacidad lo tenía.
+
+### Consentimientos
+
+`.consent-row` coloca los consentimientos en dos columnas a partir de `md`, así que
+en escritorio el bloque pasa de dos filas apiladas a una y en móvil se mantiene
+apilado. Los campos van con `mb-2` dentro de `.form-block`, no con `mb-3`.
+
+### Pendiente
+
+`--measure-form` está definido pero Login y Register no lo usan: ambas páginas
+montan un `CCardGroup` con un panel decorativo al 44%, así que el ancho útil lo
+decide la proporción del grupo y no una medida de lectura. Aplicarlo requiere
+reestructurar ese layout, no solo añadir una clase.
 
 ## 5. Lectura
 
@@ -78,7 +96,7 @@ formularios de autenticación. En móvil, padding lateral siempre.
 
 Sin medida máxima, un párrafo a 100% de ancho tiene líneas de más de 120
 caracteres y el ojo se pierde al volver al principio. Las cuatro páginas legales
-usaban `container-fluid` sin límite.
+usaban `container-fluid` sin límite y ahora usan `.legal-page`.
 
 ## 6. Sin cortes
 
