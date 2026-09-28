@@ -166,11 +166,56 @@ h6,
 
 .student-dashboard > .row {
   align-items: stretch;
-  align-content: stretch;
+  align-content: flex-start;
 }
 
-.student-dashboard .row > [class*='col'] {
+// `[class*='col']` tambien casa con color-*, colspan y collapse. Hay dos
+// CCol sin props que renderizan `col` a secas, de ahi los dos selectores.
+.student-dashboard .row > [class*='col-'],
+.student-dashboard .row > [class~='col'] {
   margin-bottom: 0;
+}
+
+// =============================================
+// Responsive
+// =============================================
+// Primer corte de ancho del proyecto. El header consumia ~154px verticales
+// (dos filas px-4 + dos CHeaderNav con py-1 + separador + mb-4), casi una
+// cuarta parte de un viewport de 640px antes de ver contenido. Sobrescribimos
+// las variables propias de CoreUI para que el menu desplegable se adapte igual.
+@include media-breakpoint-down(sm) {
+  .app-header {
+    --cui-header-nav-link-padding-y: 0.25rem;
+    --cui-header-nav-link-padding-x: 0.375rem;
+    margin-bottom: 1rem;
+  }
+
+  .app-header-bar {
+    padding-inline: 1rem;
+  }
+}
+
+// Filas ordenables de curso: llegan a ocho controles en una sola linea. Sin
+// envolver desbordan en horizontal por debajo de ~768px. El min-width del
+// titulo hace que al estrecharse las acciones bajen a su propia linea.
+.sortable-row {
+  flex-wrap: wrap;
+}
+
+.sortable-row-label {
+  min-width: 10rem;
+}
+
+// Grupo de alta de tarea: cuatro hijos en flex sin wrap. Los inputs llevan
+// min-width:auto, asi que el placeholder del titulo (~180px) impide encoger y
+// el grupo desborda por debajo de ~435px. El min-width:0 deja encogerlos y la
+// fecha de entrega se limita por fraccion de pantalla en movil.
+.task-input-group > * {
+  min-width: 0;
+}
+
+.task-input-group .task-due-date {
+  max-width: min(170px, 42vw);
 }
 
 // =============================================

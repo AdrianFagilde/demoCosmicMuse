@@ -218,7 +218,7 @@ const Lessons = () => {
         </CCardBody>
       </CCard>
 
-      <CModal visible={modalVisible} onClose={() => setModalVisible(false)}>
+      <CModal visible={modalVisible} onClose={() => setModalVisible(false)} scrollable>
         <CModalHeader>{editingId ? 'Editar clase' : 'Nueva clase'}</CModalHeader>
         <CModalBody>
           {formError && <div className="alert alert-danger">{formError}</div>}

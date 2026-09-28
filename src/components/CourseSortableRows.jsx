@@ -34,11 +34,11 @@ export const SortableTaskRow = ({
   })
   return (
     <CCard ref={setNodeRef} style={baseStyle(transform, transition, isDragging)} className="mb-2">
-      <CCardBody className="d-flex align-items-center gap-2 py-2">
+      <CCardBody className="d-flex align-items-center gap-2 py-2 sortable-row">
         <span {...dragHandleProps(attributes, listeners, `Reordenar ${task.title}`)}>
           <CIcon icon={cilMenu} />
         </span>
-        <div className="flex-grow-1">
+        <div className="flex-grow-1 sortable-row-label">
           <div className="fw-semibold">{task.title}</div>
           {task.description && <small className="text-medium-emphasis">{task.description}</small>}
         </div>
@@ -76,11 +76,11 @@ export const SortableFormRow = ({ form, taskLabel, onEdit, onViewResponses, onDe
   })
   return (
     <CCard ref={setNodeRef} style={baseStyle(transform, transition, isDragging)} className="mb-2">
-      <CCardBody className="d-flex align-items-center gap-3 py-2">
+      <CCardBody className="d-flex align-items-center gap-3 py-2 sortable-row">
         <span {...dragHandleProps(attributes, listeners, `Reordenar ${form.title}`)}>
           <CIcon icon={cilMenu} />
         </span>
-        <div className="flex-grow-1">
+        <div className="flex-grow-1 sortable-row-label">
           <div className="fw-semibold">{form.title}</div>
           {form.description && <small className="text-medium-emphasis">{form.description}</small>}
         </div>

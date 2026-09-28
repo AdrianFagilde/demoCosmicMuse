@@ -43,6 +43,7 @@ const AvatarCropModal = ({ visible, imageSrc, onCancel, onConfirm }) => {
       visible={visible}
       onClose={processing ? () => {} : onCancel}
       alignment="center"
+      scrollable
       onClosed={() => {
         setCrop({ x: 0, y: 0 })
         setZoom(1)
@@ -58,7 +59,7 @@ const AvatarCropModal = ({ visible, imageSrc, onCancel, onConfirm }) => {
           style={{
             position: 'relative',
             width: '100%',
-            height: '320px',
+            height: 'min(320px, 45vh)',
             background: '#000',
             borderRadius: '8px',
             overflow: 'hidden',

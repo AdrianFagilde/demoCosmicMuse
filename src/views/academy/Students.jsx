@@ -213,7 +213,7 @@ const Students = () => {
         </CCardBody>
       </CCard>
 
-      <CModal visible={modalVisible} onClose={() => setModalVisible(false)}>
+      <CModal visible={modalVisible} onClose={() => setModalVisible(false)} scrollable>
         <CModalHeader>Agregar estudiante</CModalHeader>
         <CModalBody>
           {error && <div className="alert alert-danger">{error}</div>}

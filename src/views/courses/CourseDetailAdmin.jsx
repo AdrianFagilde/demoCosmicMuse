@@ -298,7 +298,7 @@ const CourseDetailAdmin = ({
               </SortableContext>
             </DndContext>
           )}
-          <CInputGroup className="mt-3">
+          <CInputGroup className="mt-3 task-input-group">
             <CFormInput
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
@@ -315,11 +315,11 @@ const CourseDetailAdmin = ({
               <CIcon icon={cilCalendar} size="sm" />
             </CInputGroupText>
             <CFormInput
+              className="task-due-date"
               type="date"
               value={newTaskDueDate}
               onChange={(e) => setNewTaskDueDate(e.target.value)}
               aria-label="Fecha de entrega (opcional)"
-              style={{ maxWidth: 170 }}
             />
             <CButton type="button" color="primary" onClick={handleAddTask} disabled={addingTask}>
               {addingTask ? <CSpinner size="sm" /> : <CIcon icon={cilPlus} />}

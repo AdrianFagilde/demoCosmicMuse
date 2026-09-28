@@ -232,7 +232,12 @@ const Courses = () => {
         </CCol>
       </CRow>
 
-      <CModal visible={showCreate} onClose={() => setShowCreate(false)} backdrop="static">
+      <CModal
+        visible={showCreate}
+        onClose={() => setShowCreate(false)}
+        backdrop="static"
+        scrollable
+      >
         <CForm onSubmit={handleSaveCreate}>
           <CModalHeader closeButton>
             <CModalTitle>Nuevo curso</CModalTitle>
