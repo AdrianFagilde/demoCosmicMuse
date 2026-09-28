@@ -98,60 +98,62 @@
 // Tarjeta de contenido en modo oscuro
 // =============================================
 //
-// Relleno: #212631, que es --cui-gray-900 / --cui-dark del propio tema, no un
-// color inventado.
+// Relleno: $cosmic-purple al 16% sobre el navy del cuerpo, que compone en
+// #251c44. Se declara el color ya compuesto y no el rgba para que el
+// resultado no dependa de lo que haya detras: si una tarjeta se llegara a
+// anidar dentro de otra, un rgba se tiñe dos veces.
 //
-// Por qué hace falta: --cui-card-bg es var(--cui-body-bg), y en oscuro el body
-// es #161a3c. Es decir, la tarjeta salía DEL MISMO COLOR que el fondo de
-// página y solo la separaba un rgba(255,255,255,.10) de 1px. Por eso el
-// detalle no se leía: no era un problema de contraste de texto, era que no
+// Por qué hace falta el bloque: --cui-card-bg es var(--cui-body-bg), y en
+// oscuro el body es #161a3c. Es decir, la tarjeta salía DEL MISMO COLOR que el
+// fondo de página y solo la separaba un rgba(255,255,255,.10) de 1px. Por eso
+// el detalle no se leía: no era un problema de contraste de texto, era que no
 // había superficie.
 //
-// La elevación va por el BORDE, no por el relleno, y es una decisión forzada
-// por la paleta: el navy del cuerpo es tan oscuro que cualquier relleno más
-// claro destruye el contraste del texto. Medido:
+// La elevación va por el BORDE, no por el relleno, y no es una preferencia
+// estética sino un límite medido. $cosmic-purple es un purple oscuro
+// (luminancia 5 veces la del cuerpo), así que componerlo sube el relleno muy
+// poco antes de romper el texto. Al 16% queda en 1.07:1 y el techo antes de
+// que el texto muted pierda AAA es el 24% con 1.11:1; al 30% ya cae a 6.98:1.
+// O sea que esta opción da MATIZ de marca, no más contraste que un gris.
 //
-//   relleno    fill vs body   texto #aeb2bf
-//   #212631       1.11:1          7.16:1  <- elegido
-//   #242a3c       1.18:1          6.74:1
-//   #2a3040       1.28:1          6.22:1
-//   #323a49       1.47:1          5.40:1
+// Por eso el borde #3d4557 hace el trabajo: 1.65:1 sobre el relleno y 1.75:1
+// sobre el cuerpo, y sube a 1.97:1 en hover. El borde de .app-card es `none`
+// en claro, así que aquí se declara solo en oscuro.
 //
-// A partir de #242a3c el texto muted baja de AAA. Como el relleno solo aporta
-// 1.11:1, el borde hace el trabajo: #3d4557 se ve a 1.58:1 sobre el relleno y
-// 1.75:1 sobre el cuerpo. El borde de .app-card es `none` en claro, así que
-// aquí se declara solo en oscuro.
+// El alfa es el ajuste a tocar si el relleno sigue viéndose plano:
+//   8% #1d1b40  1.03:1  muted 7.73:1
+//  16% #251c44  1.07:1  muted 7.47:1  <- elegido
+//  24% #2c1d49  1.11:1  muted 7.19:1  tope antes de perder AAA
+//  30% #311e4c  1.14:1  muted 6.98:1  NO, rompe AAA
 //
-// Sobre #212631 los tokens de texto del tema oscuro siguen valiendo sin
-// tocar nada: --app-text-muted #dfe2e8 da 11.67:1 y --app-text-secondary
-// #aeb2bf da 7.16:1. Por eso este bloque NO los redeclara: la versión
-// anterior sí lo hacía porque sobre fondo blanco habría que darlos vuelta.
+// Sobre #251c44 los tokens de texto del tema oscuro siguen valiendo sin tocar
+// nada: --app-text-muted #dfe2e8 da 12.18:1 y --app-text-secondary #aeb2bf
+// da 7.47:1. Por eso este bloque NO los redeclara.
 //
 // Se limita a .app-card y no a --cui-card-bg global a propósito: ese token lo
 // comparten los modales, los dropdowns del header y los overlays, que deben
 // seguir oscuros para separarse del sidebar y de la cabecera.
 [data-coreui-theme='dark'] .app-card {
-  background: #212631;
+  background: #251c44;
   border: 1px solid #3d4557;
 
-  // Estados: los de style.scss están medidos sobre el cuerpo #161a3c. La
-  // tarjeta es más clara, así que en su interior bajan a 6.3-6.5:1 y pierden
-  // AAA. Estos son los tonos equivalentes más cercanos al original (13-16% de
-  // mezcla hacia blanco) que vuelven a dar 7.2:1 o más:
-  //   primary #d88fd8 6.38:1 -> #dd9edd 7.22:1
-  //   danger  #e28dba 6.31:1 -> #e69dc4 7.20:1
-  //   success #21c24c 6.41:1 -> #45cc69 7.28:1
-  //   info    #20bacc 6.46:1 -> #3fc4d3 7.25:1
-  //   warning #eead20 7.67:1 -> sin cambio
-  // Sobre el cuerpo siguen dando 8.0-8.5:1, es decir suben en vez de bajar.
-  --cui-primary: #dd9edd;
-  --cui-primary-rgb: 221, 158, 221;
-  --cui-danger: #e69dc4;
-  --cui-danger-rgb: 230, 157, 196;
-  --cui-success: #45cc69;
-  --cui-success-rgb: 69, 204, 105;
-  --cui-info: #3fc4d3;
-  --cui-info-rgb: 63, 196, 211;
+  // Estados: los de style.scss están medidos sobre el cuerpo #161a3c. Dentro
+  // de la tarjeta bajan de AAA, así que estos son los tonos equivalentes más
+  // cercanos al original (8-10% de mezcla hacia blanco) que vuelven a dar
+  // 7.2:1 o más:
+  //   primary #d88fd8 -> #db99db 7.22:1
+  //   danger  #e28dba -> #e598c1 7.22:1
+  //   success #21c24c -> #36c85d 7.21:1
+  //   info    #20bacc -> #32c0d0 7.22:1
+  //   warning #eead20 8.01:1 -> sin cambio
+  --cui-primary: #db99db;
+  --cui-primary-rgb: 219, 153, 219;
+  --cui-danger: #e598c1;
+  --cui-danger-rgb: 229, 152, 193;
+  --cui-success: #36c85d;
+  --cui-success-rgb: 54, 200, 93;
+  --cui-info: #32c0d0;
+  --cui-info-rgb: 50, 192, 208;
 
   // El borde de la cabecera y del pie usa --cui-border-color, y el detalle de
   // tarea y el constructor de checklist usan CListGroup dentro de la tarjeta.
@@ -159,11 +161,11 @@
   // hueco dentro de la tarjeta en vez de como filas.
   --cui-card-border-color: #3d4557;
   --cui-border-color: #3d4557;
-  --cui-list-group-bg: #212631;
+  --cui-list-group-bg: #251c44;
   --cui-list-group-color: var(--cui-body-color);
   --cui-list-group-border-color: #3d4557;
-  --cui-list-group-action-hover-bg: #2a3040;
-  --cui-list-group-action-active-bg: #323a49;
+  --cui-list-group-action-hover-bg: #2f2453;
+  --cui-list-group-action-active-bg: #382b5c;
 
   // La sombra en claro está hecha para una superficie clara. En oscuro no se
   // ve, así que la elevación la sostiene el borde de arriba y aquí solo queda
@@ -172,17 +174,18 @@
 }
 
 [data-coreui-theme='dark'] .app-card:hover {
-  border-color: #4a5468;
+  border-color: #4a4f6b;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
 // Cabecera de color (.app-card-primary, .app-card-success, ...): fondo en el
 // tono de estado y texto oscuro, no blanco. Con texto blanco sobre los tonos
-// claros de dark se quedaba en 1.7:1; #212631 sobre el nuevo tono da 7.2:1.
+// claros de dark se quedaba en 1.7:1; el relleno de la tarjeta sobre el tono
+// nuevo da 7.2:1.
 [data-coreui-theme='dark'] .app-card-primary .card-header,
 [data-coreui-theme='dark'] .app-card-success .card-header,
 [data-coreui-theme='dark'] .app-card-info .card-header,
 [data-coreui-theme='dark'] .app-card-warning .card-header,
 [data-coreui-theme='dark'] .app-card-danger .card-header {
-  color: #212631;
+  color: #251c44;
 }
