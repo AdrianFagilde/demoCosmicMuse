@@ -16,14 +16,7 @@ import {
   CRow,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilLockLocked,
-  cilUser,
-  cilEnvelopeClosed,
-  cilEducation,
-  cilPhone,
-  cilStar,
-} from '@coreui/icons'
+import { cilLockLocked, cilUser, cilEnvelopeClosed, cilEducation } from '@coreui/icons'
 import supabase from '../../../lib/supabase'
 import { INSTRUMENT_OPTIONS, normalizeUsername } from '../../../utils/students'
 import { StaffDivider, TrebleClef, Vinyl } from '../../../components/MusicDecor'
@@ -32,8 +25,6 @@ import PasswordInput from '../../../components/PasswordInput'
 import BirthDatePicker from '../../../components/BirthDatePicker'
 import FormField from '../../../components/FormField'
 import useUsernameAvailability from '../../../hooks/useUsernameAvailability'
-
-const LEVEL_OPTIONS = ['Principiante', 'Intermedio', 'Avanzado']
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -44,7 +35,6 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     instrument: '',
-    level: '',
     guardianFirstName: '',
     guardianLastName: '',
     guardianPhone: '',
@@ -266,7 +256,6 @@ const Register = () => {
       instrument: formData.instrument || undefined,
       birth_date: formData.birthDate || undefined,
       phone: formData.phone || undefined,
-      level: formData.level || undefined,
       consents: {
         privacy: consents.privacy,
         terms: consents.terms,
@@ -307,7 +296,7 @@ const Register = () => {
           instrument: formData.instrument || null,
           birth_date: formData.birthDate || null,
           phone: formData.phone || null,
-          level: formData.level || null,
+          level: null,
           guardian_name: isMinor
             ? `${formData.guardianFirstName} ${formData.guardianLastName}`
             : null,
@@ -484,27 +473,6 @@ const Register = () => {
                         >
                           <option value="">Selecciona un instrumento (opcional)</option>
                           {INSTRUMENT_OPTIONS.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </CFormSelect>
-                      </CInputGroup>
-                    </FormField>
-
-                    <FormField label="Nivel" error={errors.level}>
-                      <CInputGroup>
-                        <CInputGroupText>
-                          <CIcon icon={cilStar} aria-hidden="true" />
-                        </CInputGroupText>
-                        <CFormSelect
-                          value={formData.level}
-                          onChange={(e) => handleChange('level', e.target.value)}
-                          onBlur={(e) => handleBlur('level', e.target.value)}
-                          invalid={!!errors.level}
-                        >
-                          <option value="">Nivel (opcional)</option>
-                          {LEVEL_OPTIONS.map((option) => (
                             <option key={option} value={option}>
                               {option}
                             </option>
