@@ -50,7 +50,7 @@ Abre `http://localhost:3000`.
 - `src/views/` - vistas de páginas
 - `supabase/migrations/` - esquema y políticas RLS (aplicar en orden)
 - `supabase/functions/create-student/` - Edge Function para crear estudiantes como admin
-- `supabase/functions/send-push-notification/` - Edge Function de notificaciones web push (requiere secretos `VAPID_*` antes de desplegar)
+- `supabase/functions/delete-user/` - Edge Function para borrar usuarios como admin
 
 ## Añadir una nueva página
 

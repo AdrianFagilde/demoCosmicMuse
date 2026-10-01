@@ -1,5 +1,10 @@
 // Service Worker for Cosmic Muse Academy PWA
-// Offline shell + push notifications.
+// Offline shell únicamente.
+//
+// El Web Push se retiró (migración 031): ya no hay listeners de
+// push/notificationclick ni edge function que los envíe. Los avisos llegan
+// por la tabla notifications + toasts in-app, que no necesitan permiso del
+// navegador ni suscripción.
 //
 // Alcance deliberadamente estrecho: solo se cachea lo que sirve el propio
 // origen (el shell de la SPA y sus assets con hash). El tráfico a
@@ -110,59 +115,6 @@ function isStaticAsset(pathname) {
     pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)$/i)
   )
 }
-
-// Push notification handling
-self.addEventListener('push', (event) => {
-  if (!event.data) return
-
-  // El payload puede llegar vacio o no ser JSON; un throw aqui dentro
-  // aborta la entrega de la notificacion.
-  let data
-  try {
-    data = event.data.json()
-  } catch (err) {
-    data = { title: 'Cosmic Muse Academy', body: event.data.text() }
-  }
-
-  const options = {
-    body: data.body,
-    icon: '/android-chrome-192x192.png',
-    badge: '/android-chrome-192x192.png',
-    vibrate: [200, 100, 200],
-    data: data.data || {},
-    actions: [
-      { action: 'open', title: 'Abrir' },
-      { action: 'dismiss', title: 'Descartar' },
-    ],
-    requireInteraction: true,
-  }
-
-  event.waitUntil(self.registration.showNotification(data.title || 'Notificación', options))
-})
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close()
-
-  if (event.action === 'dismiss' || event.action !== 'open') {
-    return
-  }
-
-  // Respeta el destino del push: antes siempre abria el dashboard.
-  const target = (event.notification.data && event.notification.data.url) || '/'
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus()
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(target)
-      }
-    }),
-  )
-})
 
 // Message handling from main thread.
 // Acepta el formato objeto { type } que usa index.jsx y el string plano por

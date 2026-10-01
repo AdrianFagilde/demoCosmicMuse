@@ -13,6 +13,8 @@ import { AppProvider } from './context/AppContext'
 
 import App from './App'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
+import AppUpdatePrompt from './components/AppUpdatePrompt'
+import { announceAppUpdate } from './utils/swUpdatePrompt'
 
 // Ventana de gracia antes de tomar el control sin preguntar.
 //
@@ -92,9 +94,11 @@ if ('serviceWorker' in navigator) {
       return
     }
 
-    if (confirm('Hay una nueva versión disponible. ¿Recargar para actualizar?')) {
-      takeOver(newWorker)
-    }
+    // Antes era un confirm() nativo del navegador; ahora AppUpdatePrompt
+    // (ConfirmModal de CoreUI) decide al vuelo, y posponer no bloquea la
+    // pagina. Si pasan UPDATE_GRACE_MS sin responder, la recarga se aplica
+    // sola en el siguiente arranque (rama de arriba).
+    announceAppUpdate(() => takeOver(newWorker))
   }
 
   window.addEventListener('load', () => {
@@ -139,6 +143,7 @@ createRoot(document.getElementById('root')).render(
     <>
       <App />
       <PWAInstallPrompt />
+      <AppUpdatePrompt />
     </>
   </AppProvider>,
 )

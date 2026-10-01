@@ -1,5 +1,15 @@
 import React, { useMemo, useState } from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CNav, CNavItem, CNavLink, CRow } from '@coreui/react'
+import {
+  CAlert,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CRow,
+} from '@coreui/react'
 
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
@@ -19,12 +29,15 @@ const Payments = () => {
   const [activeTab, setActiveTab] = useState('payments')
   const [filterText, setFilterText] = useState('')
   const [filterStatus, setFilterStatus] = useState('Todos')
+  // Feedback in-app del envío de recordatorios (antes usaba la API nativa
+  // Notification del navegador, retirada con el Web Push).
+  const [reminderFeedback, setReminderFeedback] = useState(null)
 
   const { students } = useSupabaseStudents()
   const { payments, addPayment, getPaymentProofUrl } = useSupabasePayments(user?.id)
   const { upcomingReminders, addReminder, updateReminder, deleteReminder, sendReminder } =
     useSupabaseReminders(user?.id)
-  const { entries: notificationLog, notifyBrowser } = useSupabaseNotifications()
+  const { entries: notificationLog } = useSupabaseNotifications()
 
   const studentBalances = useMemo(
     () => computeStudentBalances(students, payments),
@@ -38,16 +51,22 @@ const Payments = () => {
       const entries = await sendReminder(reminder, trigger, studentBalances)
       if (entries && entries.length > 0) {
         const methodLabel = reminder.notify_whatsapp ? 'App + WhatsApp' : 'App'
-        notifyBrowser(
-          `Recordatorio ${methodLabel}`,
-          `${entries.length} notificaciones enviadas a ${reminder.target_group}`,
-        )
+        setReminderFeedback({
+          color: 'success',
+          text: `Recordatorio ${methodLabel}: ${entries.length} notificaciones enviadas a ${reminder.target_group}.`,
+        })
       } else {
-        notifyBrowser('Recordatorio', 'No había destinatarios para este grupo.')
+        setReminderFeedback({
+          color: 'warning',
+          text: 'No había destinatarios para este grupo.',
+        })
       }
     } catch (err) {
       console.error('Payments: fallo al enviar el recordatorio', err?.message || err)
-      notifyBrowser('Recordatorio', 'No se pudo enviar el recordatorio. Inténtalo de nuevo.')
+      setReminderFeedback({
+        color: 'danger',
+        text: 'No se pudo enviar el recordatorio. Inténtalo de nuevo.',
+      })
     }
   }
 
@@ -147,6 +166,17 @@ const Payments = () => {
             </CCard>
           </CCol>
         </CRow>
+      )}
+
+      {activeTab === 'reminders' && reminderFeedback && (
+        <CAlert
+          color={reminderFeedback.color}
+          dismissible
+          onClose={() => setReminderFeedback(null)}
+          className="mb-4"
+        >
+          {reminderFeedback.text}
+        </CAlert>
       )}
 
       {activeTab === 'reminders' && (

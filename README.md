@@ -94,11 +94,11 @@ src/
 └── routes.js          # Definición de rutas protegidas
 public/
 ├── site.webmanifest   # Manifiesto PWA (instalable)
-└── sw.js              # Service worker: shell offline y push
+└── sw.js              # Service worker: shell offline y actualización del bundle
 supabase/
 ├── config.toml        # Configuración del stack local
 ├── migrations/        # Esquema SQL, políticas RLS y triggers (aplicar en orden, una vez)
-├── functions/         # Edge Functions (create-student, delete-user, send-push-notification)
+├── functions/         # Edge Functions (create-student, delete-user)
 ├── BASELINE.md        # Estado del esquema, cómo detectar drift y qué corrigió la 017
 └── VERIFICACION_017.sql  # Comprobaciones tras aplicar la migración 017
 ```
@@ -143,13 +143,13 @@ Cualquier ruta no declarada redirige a `/dashboard`.
 - El service worker cachea **solo recursos del propio origen** (el shell y los assets con hash). El tráfico a `*.supabase.co` nunca se intercepta ni se cachea, porque las respuestas autenticadas se indexarían únicamente por URL.
 - Las navegaciones van _network first_ con el shell como respaldo offline; los assets con hash van _cache first_.
 - El nombre de la caché incluye la versión de build, que `vite.config.mjs` deriva de `VITE_BUILD_VERSION`, del HEAD de git o de la marca de tiempo. Al activarse una versión nueva se purgan las cachés anteriores.
-- La actualización no se recarga sola: se pregunta al usuario y, al aceptar, se envía `skipWaiting` al worker; la recarga ocurre en `controllerchange`, cuando el shell nuevo ya está activo.
+- La actualización no se recarga sola: se pregunta al usuario con un modal in-app (`AppUpdatePrompt`, antes era un `confirm()` nativo) y, al aceptar, se envía `skipWaiting` al worker; la recarga ocurre en `controllerchange`, cuando el shell nuevo ya está activo. Si el usuario la pospone durante 7 días, se aplica sola en el siguiente arranque.
 
 ## Nota sobre mensajería
 
 **Las tablas de mensajería ya no existen.** La 028 borró `conversations`, `conversation_participants` y `messages`: estaban vacías, sin ningún archivo de `src/` que las consultara y con 11 políticas RLS protegiendo datos que no existían. Los hooks `useSupabaseMessaging` y `useSupabasePushNotifications` ya se habían eliminado antes, en la 016, por no tener consumidor. Durante un tiempo el módulo estuvo «arreglado» solo en el papel (la 017 y la 019 corrigieron sus políticas) mientras seguía siendo superficie de ataque por PostgREST; borrar el esquema es lo que lo cierra de verdad. Si algún día se recupera el chat, hay que rehacerlo sobre el modelo actual. Detalle en `supabase/BASELINE.md`.
 
-La Edge Function `send-push-notification` y la tabla `push_subscriptions` sí siguen existiendo, y también están sin interfaz: **nada se suscribe**, porque el cliente que las usaba se eliminó. Por eso `VITE_VAPID_PUBLIC_KEY` ya no figura en `.env.example`: declararla habría sugerido un camino que no existe. `public/sw.js` sí sabe manejar los eventos `push` y `notificationclick`, así que la parte del service worker está lista; falta el registro de la suscripción.
+El Web Push del navegador tampoco existe ya: la migración 031 borró la tabla `push_subscriptions` y se retiraron la Edge Function `send-push-notification` y los listeners `push`/`notificationclick` de `public/sw.js`. Los avisos llegan por la tabla `notifications` (Realtime) y se muestran como toasts in-app (`NotificationToasts`), sin pedir permiso del navegador. Los secretos `VAPID_*` dejaron de ser necesarios.
 
 ## Documentación adicional
 

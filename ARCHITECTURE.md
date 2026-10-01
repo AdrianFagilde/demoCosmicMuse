@@ -100,7 +100,6 @@ Definido en `supabase/migrations/` (aplicar en orden, una vez cada una):
 | `form_answers`        | Respuestas a esas preguntas                                                      |
 | `form_submissions`    | Envíos de formulario por estudiante                                              |
 | `course_materials`    | Material descargable de un curso                                                  |
-| `push_subscriptions`  | Suscripciones push del navegador (tabla **sin interfaz**)                         |
 | `practice_sessions`   | Sesiones de práctica con minutos, XP y fecha                                      |
 | `practice_streaks`    | Rachas por estudiante (actualizadas por trigger, no editables)                   |
 | `student_gamification` | XP, nivel, minutos y contadores por estudiante                                  |
@@ -108,13 +107,19 @@ Definido en `supabase/migrations/` (aplicar en orden, una vez cada una):
 
 Buckets de Storage: `avatars` (público) y `payment-proofs` (privado, solo admin).
 
-> **Nota sobre "sin interfaz".** `push_subscriptions` está creada y con RLS,
-> pero **ningún archivo de `src/` la consulta**. No es lo mismo que una feature
-> dormida que se pueda activar tal cual, porque el esquema sí está expuesto por
-> PostgREST y la anon key es pública, así que cualquier hueco de RLS es
-> explotable sin que nadie use la feature.
+> **Nota sobre "sin interfaz".** Un esquema desplegado sin consumidor en
+> `src/` no es una feature dormida que se pueda activar tal cual, porque el
+> esquema sí está expuesto por PostgREST y la anon key es pública, así que
+> cualquier hueco de RLS es explotable sin que nadie use la feature.
 >
-> El módulo de mensajería fue exactamente ese caso y terminó borrado: la 014
+> `push_subscriptions` fue exactamente ese caso y terminó borrada: la 031
+> retiró la tabla de suscripciones Web Push junto con la Edge Function
+> `send-push-notification` y los listeners `push`/`notificationclick` de
+> `public/sw.js`, porque la app avisa por la tabla `notifications` y los
+> toasts in-app, sin necesidad de guardar endpoints VAPID (que son
+> credenciales de envío).
+>
+> El módulo de mensajería fue el mismo caso y terminó borrado: la 014
 > dejó dos políticas de `messages` con una comparación tautológica que permitía
 > leer e inyectar mensajes en conversaciones ajenas, y nadie lo notó porque no
 > había UI que lo delatara. La 017 y la 019 lo corrigieron sobre el papel, pero
@@ -157,10 +162,11 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 
 - `supabase/functions/create-student/index.ts`: Edge Function que verifica que el llamador sea admin vía `profiles` y crea el usuario con `auth.admin.createUser` usando la service role key. El cliente nunca invoca signUp con privilegios de staff.
 
-### Notificaciones push
+### Notificaciones
 
-- `supabase/functions/send-push-notification/index.ts`: Edge Function que envía notificaciones web push con `web-push`. Solo un admin, o el propio destinatario, puede enviarse push; limpia suscripciones inválidas (404/410). Requiere los secretos `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`.
-- **Sin cliente.** La función y la tabla `push_subscriptions` siguen desplegadas, pero no hay código en `src/` que se suscriba, así que la vía está cerrada por el extremo del navegador. `public/sw.js` ya maneja `push` y `notificationclick`; lo que falta es el registro de la suscripción. `VITE_VAPID_PUBLIC_KEY` se retiró de `.env.example` por eso: mantenerla sugería un camino que no existe.
+- **In-app únicamente.** Los avisos viven en la tabla `notifications` (publicada en Realtime) y se presentan con la campana del header (`NotificationBell`) y los toasts (`NotificationToasts`, que además renderiza los avisos ad-hoc de `showAppToast` en `src/utils/appToasts.js`, con posición, acciones y persistencia configurables).
+- Las confirmaciones que antes eran `confirm()` nativo del navegador usan `ConfirmModal` (`src/components/ConfirmModal.jsx`); el aviso de "nueva versión del SW" lo dispara `index.jsx` con `announceAppUpdate()` y lo muestra `AppUpdatePrompt` como modal.
+- El Web Push se retiró por completo en la migración 031: no hay Edge Function de envío, ni tabla de suscripciones, ni listeners `push`/`notificationclick` en el service worker (que sigue gestionando solo el shell offline y la actualización del bundle). Los secretos `VAPID_*` ya no hacen falta.
 
 ## Vistas principales
 
@@ -180,7 +186,7 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 - Deploy en **Vercel**: `vercel.json` define el rewrite SPA, `Cache-Control: immutable` para `/assets/(.*)` y `no-store` para el resto. La regla general excluye explícitamente `assets/` y `sw.js` con un lookahead negativo, para que el `no-store` no pise el cacheo inmutable independientemente del orden en que Vercel aplique las cabeceras
 - Cabeceras de seguridad aplicadas por `vercel.json`: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `X-DNS-Prefetch-Control` y `Permissions-Policy` (cámara, geolocalización, micrófono y pagos restringidos; la app no usa ninguno). Ajustar si se incorporan funciones que los necesiten
 - Variables de entorno requeridas en el host: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`; opcional: `VITE_BUILD_VERSION`. La anon key es pública por diseño y la autorización la impone RLS, así que no es un secreto
-- Secretos de Edge Functions en Supabase: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, y la service role key si se usa el flujo local
+- Secretos de Edge Functions en Supabase: la service role key si se usa el flujo local (los `VAPID_*` se retiraron con el Web Push en la 031)
 
 ## PWA y offline
 
@@ -188,7 +194,7 @@ La autorización se aplica íntegramente en PostgreSQL (`supabase/migrations/007
 - `public/sw.js` cachea **solo el propio origen**. El tráfico a `*.supabase.co` se deja pasar: sus respuestas dependen de la cabecera de autorización, no de la URL, así que cachearlas podría devolver los datos de un usuario a otro
 - Navegaciones _network first_ con `/index.html` de respaldo; assets con hash _cache first_; el resto del mismo origen va directo a la red
 - `activate` borra cualquier caché con otra versión; `clearCache` preserva la activa para no dejar el worker sin shell offline
-- La actualización pide confirmación y recarga en `controllerchange`, no antes: recargar mientras sigue activo el worker viejo descarta el bundle recién descargado
+- La actualización pide confirmación con el `ConfirmModal` de `AppUpdatePrompt` (antes `confirm()` nativo) y recarga en `controllerchange`, no antes: recargar mientras sigue activo el worker viejo descarta el bundle recién descargado
 
 ## Tareas de mantenimiento
 

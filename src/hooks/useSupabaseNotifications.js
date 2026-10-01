@@ -38,22 +38,7 @@ const useSupabaseNotifications = () => {
     [refetch],
   )
 
-  const notifyBrowser = useCallback((title, body) => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return
-    if (Notification.permission === 'granted') {
-      new Notification(title, { body })
-      return
-    }
-    if (Notification.permission !== 'denied') {
-      Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-          new Notification(title, { body })
-        }
-      })
-    }
-  }, [])
-
-  return { entries, loading, error, addEntries, notifyBrowser, refetch }
+  return { entries, loading, error, addEntries, refetch }
 }
 
 export default useSupabaseNotifications
