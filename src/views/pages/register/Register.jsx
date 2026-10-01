@@ -405,21 +405,15 @@ const Register = () => {
                       </CInputGroup>
                     </FormField>
 
-                    <FormField
+                    <BirthDatePicker
                       label="Fecha de nacimiento"
+                      value={formData.birthDate || undefined}
+                      onChange={(val) => handleChange('birthDate', val)}
                       required
+                      disabled={loading}
                       error={errors.birthDate}
-                      hint="Debes tener menos de 120 años"
-                    >
-                      <BirthDatePicker
-                        value={formData.birthDate || undefined}
-                        onChange={(val) => handleChange('birthDate', val)}
-                        required
-                        disabled={loading}
-                        error={errors.birthDate}
-                        maxDate={new Date()}
-                      />
-                    </FormField>
+                      maxDate={new Date()}
+                    />
 
                     <FormField label="Correo electrónico" required error={errors.email}>
                       <CInputGroup>
@@ -438,55 +432,44 @@ const Register = () => {
                       </CInputGroup>
                     </FormField>
 
-                    <FormField
+                    <PhoneInput
                       label="Teléfono"
+                      value={formData.phone}
+                      onChange={(val) => handleChange('phone', val)}
+                      onBlur={(val) => handleBlur('phone', val)}
                       required
                       error={errors.phone}
+                      disabled={loading}
                       hint="Formato internacional: +34 600 123 456"
-                    >
-                      <PhoneInput
-                        value={formData.phone}
-                        onChange={(val) => handleChange('phone', val)}
-                        onBlur={(val) => handleBlur('phone', val)}
-                        required
-                        error={errors.phone}
-                        disabled={loading}
-                      />
-                    </FormField>
+                    />
 
-                    <FormField
+                    <PasswordInput
                       label="Contraseña"
+                      value={formData.password}
+                      onChange={(val) => handleChange('password', val)}
+                      onBlur={(val) => handleBlur('password', val)}
                       required
                       error={errors.password}
+                      disabled={loading}
+                      showStrength
+                      minLength={6}
+                      autoComplete="new-password"
+                      id="password"
                       hint="Mínimo 6 caracteres"
-                    >
-                      <PasswordInput
-                        value={formData.password}
-                        onChange={(val) => handleChange('password', val)}
-                        onBlur={(val) => handleBlur('password', val)}
-                        required
-                        error={errors.password}
-                        disabled={loading}
-                        showStrength
-                        minLength={6}
-                        autoComplete="new-password"
-                        id="password"
-                      />
-                    </FormField>
+                    />
 
-                    <FormField label="Confirmar contraseña" required error={errors.confirmPassword}>
-                      <PasswordInput
-                        value={formData.confirmPassword}
-                        onChange={(val) => handleChange('confirmPassword', val)}
-                        onBlur={(val) => handleBlur('confirmPassword', val)}
-                        required
-                        error={errors.confirmPassword}
-                        disabled={loading}
-                        showStrength={false}
-                        autoComplete="new-password"
-                        id="confirmPassword"
-                      />
-                    </FormField>
+                    <PasswordInput
+                      label="Confirmar contraseña"
+                      value={formData.confirmPassword}
+                      onChange={(val) => handleChange('confirmPassword', val)}
+                      onBlur={(val) => handleBlur('confirmPassword', val)}
+                      required
+                      error={errors.confirmPassword}
+                      disabled={loading}
+                      showStrength={false}
+                      autoComplete="new-password"
+                      id="confirmPassword"
+                    />
 
                     <FormField label="Instrumento" error={errors.instrument}>
                       <CInputGroup>
