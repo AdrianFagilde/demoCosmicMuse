@@ -69,6 +69,14 @@ const Register = () => {
   const navigateTimeoutRef = useRef(null)
   const navigate = useNavigate()
 
+  // Helper para formatear fecha como YYYY-MM-DD (definido antes de useMemo que lo usa)
+  const formatDateForInput = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   // Auto-focus en primer campo al montar
   useEffect(() => {
     nameInputRef.current?.focus()
@@ -169,13 +177,6 @@ const Register = () => {
     const d = new Date()
     return formatDateForInput(d)
   }, [])
-
-  const formatDateForInput = (date) => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
