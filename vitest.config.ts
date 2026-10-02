@@ -12,6 +12,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
+      include: ['src/utils/{dates,students}.js'],
       thresholds: {
         statements: 80,
         branches: 80,

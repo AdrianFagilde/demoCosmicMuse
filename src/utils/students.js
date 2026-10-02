@@ -51,7 +51,8 @@ export const buildAssignmentGroups = (students) => {
 }
 
 export const normalizeUsername = (fullName) =>
-  fullName
+  (fullName || '')
+    .trim()
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')

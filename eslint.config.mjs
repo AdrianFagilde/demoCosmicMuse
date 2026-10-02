@@ -1,10 +1,11 @@
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import eslintPluginReact from 'eslint-plugin-react'
 import eslintPluginReactHooks from 'eslint-plugin-react-hooks'
+import tseslint from 'typescript-eslint'
 import globals from 'globals'
 
-export default [
-  { ignores: ['eslint.config.mjs'] },
+export default tseslint.config(
+  { ignores: ['eslint.config.mjs', 'build', 'coverage', 'node_modules'] },
   {
     ...eslintPluginReact.configs.flat.recommended,
     ...eslintPluginReact.configs.flat['jsx-runtime'],
@@ -46,5 +47,42 @@ export default [
       'no-undef': 'error',
     },
   },
+  {
+    ...eslintPluginReact.configs.flat.recommended,
+    ...eslintPluginReact.configs.flat['jsx-runtime'],
+    files: ['src/**/*.{ts,tsx}'],
+    plugins: {
+      react: eslintPluginReact,
+      'react-hooks': eslintPluginReactHooks,
+      '@typescript-eslint': tseslint.plugin,
+    },
+    languageOptions: {
+      parser: tseslint.parser,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
+    rules: {
+      ...tseslint.configs.recommended.reduce(
+        (rules, config) => ({ ...rules, ...(config.rules || {}) }),
+        {},
+      ),
+      ...eslintPluginReactHooks.configs.recommended.rules,
+      'react/jsx-no-undef': 'error',
+    },
+  },
   eslintPluginPrettierRecommended,
-]
+)

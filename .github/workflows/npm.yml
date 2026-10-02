@@ -47,6 +47,12 @@ jobs:
       - name: Run lint
         run: npm run lint
 
+      - name: Run typecheck
+        run: npm run typecheck
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
       - name: Run build
         run: npm run build
 
@@ -55,3 +61,32 @@ jobs:
       # sin quejarse.
       - name: Assert Supabase config reached the bundle
         run: node scripts/assert-bundle-env.mjs
+
+  # Aplica las migraciones en un Supabase local y comprueba invariantes del
+  # esquema final (RLS, contrato de funciones, politicas). Sin esto, una
+  # migracion rota solo se descubre al desplegar.
+  supabase-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Apply migrations from scratch
+        run: supabase db reset --local
+
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Verify final schema invariants
+        run: |
+          DB_URL=$(supabase status -o env | grep '^DB_URL=' | cut -d'"' -f2)
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/ci_verification.sql
