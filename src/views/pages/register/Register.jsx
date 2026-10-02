@@ -286,28 +286,6 @@ const Register = () => {
         return
       }
 
-      if (data.user) {
-        const profileData = {
-          id: data.user.id,
-          full_name: formData.fullName,
-          username,
-          email: formData.email,
-          role: 'student',
-          instrument: formData.instrument || null,
-          birth_date: formData.birthDate || null,
-          phone: formData.phone || null,
-          level: null,
-          guardian_name: isMinor
-            ? `${formData.guardianFirstName} ${formData.guardianLastName}`
-            : null,
-          guardian_phone: isMinor ? formData.guardianPhone : null,
-        }
-        const { error: upsertError } = await supabase
-          .from('profiles')
-          .upsert(profileData, { onConflict: 'id' })
-        if (upsertError) console.error('[Register] Upsert error:', upsertError.message)
-      }
-
       sessionStorage.setItem(`cosmic_muse_welcome_pending_${formData.email}`, '1')
 
       if (data.session) {
