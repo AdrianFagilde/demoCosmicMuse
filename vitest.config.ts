@@ -13,7 +13,7 @@ export default defineConfig({
       reporter: ['text', 'html', 'lcov'],
       include: [
         'src/utils/{dates,students,colors,format,courses,linkify,notificationRouting,appToasts,version,forms,notifications,image}.js',
-        'src/hooks/{useSupabaseQuery,useCourseEnrollments,useSupabaseTasks,useSupabasePayments,useUsernameAvailability}.js',
+        'src/hooks/{useSupabaseQuery,useCourseEnrollments,useSupabaseTasks,useSupabaseLessons,useSupabasePayments,useSupabaseReminders,useUsernameAvailability}.js',
       ],
       thresholds: {
         statements: 80,
