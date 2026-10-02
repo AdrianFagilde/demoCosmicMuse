@@ -223,28 +223,38 @@ CREATE POLICY "Student read own proofs" ON storage.objects
 -- o vía service_role.
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $
 BEGIN
-  INSERT INTO public.profiles (
-    id, full_name, username, email, role,
-    birth_date, guardian_name, guardian_phone
-  )
+  INSERT INTO public.profiles (id, full_name, username, email, role, phone, instrument, level, birth_date, guardian_name, guardian_phone)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data ->> 'full_name', 'Usuario'),
     COALESCE(NEW.raw_user_meta_data ->> 'username', SPLIT_PART(NEW.email, '@', 1)),
     NEW.email,
     'student',
-    CASE
-      WHEN NEW.raw_user_meta_data ->> 'birth_date' IS NOT NULL
-        THEN (NEW.raw_user_meta_data ->> 'birth_date')::DATE
-      ELSE NULL
-    END,
+    NEW.raw_user_meta_data ->> 'phone',
+    NEW.raw_user_meta_data ->> 'instrument',
+    NEW.raw_user_meta_data ->> 'level',
+    CASE WHEN NEW.raw_user_meta_data ->> 'birth_date' IS NOT NULL THEN (NEW.raw_user_meta_data ->> 'birth_date')::DATE ELSE NULL END,
     NEW.raw_user_meta_data ->> 'guardian_name',
     NEW.raw_user_meta_data ->> 'guardian_phone'
   );
   RETURN NEW;
 END;
+$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- El trigger existente (on_auth_user_created) conserva su binding;
