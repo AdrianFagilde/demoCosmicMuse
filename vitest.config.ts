@@ -8,11 +8,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
-    css: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      include: ['src/utils/{dates,students}.js'],
+      include: [
+        'src/utils/{dates,students,colors,format,courses,linkify,notificationRouting,appToasts,version,forms,notifications,image}.js',
+        'src/hooks/{useSupabaseQuery,useCourseEnrollments}.js',
+      ],
       thresholds: {
         statements: 80,
         branches: 80,
