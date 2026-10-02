@@ -23,6 +23,7 @@ const BirthDatePicker = ({
   label = 'Fecha de nacimiento',
   value = '',
   onChange,
+  onBlur,
   required = false,
   disabled = false,
   error,
@@ -53,6 +54,7 @@ const BirthDatePicker = ({
         autoComplete="bday"
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
+        onBlur={(e) => onBlur?.(e.target.value)}
         required={required}
         disabled={disabled}
         invalid={!!error}

@@ -15,6 +15,7 @@ const PhoneInput = ({
   label = 'Teléfono',
   value = '',
   onChange,
+  onBlur,
   required = false,
   disabled = false,
   error,
@@ -64,6 +65,7 @@ const PhoneInput = ({
     const normalized = normalize(e.target.value)
     e.target.value = formatVisual(normalized)
     onChange?.(normalized)
+    onBlur?.(normalized)
   }
 
   const handleFocus = (e) => {
