@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type SupabaseResult = { data?: any; error?: any }
+export type SupabaseResult = { data?: any; error?: any; count?: number }
 
 export type SupabaseCall = { table: string; method: string; args: any[] }
 
@@ -77,6 +77,28 @@ export function createSupabaseMock() {
     from: (table: string) => {
       record(table, 'from', [])
       return makeBuilder(table)
+    },
+    rpc: (fn: string, args?: unknown) => {
+      record('rpc', fn, [args])
+      return Promise.resolve(nextResult(`rpc:${fn}`))
+    },
+    channel: (name: string) => {
+      record('realtime', 'channel', [name])
+      const channel: any = {
+        on: (...args: any[]) => {
+          record('realtime', 'on', args)
+          return channel
+        },
+        subscribe: (...args: any[]) => {
+          record('realtime', 'subscribe', args)
+          return channel
+        },
+      }
+      return channel
+    },
+    removeChannel: (channel: unknown) => {
+      record('realtime', 'removeChannel', [channel])
+      return Promise.resolve('ok')
     },
     auth: {
       getSession: async () => {
