@@ -223,7 +223,7 @@ CREATE POLICY "Student read own proofs" ON storage.objects
 -- o vía service_role.
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, full_name, username, email, role, phone, instrument, level, birth_date, guardian_name, guardian_phone)
   VALUES (
@@ -241,21 +241,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
-$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
- LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
- LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
- LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
- LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
- LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- El trigger existente (on_auth_user_created) conserva su binding;
 -- CREATE OR REPLACE FUNCTION actualiza la definición en el mismo OID.

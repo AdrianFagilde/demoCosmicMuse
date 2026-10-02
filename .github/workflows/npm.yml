@@ -90,3 +90,8 @@ jobs:
         run: |
           DB_URL=$(supabase status -o env | grep '^DB_URL=' | cut -d'"' -f2)
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/ci_verification.sql
+
+      - name: Verify RLS behaviour with JWT context
+        run: |
+          DB_URL=$(supabase status -o env | grep '^DB_URL=' | cut -d'"' -f2)
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/rls_tests.sql
