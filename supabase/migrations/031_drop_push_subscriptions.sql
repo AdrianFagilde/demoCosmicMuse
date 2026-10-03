@@ -26,11 +26,10 @@
 -- Si algún día se recupera el push, hay que registrar de nuevo: los
 -- endpoints antiguos no se pueden reconstruir desde la app.
 --
--- Idempotente: IF EXISTS en los DROP.
+-- Idempotente: DROP TABLE IF EXISTS ... CASCADE. No se hace DROP POLICY
+-- antes porque DROP POLICY IF EXISTS exige que la tabla exista (el IF EXISTS
+-- aplica a la policy, no a la tabla) y fallaba si la tabla ya no estaba.
+-- DROP TABLE ... CASCADE elimina las policies asociadas por sí solo.
 -- =============================================
-
-DROP POLICY IF EXISTS "Admin all push_subscriptions" ON public.push_subscriptions;
-DROP POLICY IF EXISTS "User manage own push_subscriptions" ON public.push_subscriptions;
-DROP POLICY IF EXISTS "Student manage own push_subscriptions" ON public.push_subscriptions;
 
 DROP TABLE IF EXISTS public.push_subscriptions CASCADE;
