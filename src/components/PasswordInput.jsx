@@ -1,7 +1,45 @@
 import React, { useState } from 'react'
-import { CFormInput, CFormLabel, CInputGroup, CInputGroupText, CProgress } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilToggleOn, cilToggleOff } from '@coreui/icons'
+import { CFormInput, CFormLabel, CInputGroup, CProgress } from '@coreui/react'
+
+// CoreUI no incluye un ojo "abierto" en su set libre, asi que usamos SVG en
+// linea para el par mostrar/ocultar clasico.
+const EyeIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    width="1em"
+    height="1em"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+
+const EyeOffIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    width="1em"
+    height="1em"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M3 3l18 18" />
+    <path d="M10.6 5.1A11 11 0 0 1 12 5c6 0 9.5 7 9.5 7a17.7 17.7 0 0 1-3.2 4.1" />
+    <path d="M6.3 6.3A17.6 17.6 0 0 0 2.5 12S6 18.5 12 18.5a10.6 10.6 0 0 0 4.2-.86" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+  </svg>
+)
 
 /**
  * Input de contraseña con toggle show/hide y medidor de fortaleza.
@@ -54,9 +92,6 @@ const PasswordInput = ({
         {label} {required && <span className="text-danger">*</span>}
       </CFormLabel>
       <CInputGroup>
-        <CInputGroupText>
-          <CIcon icon={show ? cilToggleOff : cilToggleOn} aria-hidden="true" />
-        </CInputGroupText>
         <CFormInput
           id={id}
           type={show ? 'text' : 'password'}
@@ -79,7 +114,7 @@ const PasswordInput = ({
           aria-pressed={show}
           disabled={disabled}
         >
-          <CIcon icon={show ? cilToggleOff : cilToggleOn} aria-hidden="true" />
+          {show ? <EyeOffIcon /> : <EyeIcon />}
         </button>
       </CInputGroup>
       {showStrength && value && (
