@@ -76,8 +76,9 @@ const Notifications = () => {
 
               // Con referencia la fila es un enlace de verdad: navegable con
               // teclado y anunciable como tal. Sin referencia (notificaciones
-              // manuales y las anteriores a la 029) no hay destino, asi que
-              // sigue siendo un elemento no interactivo que solo marca leida.
+              // manuales y las anteriores a la 029) no hay destino, asi que es
+              // un <button> que solo marca leida, tambien navegable y activable
+              // con Enter/Espacio.
               if (target) {
                 return (
                   <Link key={n.id} to={target} className={className} onClick={handleClick}>
@@ -86,9 +87,14 @@ const Notifications = () => {
                 )
               }
               return (
-                <div key={n.id} className={`${className} is-clickable`} onClick={handleClick}>
+                <button
+                  key={n.id}
+                  type="button"
+                  className={`${className} is-clickable text-start w-100`}
+                  onClick={handleClick}
+                >
                   {inner}
-                </div>
+                </button>
               )
             })}
           </div>

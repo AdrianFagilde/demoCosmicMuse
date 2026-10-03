@@ -248,8 +248,7 @@ const MyProfile = () => {
                   <CButton
                     color="secondary"
                     variant="outline"
-                    as="label"
-                    htmlFor="avatarUpload"
+                    onClick={() => document.getElementById('avatarUpload')?.click()}
                     className="is-clickable"
                   >
                     <CIcon icon={cilCamera} className="me-1" aria-hidden="true" />

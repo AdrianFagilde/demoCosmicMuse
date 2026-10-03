@@ -308,17 +308,26 @@
   color: var(--cui-body-color);
 }
 
-/* Racha compacta en la top bar (numero pequeno, no tarjeta) */
-.dash-streak {
+/* Racha y tiempo practicado hoy en la top bar (numeros pequenos, no tarjetas) */
+.dash-streak,
+.dash-today {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(var(--cui-danger-rgb), 0.12);
-  color: var(--cui-danger);
   font-size: 0.85rem;
   line-height: 1;
+}
+
+.dash-streak {
+  background: rgba(var(--cui-danger-rgb), 0.12);
+  color: var(--cui-danger);
+}
+
+.dash-today {
+  background: rgba(var(--cui-info-rgb), 0.12);
+  color: var(--cui-info);
 }
 
 /* Weekly dots

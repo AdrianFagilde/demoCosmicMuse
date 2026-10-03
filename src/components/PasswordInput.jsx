@@ -71,9 +71,16 @@ const PasswordInput = ({
           aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
           {...rest}
         />
-        <CInputGroupText className="cursor-pointer" onClick={() => setShow(!show)}>
+        <button
+          type="button"
+          className="input-group-text cursor-pointer"
+          onClick={() => setShow(!show)}
+          aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          aria-pressed={show}
+          disabled={disabled}
+        >
           <CIcon icon={show ? cilToggleOff : cilToggleOn} aria-hidden="true" />
-        </CInputGroupText>
+        </button>
       </CInputGroup>
       {showStrength && value && (
         <div className="mt-2">

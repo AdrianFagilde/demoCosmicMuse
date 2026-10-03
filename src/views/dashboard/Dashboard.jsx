@@ -21,9 +21,9 @@ import {
   cilPeople,
   cilCalendar,
   cilChart,
+  cilClock,
   cilFire,
   cilMediaPlay,
-  cilMediaStop,
   cilMusicNote,
 } from '@coreui/icons'
 
@@ -67,6 +67,16 @@ const formatTimeAgo = (date) => {
   if (hours > 0) return `hace ${hours} hora${hours > 1 ? 's' : ''}`
   if (minutes > 0) return `hace ${minutes} min`
   return 'ahora mismo'
+}
+
+// Horas/minutos practicados hoy, en formato compacto: "1 h 20 min" / "45 min".
+const formatPracticeMinutes = (totalMinutes) => {
+  const safe = Math.max(0, Math.round(totalMinutes || 0))
+  const hours = Math.floor(safe / 60)
+  const minutes = safe % 60
+  if (hours && minutes) return `${hours} h ${minutes} min`
+  if (hours) return `${hours} h`
+  return `${minutes} min`
 }
 
 import { buildHash } from '../../utils/version'
@@ -210,10 +220,15 @@ const Dashboard = () => {
     })
   }
 
-  // Al finalizar: la BD calcula duration_minutes y avanza la racha.
-  const handleFinishPractice = async (session) => {
-    await practice.endPractice(session.id)
-  }
+  // Solo cuentan las sesiones cerradas con duracion > 0: abrir el temporizador
+  // sin practicar no debe sumar minutos.
+  const practiceToday =
+    practice.sessions
+      ?.filter((s) => {
+        if (!s.started_at || !s.ended_at || !s.duration_minutes) return false
+        return new Date(s.started_at).toDateString() === new Date().toDateString()
+      })
+      .reduce((sum, s) => sum + (s.duration_minutes || 0), 0) || 0
 
   const instrumentColor = enrolledCourses[0]
     ? getInstrumentColor(enrolledCourses[0].instrument)
@@ -234,15 +249,11 @@ const Dashboard = () => {
             <Equalizer />
           </div>
           <div className="d-flex align-items-center gap-2">
-            {practice.activeSession && (
-              <button
-                className="btn btn-sm btn-outline-danger"
-                onClick={() => handleFinishPractice(practice.activeSession)}
-                type="button"
-              >
-                <CIcon icon={cilMediaStop} className="me-1" size="sm" aria-hidden="true" />
-                Finalizar práctica
-              </button>
+            {practiceToday > 0 && (
+              <div className="dash-today" title="Tiempo practicado hoy">
+                <CIcon icon={cilClock} size="sm" aria-hidden="true" />
+                <span className="fw-bold">{formatPracticeMinutes(practiceToday)}</span>
+              </div>
             )}
             {streakDays > 0 && (
               <div className="dash-streak" title={`${streakDays} días de racha`}>
