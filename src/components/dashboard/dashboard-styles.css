@@ -383,6 +383,19 @@
   color: var(--cui-body-color);
 }
 
+/* Racha compacta en la top bar (numero pequeno, no tarjeta) */
+.dash-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(var(--cui-danger-rgb), 0.12);
+  color: var(--cui-danger);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
 /* Weekly dots
    Contenido: barra de hasta 40px + gap + etiqueta + badge "Hoy" en el dia actual.
    Con height fijo de 44px la columna se salia por arriba entre 11 y 28px y

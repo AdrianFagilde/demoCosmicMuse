@@ -1,5 +1,5 @@
 // =============================================
-// Gamificación: selector de práctica, temporizador flotante, nivel/XP y logros
+// Gamificación: selector de práctica, nivel/XP y logros
 //
 // Vive en el chunk global (style.scss) igual que _card.scss porque el mismo
 // contrato lo usan Dashboard y StudentDetail; moverlo a un CSS de componente
@@ -69,89 +69,6 @@
   flex-direction: column;
   flex: 1 1 auto;
   min-width: 0;
-}
-
-.practice-choice__group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-// --- Temporizador flotante de práctica en curso ---
-//
-// Gradiente de marca fijo (no var(--cui-primary)): en oscuro --cui-primary es un
-// rosa claro (#db99db) sobre el que el texto blanco queda por debajo de AAA.
-// Este par #712771 -> #4b1f5e mantiene >= 7:1 con blanco en ambos temas.
-.practice-timer {
-  position: fixed;
-  left: 50%;
-  bottom: var(--space-3);
-  z-index: 1050;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: min(680px, calc(100vw - 2 * var(--space-3)));
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-card);
-  background: linear-gradient(135deg, #712771 0%, #4b1f5e 100%);
-  color: #fff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-}
-
-.practice-timer__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  font-size: 1.1rem;
-}
-
-.practice-timer__text {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.practice-timer__label {
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.practice-timer__hint {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.practice-timer__clock {
-  flex: 0 0 auto;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  font-size: 1.15rem;
-}
-
-.practice-timer__stop {
-  flex: 0 0 auto;
-  color: #4b1f5e;
-  font-weight: 600;
-}
-
-@media (max-width: 575.98px) {
-  .practice-timer {
-    flex-wrap: wrap;
-    row-gap: 0.4rem;
-  }
-
-  .practice-timer__text {
-    flex-basis: 60%;
-  }
 }
 
 // --- Tarjeta de nivel/XP ---

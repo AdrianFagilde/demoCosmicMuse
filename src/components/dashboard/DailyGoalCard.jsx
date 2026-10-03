@@ -1,19 +1,31 @@
-import React from 'react'
+import React, { useState } from 'react'
 import CIcon from '@coreui/icons-react'
-import { cilSpeedometer, cilCheck, cilFire } from '@coreui/icons'
+import { cilSpeedometer, cilCheck, cilFire, cilMediaStop } from '@coreui/icons'
 import ProgressRing from './ProgressRing'
 import { MusicNote } from '../MusicDecor'
 
 const DailyGoalCard = ({
   practiceMinutesToday = 0,
-  streak = 0,
   goalMinutes = 30,
+  activeSession = null,
   onStartPractice,
+  onFinishPractice,
 }) => {
+  const [finishing, setFinishing] = useState(false)
   const goal = goalMinutes || 30
   const progress = Math.min(100, Math.round((practiceMinutesToday / goal) * 100))
   const remaining = Math.max(0, goal - practiceMinutesToday)
   const isComplete = progress >= 100
+
+  const handleFinish = async () => {
+    if (!activeSession || !onFinishPractice) return
+    setFinishing(true)
+    try {
+      await onFinishPractice(activeSession)
+    } finally {
+      setFinishing(false)
+    }
+  }
 
   return (
     <div className="daily-goal-card app-card">
@@ -52,22 +64,33 @@ const DailyGoalCard = ({
           className="flex-shrink-0"
         />
 
-        <div className="daily-goal-actions d-flex flex-column gap-3 ms-3">
-          <button
-            className={`daily-goal-btn btn ${isComplete ? 'btn-outline-light' : 'btn-light'} w-100`}
-            onClick={onStartPractice}
-            disabled={isComplete}
-            type="button"
-          >
-            <CIcon icon={cilFire} className="me-2" aria-hidden="true" />
-            {isComplete ? '¡Meta lograda!' : 'Practicar ahora'}
-          </button>
-          <div className="d-flex align-items-center gap-3 text-body-secondary small">
-            <div className="d-flex align-items-center gap-1">
-              <CIcon icon={cilFire} size="sm" aria-hidden="true" />
-              <span className="fw-bold">{streak} días</span>
-            </div>
-          </div>
+        <div className="daily-goal-actions d-flex flex-column gap-2 ms-3">
+          {activeSession ? (
+            <>
+              <button
+                className="daily-goal-btn btn btn-light w-100"
+                onClick={handleFinish}
+                disabled={finishing}
+                type="button"
+              >
+                <CIcon icon={cilMediaStop} className="me-2" aria-hidden="true" />
+                {finishing ? 'Guardando...' : 'Finalizar práctica'}
+              </button>
+              <span className="text-body-secondary small text-center">
+                Sesión de práctica en curso
+              </span>
+            </>
+          ) : (
+            <button
+              className={`daily-goal-btn btn ${isComplete ? 'btn-outline-light' : 'btn-light'} w-100`}
+              onClick={onStartPractice}
+              disabled={isComplete}
+              type="button"
+            >
+              <CIcon icon={cilFire} className="me-2" aria-hidden="true" />
+              {isComplete ? '¡Meta lograda!' : 'Practicar ahora'}
+            </button>
+          )}
         </div>
       </div>
 

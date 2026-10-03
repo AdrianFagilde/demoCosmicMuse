@@ -37,14 +37,10 @@ import LinkifiedText from '../../components/LinkifiedText'
 import KpiCard from '../../components/KpiCard'
 
 // New Duolingo-style components
-import JourneyPath from '../../components/dashboard/JourneyPath'
 import ActionCard from '../../components/dashboard/ActionCard'
 import DailyGoalCard from '../../components/dashboard/DailyGoalCard'
 import WeeklyDots from '../../components/dashboard/WeeklyDots'
-import XPLevelCard from '../../components/dashboard/XPLevelCard'
-import BadgesGallery from '../../components/dashboard/BadgesGallery'
 import PracticeTaskSelector from '../../components/dashboard/PracticeTaskSelector'
-import PracticeTimer from '../../components/dashboard/PracticeTimer'
 import { getInstrumentColor } from '../../utils/colors'
 import { localDateKey, parseDbDate } from '../../utils/dates'
 import { Equalizer, MusicNote, StaffDivider } from '../../components/MusicDecor'
@@ -74,28 +70,6 @@ const formatTimeAgo = (date) => {
   return 'ahora mismo'
 }
 
-const getNextLessonCountdown = (nextLesson) => {
-  if (!nextLesson) return { text: 'Sin programar', isOverdue: false }
-  const now = new Date()
-  const lesson = new Date(nextLesson)
-
-  if (isNaN(lesson.getTime())) {
-    return { text: 'Fecha inválida', isOverdue: false }
-  }
-
-  const diff = lesson - now
-
-  if (diff < 0) return { text: 'Pasada', isOverdue: true }
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-
-  if (days > 0) return { text: `${days}d ${hours}h`, isOverdue: false }
-  if (hours > 0) return { text: `${hours}h ${minutes}m`, isOverdue: false }
-  return { text: `${minutes}m`, isOverdue: false }
-}
-
 import { buildHash } from '../../utils/version'
 
 const Dashboard = () => {
@@ -107,12 +81,10 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const { students, getSummary } = useSupabaseStudents()
   const { tasks } = useSupabaseTasks()
-  const { courses, fetchStudentCourseProgress } = useSupabaseCourses()
+  const { courses } = useSupabaseCourses()
   const practice = useSupabasePractice(user?.id)
   const gamification = useSupabaseGamification(user?.id)
   const [selectorOpen, setSelectorOpen] = useState(false)
-  const [practiceLabel, setPracticeLabel] = useState('')
-  const [finishingPractice, setFinishingPractice] = useState(false)
   const [summary, setSummary] = useState({
     activeStudents: 0,
     lessonsThisWeek: 0,
@@ -120,7 +92,6 @@ const Dashboard = () => {
     availableInstruments: [],
   })
   const [paymentsByMonth, setPaymentsByMonth] = useState([])
-  const [myProgressRows, setMyProgressRows] = useState([])
 
   const instrumentData = useMemo(() => {
     const counts = {}
@@ -211,19 +182,9 @@ const Dashboard = () => {
   const pendingTasks = myTasks.filter((t) => !isTaskDone(t))
   const completedTasks = myTasks.filter((t) => isTaskDone(t))
 
-  const nextLessonCountdown = getNextLessonCountdown(profile?.next_lesson)
-
   const enrolledCourses = courses.filter((c) =>
     c.course_enrollments?.some((e) => e.student_id === user?.id),
   )
-
-  useEffect(() => {
-    if (!isStudent || !user?.id) return
-    ;(async () => {
-      const progress = await fetchStudentCourseProgress(user.id)
-      setMyProgressRows(progress)
-    })()
-  }, [isStudent, user?.id, fetchStudentCourseProgress])
 
   const sortTasksByUrgency = (taskList) => {
     const now = new Date()
@@ -257,7 +218,6 @@ const Dashboard = () => {
   const openPracticeSelector = () => setSelectorOpen(true)
 
   const handleSelectPractice = async (payload) => {
-    setPracticeLabel(payload.label || '')
     await practice.startPractice({
       taskId: payload.taskId,
       courseTaskId: payload.courseTaskId,
@@ -267,29 +227,21 @@ const Dashboard = () => {
   // Al finalizar: la BD calcula duration_minutes, otorga XP y avanza la racha.
   // Hay que releer la gamificacion para reflejar XP/nivel/logros al instante.
   const handleFinishPractice = async (session) => {
-    setFinishingPractice(true)
-    try {
-      await practice.endPractice(session.id)
-      await gamification.refetch()
-    } finally {
-      setFinishingPractice(false)
-      setPracticeLabel('')
-    }
+    await practice.endPractice(session.id)
+    await gamification.refetch()
   }
 
   const instrumentColor = enrolledCourses[0]
     ? getInstrumentColor(enrolledCourses[0].instrument)
     : '#6366f1'
   const streakDays = practice.streak?.current_streak || 0
-  const hasNextLesson =
-    Boolean(profile?.next_lesson) && !isNaN(new Date(profile.next_lesson).getTime())
 
   if (isStudent) {
     return (
       <div className="student-dashboard d-flex flex-column">
         <div data-build-version={buildHash} className="d-none" />
 
-        {/* TOP BAR - Compact greeting */}
+        {/* TOP BAR - saludo + racha compacta */}
         <div className="dash-topbar px-2">
           <div className="d-flex align-items-center gap-3">
             <div className="dash-greeting">
@@ -297,36 +249,38 @@ const Dashboard = () => {
             </div>
             <Equalizer />
           </div>
+          {streakDays > 0 && (
+            <div className="dash-streak" title={`${streakDays} días de racha`}>
+              <CIcon icon={cilFire} size="sm" aria-hidden="true" />
+              <span className="fw-bold">{streakDays}</span>
+            </div>
+          )}
         </div>
 
-        {/* ROW 1: Daily Goal + Journey Path */}
+        {/* ROW 1: Meta diaria (accion principal) + consistencia semanal */}
         <CRow className="mb-3 g-3">
-          <CCol lg={6} className="mb-0">
+          <CCol lg={8} className="mb-0">
             <DailyGoalCard
               practiceMinutesToday={practiceToday}
-              streak={streakDays}
               goalMinutes={gamification.dailyGoalMinutes}
+              activeSession={practice.activeSession}
               onStartPractice={openPracticeSelector}
+              onFinishPractice={handleFinishPractice}
             />
           </CCol>
-          <CCol lg={6} className="mb-0">
-            <JourneyPath
-              courses={enrolledCourses}
-              myProgressRows={myProgressRows}
-              onViewCourse={(courseId) => {
-                navigate(`/courses/${courseId}`)
-              }}
-              onViewAll={() => {
-                navigate('/courses')
-              }}
+          <CCol lg={4} className="mb-0">
+            <WeeklyDots
+              weeklySummary={practice.weeklySummary}
+              instrumentColor={instrumentColor}
+              onStartPractice={openPracticeSelector}
             />
           </CCol>
         </CRow>
 
-        {/* ROW 2: Urgent actions + Weekly */}
+        {/* ROW 2: Que practicar ahora */}
         <CRow className="mb-3 g-3">
-          <CCol lg={6} className="mb-0">
-            <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center">
+          <CCol lg={12} className="mb-0">
+            <div className="app-card app-card-compact h-100 d-flex flex-column">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <span className="fw-semibold d-flex align-items-center gap-2">
                   <CIcon
@@ -337,147 +291,61 @@ const Dashboard = () => {
                   />
                   Ahora mismo
                 </span>
-                {urgentTasks.length > 4 && (
-                  <button
-                    className="btn btn-sm btn-outline-primary"
-                    onClick={() => {
-                      navigate('/tasks')
-                    }}
-                    type="button"
-                  >
-                    Ver todas
-                  </button>
-                )}
+                <button
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => navigate('/tasks')}
+                  type="button"
+                >
+                  Ver todas
+                </button>
               </div>
               <div className="d-flex flex-column gap-2">
                 {urgentTasks.length > 0 ? (
-                  urgentTasks.map((task) => (
+                  urgentTasks.slice(0, 3).map((task) => (
                     <ActionCard
                       key={task.id}
-                      task={{ ...task, instrument_color: getInstrumentColor(profile?.instrument) }}
-                      onClick={() => {
-                        navigate('/tasks')
+                      task={{
+                        ...task,
+                        instrument_color: getInstrumentColor(profile?.instrument),
                       }}
+                      onClick={() => navigate('/tasks')}
                     />
                   ))
                 ) : (
                   <div className="text-center text-medium-emphasis py-3">
                     <CIcon icon={cilMusicNote} size="lg" className="mb-2" aria-hidden="true" />
                     <div className="fw-semibold mb-1">¡Todo al día!</div>
-                    <div className="small mb-2">No tienes tareas urgentes</div>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={openPracticeSelector}
-                      type="button"
-                    >
-                      <CIcon icon={cilMediaPlay} className="me-1" size="sm" aria-hidden="true" />{' '}
-                      Práctica libre
-                    </button>
+                    <div className="small mb-3">No tienes tareas urgentes</div>
+                    <div className="d-flex justify-content-center gap-2 flex-wrap">
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={openPracticeSelector}
+                        type="button"
+                      >
+                        <CIcon icon={cilMediaPlay} className="me-1" size="sm" aria-hidden="true" />{' '}
+                        Práctica libre
+                      </button>
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => navigate('/courses')}
+                        type="button"
+                      >
+                        Ver mis cursos
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          </CCol>
-          <CCol lg={6} className="mb-0">
-            <WeeklyDots
-              weeklySummary={practice.weeklySummary}
-              instrumentColor={instrumentColor}
-              onStartPractice={openPracticeSelector}
-            />
-          </CCol>
-        </CRow>
-
-        {/* ROW 3: Próxima clase + Racha */}
-        <CRow className="g-3 flex-grow-1">
-          <CCol lg={6} className="mb-0">
-            <div className="app-card app-card-compact app-card-brand app-card-brand--indigo h-100 d-flex flex-column justify-content-center">
-              <div className="d-flex align-items-center gap-3">
-                <div className="brand-icon d-flex align-items-center justify-content-center rounded-circle flex-shrink-0">
-                  <CIcon icon={cilCalendar} size="xl" color="white" aria-hidden="true" />
-                </div>
-                <div className="flex-grow-1">
-                  {hasNextLesson ? (
-                    <>
-                      <div className="fw-bold">Próxima clase</div>
-                      <div className="text-white small">
-                        {new Date(profile.next_lesson).toLocaleString('es-ES', {
-                          weekday: 'long',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </div>
-                      {profile?.teacher && (
-                        <div className="text-white small">Con {profile.teacher}</div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="fw-bold">Próxima clase</div>
-                      <div className="text-white small">Aún no tenés clase programada</div>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="d-flex align-items-center justify-content-between mt-3">
-                {/* Sobre el indigo de marca ningun ambar llega a 7:1 (necesitaria
-                    ser casi blanco), asi que "Pasada" no cambia de color: el
-                    propio texto ya comunica el vencimiento. */}
-                <span className="fw-bold">{nextLessonCountdown.text}</span>
+              <div className="mt-auto pt-3 text-center">
                 <button
-                  className="btn btn-outline-light btn-sm"
-                  onClick={() => {
-                    // /lessons es routes.js `roles: ['admin']`: un alumno que
-                    // llegaba ahi era expulsado a /dashboard por AppContent. La
-                    // tabla "Proximas clases" del alumno vive en /my-profile.
-                    navigate('/my-profile')
-                  }}
+                  className="btn btn-link btn-sm text-medium-emphasis text-decoration-none"
+                  onClick={() => navigate('/my-profile')}
                   type="button"
                 >
-                  Ver detalles
+                  Ver mi progreso
                 </button>
               </div>
             </div>
-          </CCol>
-          <CCol lg={6} className="mb-0">
-            <div className="app-card app-card-compact app-card-stat app-card-stat--streak h-100 d-flex flex-column justify-content-center">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span className="fw-semibold d-flex align-items-center gap-2">
-                  <CIcon icon={cilFire} className="text-danger" size="lg" aria-hidden="true" />
-                  Racha
-                </span>
-                <div className="text-medium-emphasis small">{streakDays} días seguidos</div>
-              </div>
-              <div className="d-flex align-items-center gap-3">
-                <div className="action-icon action-icon--danger">
-                  <CIcon icon={cilFire} size="xl" aria-hidden="true" />
-                </div>
-                <div>
-                  <div className="streak-value fw-bold">
-                    {streakDays} {streakDays === 1 ? 'día' : 'días'}
-                  </div>
-                  <div className="text-medium-emphasis small">
-                    Practicá a diario y mantené tu racha
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CCol>
-        </CRow>
-
-        {/* ROW 4: Nivel/XP + Logros */}
-        <CRow className="g-3">
-          <CCol lg={6} className="mb-0">
-            <XPLevelCard
-              xp={gamification.xp}
-              totalPracticeMinutes={gamification.totalPracticeMinutes}
-              tasksCompleted={gamification.tasksCompleted}
-              coursesCompleted={gamification.coursesCompleted}
-            />
-          </CCol>
-          <CCol lg={6} className="mb-0">
-            <BadgesGallery badges={gamification.badges} nextBadges={gamification.nextBadges} />
           </CCol>
         </CRow>
 
@@ -487,15 +355,6 @@ const Dashboard = () => {
           onSelect={handleSelectPractice}
           tasks={pendingTasks}
         />
-
-        {practice.activeSession && (
-          <PracticeTimer
-            session={practice.activeSession}
-            label={practiceLabel}
-            onFinish={handleFinishPractice}
-            finishing={finishingPractice}
-          />
-        )}
       </div>
     )
   }
