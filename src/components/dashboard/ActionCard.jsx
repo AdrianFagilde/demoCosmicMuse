@@ -7,8 +7,8 @@ import ProgressRing from './ProgressRing'
 const ActionCard = ({ task, onClick }) => {
   const urgency = getUrgency(task.due_date)
   // El color de urgencia ya no se inyecta inline: los modificadores
-  // .action-card.<variant> lo declaran en CSS. action-icon, el badge y el borde
-  // izquierdo leen todos --action-color.
+  // .action-card.<variant> declaran --action-accent (decoracion) y --action-ink
+  // (texto AAA). El icono, el badge y el numero leen esos tokens.
   const instrumentColor = task.instrument_color || '#6366f1'
   const [isFocused, setIsFocused] = React.useState(false)
 
@@ -23,7 +23,6 @@ const ActionCard = ({ task, onClick }) => {
   return (
     <div
       className={`action-card ${urgency.variant} ${isFocused ? 'focused' : ''}`}
-      style={{ '--instrument-color': instrumentColor }}
       onClick={onClick}
       role="button"
       tabIndex={0}

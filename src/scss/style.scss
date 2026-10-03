@@ -444,7 +444,7 @@ h6,
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: var(--cui-text-muted);
+  color: var(--app-text-muted);
 }
 
 .staff-divider-inner {
@@ -482,12 +482,12 @@ h6,
   font-size: 1.05rem;
   letter-spacing: 0.02em;
   text-align: center;
-  color: var(--cui-text-muted);
+  color: var(--app-text-muted);
 }
 
 .header .staff-divider {
   padding-top: 6px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.87);
 }
 
 .header .staff-divider-notes {
@@ -549,7 +549,7 @@ h6,
   }
 
   .staff-divider {
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.87);
   }
 
   .staff-divider-notes {
@@ -557,7 +557,7 @@ h6,
   }
 
   .staff-caption {
-    color: rgba(255, 255, 255, 0.78);
+    color: var(--app-text-on-brand);
   }
 }
 

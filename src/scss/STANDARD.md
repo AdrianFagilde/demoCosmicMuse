@@ -123,3 +123,46 @@ la librería ya publica.
 
 Evitar valores de `font-size` sueltos; si hace falta un tamaño que no existe, se
 añade el token antes que el literal.
+
+## 8. Contraste (AAA)
+
+Objetivo: **≥ 7:1** para texto, en ambos temas. Los tokens viven en `style.scss`:
+`--app-text-muted`, `--app-text-secondary`, `--app-text-on-brand` y los
+`--cui-danger/info/success/warning`, medidos sobre los tres fondos claros de la
+app (`#fff`, `#f4f4f7`, `#ececf1`) y, en oscuro, sobre el cuerpo `#161a3c`.
+
+Reglas al tocar color:
+
+- Los tonos de estado de CoreUI fallan como texto claro (info 1.85:1, warning
+  1.57:1, success 2.97:1, danger 6.00:1). Por eso `--cui-*` se redefine en `:root`.
+  Las utilidades `.text-*` leen el triple `-rgb`, así que hay que redefinirlo
+  también.
+- No usar `--cui-text-muted` ni `--cui-text`: **no existen** en CoreUI/Bootstrap.
+  El color queda inválido y el elemento hereda, que a veces parece funcionar pero
+  no se controla. Para texto atenuado: `--app-text-muted`; para texto normal:
+  `--cui-body-color`.
+- Un color vivo de marca (los de `utils/colors.js`: amber 2.15:1, cyan 2.4:1,
+  green 2.4:1 sobre blanco) **no puede ser texto ni un glifo sin fondo oscuro**.
+  Si decora, vale; si es texto, se usa un token de estado o se mezcla hacia negro.
+
+### Tarjetas dinámicas del dashboard
+
+En `dashboard-styles.css` los acentos de urgencia e instrumento se separaron en
+dos variables por modificador:
+
+- `--action-accent`: tono vivo, solo decoración (barra izquierda, tintes de badge
+  e icono). Sin requisito de contraste.
+- `--action-ink`: color del texto y del glifo, AAA en ambos temas. En oscuro las
+  tarjetas son `#212631`, más claro que el cuerpo `#161a3c` contra el que se
+  midieron los `--cui-*`, así que hay un tinte claro propio por variante.
+
+La meta diaria usa indigo 700 (`#4338ca`, 7.90:1) en vez de indigo 500
+(`#6366f1`, 4.47:1). El fondo del nodo "en curso/completado" se oscurece un 50%
+hacia negro para que el glifo blanco supere 4.5:1.
+
+### Exenciones
+
+El contenido `aria-hidden` decorativo (`.staff-divider`, `.staff-caption`,
+marcos de esquina, watermarks, barras de `weekly-dot`) no es texto para el
+usuario de lector de pantalla y no entra en el requisito AAA. Aun así sus tonos
+apuntan a los mismos tokens para que la lectura visual sea coherente.

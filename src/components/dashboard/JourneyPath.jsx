@@ -125,7 +125,7 @@ const JourneyPath = ({ courses, myProgressRows, onViewCourse, onViewAll }) => {
               ) : node.type === 'current' ? (
                 <CIcon icon={node.icon} size="xl" color="white" aria-hidden="true" />
               ) : (
-                <CIcon icon={cilBan} size="xl" color="var(--cui-text-muted)" aria-hidden="true" />
+                <CIcon icon={cilBan} size="xl" color="var(--app-text-muted)" aria-hidden="true" />
               )}
             </div>
             <div className="journey-node-label">

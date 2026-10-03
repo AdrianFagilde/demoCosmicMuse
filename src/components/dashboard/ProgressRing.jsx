@@ -142,7 +142,7 @@ const ProgressRing = ({
             className="progress-ring-label"
             style={{
               fontSize: size * 0.1,
-              color: 'var(--cui-text-muted)',
+              color: 'var(--app-text-muted)',
               marginTop: 2,
               textAlign: 'center',
             }}

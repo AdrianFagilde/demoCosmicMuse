@@ -385,9 +385,10 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="d-flex align-items-center justify-content-between mt-3">
-                <span className={`fw-bold ${nextLessonCountdown.isOverdue ? 'text-warning' : ''}`}>
-                  {nextLessonCountdown.text}
-                </span>
+                {/* Sobre el indigo de marca ningun ambar llega a 7:1 (necesitaria
+                    ser casi blanco), asi que "Pasada" no cambia de color: el
+                    propio texto ya comunica el vencimiento. */}
+                <span className="fw-bold">{nextLessonCountdown.text}</span>
                 <button
                   className="btn btn-outline-light btn-sm"
                   onClick={() => {

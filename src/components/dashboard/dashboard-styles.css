@@ -78,20 +78,24 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* El icono va en blanco sobre el color del instrumento. Los tonos de instrumento
+   son vivos (amber 2.15:1, cyan 2.4:1 con blanco), asi que el fondo se oscurece
+   un 50% hacia negro: el peor caso queda en 6.5:1, por encima del 4.5:1 exigido a
+   un glifo (no es texto). */
 .journey-node.completed .journey-node-icon {
-  background: var(--node-color);
+  background: color-mix(in srgb, var(--node-color) 50%, #000);
   color: white;
 }
 
 .journey-node.current .journey-node-icon {
-  background: var(--node-color);
+  background: color-mix(in srgb, var(--node-color) 50%, #000);
   color: white;
   animation: pulse-ring 2s ease-out infinite;
 }
 
 .journey-node.locked .journey-node-icon {
   background: var(--cui-secondary-bg);
-  color: var(--cui-text-muted);
+  color: var(--app-text-muted);
 }
 
 @keyframes pulse-ring {
@@ -118,7 +122,7 @@
   font-size: 0.66rem;
   font-weight: 600;
   text-align: center;
-  color: var(--cui-text);
+  color: var(--cui-body-color);
   line-height: 1.2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -126,34 +130,46 @@
   overflow: hidden;
 }
 
+/* El estado "en curso" ya lo comunica el fondo del icono; el color del
+   instrumento como texto fallaba AAA (amber 2.15:1, cyan 2.4:1 sobre blanco). */
 .journey-node.current .journey-node-label {
-  color: var(--node-color);
+  color: var(--cui-body-color);
 }
 
 .journey-node.locked .journey-node-label {
-  color: var(--cui-text-muted);
+  color: var(--app-text-muted);
 }
 
 .journey-node-sub {
   font-size: 0.56rem;
   text-align: center;
-  color: var(--cui-text-muted);
+  color: var(--app-text-muted);
   margin-top: 2px;
 }
 
-/* Daily goal ring */
+/* Daily goal ring.
+   Indigo 700 (#4338ca) en vez de indigo 500 (#6366f1): el 500 daba 4.47:1 con el
+   texto blanco y su extremo oscuro 6.35:1. El 700 da 7.90:1 y el extremo oscuro
+   (78% hacia negro) 10.22:1, asi que todo el texto de la tarjeta pasa AAA. */
 .daily-goal-card {
-  --daily-color: #6366f1;
+  --daily-color: #4338ca;
   background: linear-gradient(
     135deg,
     var(--daily-color) 0%,
-    color-mix(in srgb, var(--daily-color) 80%, black) 100%
+    color-mix(in srgb, var(--daily-color) 78%, black) 100%
   );
   color: white;
   border-radius: var(--radius-card);
   padding: var(--space-3);
   position: relative;
   overflow: hidden;
+}
+
+/* .text-body-secondary usa --cui-secondary-color, que en claro es gris oscuro
+   (#414650) y sobre el indigo fallaba por completo. Sobre la superficie de marca
+   el secundario es blanco: 7.90:1 AAA. */
+.daily-goal-card .text-body-secondary {
+  color: var(--app-text-on-brand);
 }
 
 /* El .app-card oscuro define su propio fondo y ganaria por especificidad sobre
@@ -207,9 +223,16 @@
 }
 
 /* Action cards
-   El color de urgencia llega por los modificadores de abajo, no por un style
-   inline: la tarjeta y su badge leen --action-color, un unico origen. */
+   Se separan dos papeles que antes compartian una sola variable:
+   - --action-accent: el tono vivo de urgencia. Solo decora (barra izquierda,
+     tintes de badge e icono), asi que no tiene requisito de contraste.
+   - --action-ink: el color del TEXTO y del glifo. Es un tono de estado medido
+     para AAA (>=7:1) sobre el tinte y sobre el fondo de la tarjeta, en ambos
+     temas. Los tonos vivos de urgencia fallaban: amber 2.15:1, cyan 2.4:1,
+     green 2.4:1, red 3.76:1 sobre blanco. */
 .action-card {
+  --action-accent: #64748b;
+  --action-ink: var(--cui-secondary-color);
   border-radius: 12px;
   padding: var(--space-3);
   background: var(--cui-card-bg);
@@ -219,30 +242,58 @@
 }
 
 .action-card.none {
-  --action-color: #64748b;
+  --action-accent: #64748b;
+  --action-ink: var(--cui-secondary-color);
 }
 
 .action-card.urgent-overdue {
-  --action-color: #ef4444;
-  border-left: 3px solid var(--action-color);
+  --action-accent: #ef4444;
+  --action-ink: var(--cui-danger);
+  border-left: 3px solid var(--action-accent);
 }
 
 .action-card.urgent-today {
-  --action-color: #f59e0b;
-  border-left: 3px solid var(--action-color);
+  --action-accent: #f59e0b;
+  --action-ink: var(--cui-warning);
+  border-left: 3px solid var(--action-accent);
 }
 
 .action-card.urgent-week {
-  --action-color: #06b6d4;
-  border-left: 3px solid var(--action-color);
+  --action-accent: #06b6d4;
+  --action-ink: var(--cui-info);
+  border-left: 3px solid var(--action-accent);
 }
 
 .action-card.urgent-future {
-  --action-color: #22c55e;
+  --action-accent: #22c55e;
+  --action-ink: var(--cui-success);
+}
+
+/* En oscuro las tarjetas son #212631, mas claro que el cuerpo #161a3c contra el
+   que se midieron los tonos de estado, asi que estos bajan de 7:1. Estos tintes
+   claros del propio matiz vuelven a AAA sobre el tinte y el fondo de la tarjeta. */
+[data-coreui-theme='dark'] .action-card.none {
+  --action-ink: #dfe2e8;
+}
+
+[data-coreui-theme='dark'] .action-card.urgent-overdue {
+  --action-ink: #ffbcbc;
+}
+
+[data-coreui-theme='dark'] .action-card.urgent-today {
+  --action-ink: #face85;
+}
+
+[data-coreui-theme='dark'] .action-card.urgent-week {
+  --action-ink: #82daea;
+}
+
+[data-coreui-theme='dark'] .action-card.urgent-future {
+  --action-ink: #90e2ae;
 }
 
 .action-card:hover {
-  border-color: var(--action-color);
+  border-color: var(--action-accent);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
@@ -255,15 +306,18 @@
 }
 
 .action-badge {
-  background-color: color-mix(in srgb, var(--action-color) 12%, transparent);
-  color: var(--action-color);
-  border: 1px solid color-mix(in srgb, var(--action-color) 40%, transparent);
+  background-color: color-mix(in srgb, var(--action-accent) 12%, transparent);
+  color: var(--action-ink);
+  border: 1px solid color-mix(in srgb, var(--action-accent) 40%, transparent);
   font-size: 0.6rem;
   padding: 2px 6px;
 }
 
+/* El numero lee el color de urgencia (AAA), no el del instrumento: los tonos de
+   instrumento son vivos y como texto fallaban (amber 2.15:1, cyan 2.4:1). El
+   anillo sigue mostrando el color del instrumento como grafico. */
 .action-progress-value {
-  color: var(--instrument-color, var(--action-color));
+  color: var(--action-ink);
 }
 
 .action-progress-label {
@@ -271,7 +325,7 @@
 }
 
 .action-arrow {
-  opacity: 0.5;
+  opacity: 1;
 }
 
 /* `min-w-0` is a Bootstrap utility that CoreUI does not ship. Without a real
@@ -288,13 +342,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--action-color) 15%, transparent);
-  color: var(--action-color);
+  background: color-mix(in srgb, var(--action-accent) 10%, transparent);
+  color: var(--action-ink);
   flex-shrink: 0;
 }
 
 .action-icon--danger {
-  --action-color: #ef4444;
+  --action-accent: #ef4444;
+  --action-ink: var(--cui-danger);
+}
+
+[data-coreui-theme='dark'] .action-icon--danger {
+  --action-ink: #ffbcbc;
 }
 
 /* Icono sobre superficie de marca (texto blanco). */
@@ -321,7 +380,7 @@
 .dash-greeting {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--cui-text);
+  color: var(--cui-body-color);
 }
 
 /* Weekly dots
@@ -363,7 +422,7 @@
 
 .weekly-dot-label {
   font-size: 0.55rem;
-  color: var(--cui-text-muted);
+  color: var(--app-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
