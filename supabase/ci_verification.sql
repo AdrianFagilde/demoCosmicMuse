@@ -48,6 +48,18 @@ BEGIN
     SELECT 'get_next_badges returns TABLE',
            pg_get_function_result(to_regprocedure('public.get_next_badges(uuid)')) LIKE 'TABLE%'
     UNION ALL
+    -- These functions must EXECUTE, not just exist. In 016 they became plpgsql
+    -- and RETURN QUERY stopped coercing: gs.day is timestamptz (generate_series
+    -- prefers the timestamptz overload), so returning it as `day DATE` raised
+    -- 42804; COUNT(*) (bigint) did the same against `progress INTEGER`. With a
+    -- NULL student_id the auth guard does not block, the query plans and the
+    -- type mismatch would surface here instead of in the browser.
+    SELECT 'get_weekly_practice_summary runs (7 days)',
+           (SELECT count(*) FROM public.get_weekly_practice_summary(NULL::uuid)) = 7
+    UNION ALL
+    SELECT 'get_next_badges runs (3 badges)',
+           (SELECT count(*) FROM public.get_next_badges(NULL::uuid)) = 3
+    UNION ALL
     -- Enrollment helper used by the course read policies.
     SELECT 'is_enrolled_in(uuid) exists',
            to_regprocedure('public.is_enrolled_in(uuid)') IS NOT NULL
