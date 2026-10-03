@@ -15,8 +15,11 @@
 --   y el RPC devolvia 400. Fix: gs.day::DATE.
 --
 -- get_next_badges:
---   COUNT(*) / COUNT(DISTINCT ...) son bigint y la columna `progress` esta
---   declarada INTEGER. Mismo fallo al ejecutarla. Fix: castear a INTEGER.
+--   La 029 ya la habia movido de public.course_tasks (borrada en 025) a
+--   public.tasks con course_id IS NOT NULL. Esta migracion conserva esa
+--   definicion (no reintroduce course_tasks) y anade el cast que falta:
+--   COUNT(*) devuelve bigint y `progress` esta declarada INTEGER, asi que
+--   RETURN QUERY tambien fallaba con 42804 al ejecutarla. Fix: ::INTEGER.
 --
 -- Ambas se recrean de forma idempotente (CREATE OR REPLACE) y se mantienen los
 -- GRANT/REVOKE de 016 para no reabrir la fuga que cerro esa migracion.
@@ -87,13 +90,17 @@ BEGIN
       ('tasks_100', '100 Tareas', 'Completa 100 tareas',
        (SELECT COUNT(*) FROM public.tasks WHERE student_id = p_student_id AND status = 'Completado')::INTEGER, 100),
       ('first_course', 'Primer Curso', 'Completa tu primer curso',
-       (SELECT COUNT(DISTINCT e.course_id) FROM public.course_enrollments e
-        JOIN public.checklist_progress cp ON cp.student_id = e.student_id
-        JOIN public.task_checklist_items tci ON tci.id = cp.item_id
-        JOIN public.course_tasks ct ON ct.id = tci.task_id
-        WHERE e.student_id = p_student_id
-        GROUP BY e.course_id
-        HAVING COUNT(tci.id) = COUNT(cp.item_id))::INTEGER, 1),
+       (SELECT COUNT(*) FROM (
+          SELECT t3.course_id
+          FROM public.tasks t3
+          JOIN public.task_checklist_items tci3 ON tci3.task_id = t3.id
+          LEFT JOIN public.checklist_progress cp3
+                 ON cp3.item_id = tci3.id
+                AND cp3.student_id = p_student_id
+          WHERE t3.course_id IS NOT NULL
+          GROUP BY t3.course_id
+          HAVING COUNT(*) FILTER (WHERE cp3.item_id IS NOT NULL) = COUNT(*)
+        ) AS completed_courses)::INTEGER, 1),
       ('week_streak', 'Racha de 7 Días', 'Practica 7 días seguidos',
        COALESCE((SELECT current_streak FROM public.practice_streaks WHERE student_id = p_student_id), 0)::INTEGER, 7),
       ('month_streak', 'Racha de 30 Días', 'Practica 30 días seguidos',
