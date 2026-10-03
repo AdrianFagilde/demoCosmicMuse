@@ -42,7 +42,7 @@ const AppHeader = () => {
 
   return (
     <CHeader position="sticky" className="app-header mb-4 p-0" ref={headerRef}>
-      <CContainer className="app-header-bar px-4" fluid>
+      <CContainer className="app-header-bar px-0" fluid>
         <div className="app-header-main">
           <CHeaderToggler
             onClick={() => setSidebarShow(!sidebarShow)}
