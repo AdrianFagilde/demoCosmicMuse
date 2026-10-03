@@ -9,6 +9,8 @@ export const INSTRUMENT_COLORS = {
   batería: '#8b5cf6',
   bateria: '#8b5cf6',
   bajo: '#06b6d4',
+  cuatro: '#0ea5e9',
+  arpa: '#d946ef',
   flauta: '#22c55e',
   saxofon: '#f97316',
   saxofón: '#f97316',

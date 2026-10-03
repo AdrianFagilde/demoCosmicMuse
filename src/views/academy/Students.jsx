@@ -28,7 +28,7 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
-import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
+import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS, formatInstrument } from '../../utils/students'
 import { buildHash } from '../../utils/version'
 
 const emptyForm = {
@@ -179,7 +179,7 @@ const Students = () => {
                   <CTableDataCell>
                     <Link to={`/students/${student.id}`}>{student.full_name}</Link>
                   </CTableDataCell>
-                  <CTableDataCell>{student.instrument}</CTableDataCell>
+                  <CTableDataCell>{formatInstrument(student.instrument)}</CTableDataCell>
                   <CTableDataCell>{student.teacher}</CTableDataCell>
                   <CTableDataCell>
                     <div className="d-flex align-items-center gap-2">
@@ -247,7 +247,7 @@ const Students = () => {
             <option value="">Seleccionar...</option>
             {INSTRUMENT_OPTIONS.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {formatInstrument(option)}
               </option>
             ))}
           </CFormSelect>

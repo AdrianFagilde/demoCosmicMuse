@@ -17,6 +17,7 @@ import { StudentSortableChecklistItem } from '../../components/CourseSortableRow
 import MaterialList from '../../components/MaterialList'
 import LinkifiedText from '../../components/LinkifiedText'
 import { isOverdue } from '../../utils/dates'
+import { formatInstrument } from '../../utils/students'
 
 /**
  * Vista del alumno: progreso propio, materiales en solo lectura, cuestionarios
@@ -55,7 +56,9 @@ const CourseDetailStudent = ({
         {course.description && <p>{course.description}</p>}
         {(course.instrument || course.level) && (
           <div className="d-flex gap-2 mb-2">
-            {course.instrument && <CBadge color="primary">{course.instrument}</CBadge>}
+            {course.instrument && (
+              <CBadge color="primary">{formatInstrument(course.instrument)}</CBadge>
+            )}
             {course.level && <CBadge color="dark">{course.level}</CBadge>}
           </div>
         )}

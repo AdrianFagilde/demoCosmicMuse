@@ -25,12 +25,12 @@ import useSupabaseLessons from '../../hooks/useSupabaseLessons'
 import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
 import AvatarCropModal from '../../components/AvatarCropModal'
-import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
+import { INSTRUMENT_OPTIONS, formatInstrument } from '../../utils/students'
 
 const MyProfile = () => {
   const { user, profile, refreshProfile } = useAuth()
   const { lessons, loading } = useSupabaseLessons(user?.id)
-  const [form, setForm] = useState({ phone: '', instrument: '', level: '' })
+  const [form, setForm] = useState({ phone: '', instrument: '' })
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [avatarFile, setAvatarFile] = useState(null)
@@ -48,7 +48,6 @@ const MyProfile = () => {
       setForm({
         phone: profile.phone || '',
         instrument: profile.instrument || '',
-        level: profile.level || 'Principiante',
       })
     }
   }, [profile, syncedProfileId])
@@ -117,6 +116,7 @@ const MyProfile = () => {
       .upload(filePath, avatarFile, { upsert: true })
 
     if (uploadError) {
+      console.error('[MyProfile] avatar upload error:', uploadError)
       setMessage({ type: 'danger', text: 'Error al subir la imagen.' })
       setUploadingAvatar(false)
       return
@@ -124,12 +124,14 @@ const MyProfile = () => {
 
     const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
 
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from('profiles')
       .update({ avatar_url: urlData.publicUrl, updated_at: new Date().toISOString() })
       .eq('id', user.id)
+      .select('id')
 
-    if (updateError) {
+    if (updateError || !updated?.length) {
+      console.error('[MyProfile] avatar save error:', updateError)
       setMessage({ type: 'danger', text: 'Error al guardar la foto de perfil.' })
     } else {
       setMessage({ type: 'success', text: 'Foto de perfil actualizada.' })
@@ -143,17 +145,18 @@ const MyProfile = () => {
     setSaving(true)
     setMessage({ type: '', text: '' })
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('profiles')
       .update({
         phone: form.phone || null,
         instrument: form.instrument || null,
-        level: form.level,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id)
+      .select('id')
 
-    if (error) {
+    if (error || !updated?.length) {
+      console.error('[MyProfile] profile save error:', error)
       setMessage({ type: 'danger', text: 'Error al guardar los cambios.' })
     } else {
       setMessage({ type: 'success', text: 'Perfil actualizado correctamente.' })
@@ -289,19 +292,7 @@ const MyProfile = () => {
                 <option value="">Seleccionar...</option>
                 {INSTRUMENT_OPTIONS.map((option) => (
                   <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </CFormSelect>
-              <CFormSelect
-                label="Nivel"
-                className="mb-3"
-                value={form.level}
-                onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))}
-              >
-                {LEVEL_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                    {formatInstrument(option)}
                   </option>
                 ))}
               </CFormSelect>
@@ -332,7 +323,7 @@ const MyProfile = () => {
                         <CTableRow key={lesson.id}>
                           <CTableDataCell>{lesson.lesson_date}</CTableDataCell>
                           <CTableDataCell>{lesson.lesson_time}</CTableDataCell>
-                          <CTableDataCell>{lesson.instrument}</CTableDataCell>
+                          <CTableDataCell>{formatInstrument(lesson.instrument)}</CTableDataCell>
                           <CTableDataCell>{lesson.teacher}</CTableDataCell>
                           <CTableDataCell>{lesson.duration}</CTableDataCell>
                         </CTableRow>

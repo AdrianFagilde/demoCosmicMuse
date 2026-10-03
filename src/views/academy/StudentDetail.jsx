@@ -24,6 +24,7 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
+import { formatInstrument } from '../../utils/students'
 import RestrictedAccess from '../../components/RestrictedAccess'
 import LinkifiedText from '../../components/LinkifiedText'
 
@@ -137,7 +138,7 @@ const StudentDetail = () => {
                 </CAvatar>
                 <div>
                   <h4 className="mb-1">{student.full_name}</h4>
-                  <div className="text-medium-emphasis">{student.instrument}</div>
+                  <div className="text-medium-emphasis">{formatInstrument(student.instrument)}</div>
                 </div>
               </div>
               <div className="mb-2">

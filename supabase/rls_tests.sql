@@ -203,10 +203,26 @@ BEGIN
   GET DIAGNOSTICS v = ROW_COUNT;
   IF v <> 1 THEN v_fail := v_fail || format('updated %s own notifications (want 1); ', v); END IF;
 
-  -- 027 removed the self-update on profiles: role escalation and edits are dead.
-  EXECUTE 'UPDATE public.profiles SET role = ''admin'' WHERE id = auth.uid()';
+  -- 032 re-enables the self-update on profiles, but only for the whitelisted
+  -- columns (phone/instrument/avatar_url). The guard trigger must reject both
+  -- role escalation and edits to sensitive columns.
+  EXECUTE 'UPDATE public.profiles SET phone = ''+58 0000000'', instrument = ''Piano'' WHERE id = auth.uid()';
   GET DIAGNOSTICS v = ROW_COUNT;
-  IF v <> 0 THEN v_fail := v_fail || format('escalated own role (%s rows, want 0); ', v); END IF;
+  IF v <> 1 THEN v_fail := v_fail || format('updated own profile (%s rows, want 1); ', v); END IF;
+
+  BEGIN
+    EXECUTE 'UPDATE public.profiles SET role = ''admin'' WHERE id = auth.uid()';
+    v_fail := v_fail || 'escalated own role (expected rejection); ';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL; -- expected
+  END;
+
+  BEGIN
+    EXECUTE 'UPDATE public.profiles SET status = ''Inactivo'' WHERE id = auth.uid()';
+    v_fail := v_fail || 'changed own status (expected rejection); ';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL; -- expected
+  END;
 
   -- 027 removed the self-update on metrics: students cannot inflate progress.
   EXECUTE 'UPDATE public.student_metrics SET progress = 100 WHERE student_id = auth.uid()';

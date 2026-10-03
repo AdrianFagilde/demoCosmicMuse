@@ -27,7 +27,7 @@ import CIcon from '@coreui/icons-react'
 import { cilPlus, cilTrash } from '@coreui/icons'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
-import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
+import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS, formatInstrument } from '../../utils/students'
 
 const emptyForm = {
   title: '',
@@ -173,7 +173,9 @@ const Courses = () => {
                     {course.description && <p className="mb-2">{course.description}</p>}
                     {(course.instrument || course.level) && (
                       <div className="mb-0 d-flex gap-2">
-                        {course.instrument && <CBadge color="primary">{course.instrument}</CBadge>}
+                        {course.instrument && (
+                          <CBadge color="primary">{formatInstrument(course.instrument)}</CBadge>
+                        )}
                         {course.level && <CBadge color="dark">{course.level}</CBadge>}
                       </div>
                     )}
@@ -270,7 +272,7 @@ const Courses = () => {
                 <option value="">Sin instrumento</option>
                 {INSTRUMENT_OPTIONS.map((instrument) => (
                   <option key={instrument} value={instrument}>
-                    {instrument}
+                    {formatInstrument(instrument)}
                   </option>
                 ))}
               </CFormSelect>

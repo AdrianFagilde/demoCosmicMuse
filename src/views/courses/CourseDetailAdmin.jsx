@@ -41,7 +41,7 @@ import FormEditorModal from '../../components/FormEditorModal'
 import FormResponsesModal from '../../components/FormResponsesModal'
 import MaterialList from '../../components/MaterialList'
 import TaskEditorModal from '../../components/TaskEditorModal'
-import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS } from '../../utils/students'
+import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS, formatInstrument } from '../../utils/students'
 import { FILE_ACCEPT, validateCourseFile } from '../../utils/forms'
 import { computeStats } from '../../utils/courses'
 
@@ -242,7 +242,9 @@ const CourseDetailAdmin = ({
           {course.description && <p className="mb-2">{course.description}</p>}
           {(course.instrument || course.level) && (
             <div className="d-flex gap-2 mb-1">
-              {course.instrument && <CBadge color="primary">{course.instrument}</CBadge>}
+              {course.instrument && (
+                <CBadge color="primary">{formatInstrument(course.instrument)}</CBadge>
+              )}
               {course.level && <CBadge color="dark">{course.level}</CBadge>}
             </div>
           )}
@@ -563,7 +565,7 @@ const CourseDetailAdmin = ({
                   <option value="">Sin instrumento</option>
                   {INSTRUMENT_OPTIONS.map((instrument) => (
                     <option key={instrument} value={instrument}>
-                      {instrument}
+                      {formatInstrument(instrument)}
                     </option>
                   ))}
                 </CFormSelect>

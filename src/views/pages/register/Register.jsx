@@ -18,7 +18,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilEnvelopeClosed, cilEducation } from '@coreui/icons'
 import supabase from '../../../lib/supabase'
-import { INSTRUMENT_OPTIONS, normalizeUsername } from '../../../utils/students'
+import { INSTRUMENT_OPTIONS, formatInstrument, normalizeUsername } from '../../../utils/students'
 import { StaffDivider, TrebleClef, Vinyl } from '../../../components/MusicDecor'
 import PhoneInput from '../../../components/PhoneInput'
 import PasswordInput from '../../../components/PasswordInput'
@@ -452,7 +452,7 @@ const Register = () => {
                           <option value="">Selecciona un instrumento (opcional)</option>
                           {INSTRUMENT_OPTIONS.map((option) => (
                             <option key={option} value={option}>
-                              {option}
+                              {formatInstrument(option)}
                             </option>
                           ))}
                         </CFormSelect>

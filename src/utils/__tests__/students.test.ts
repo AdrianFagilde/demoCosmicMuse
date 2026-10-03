@@ -8,6 +8,8 @@ import {
   normalizeUsername,
   isDelinquentSince,
   computeStudentBalances,
+  getInstrumentEmoji,
+  formatInstrument,
 } from '../students'
 
 afterEach(() => {
@@ -83,6 +85,37 @@ describe('buildAssignmentGroups', () => {
 
   it('handles non-array input', () => {
     expect(buildAssignmentGroups(null)).toEqual([])
+  })
+})
+
+describe('getInstrumentEmoji', () => {
+  it('resolves the emoji ignoring case and accents', () => {
+    expect(getInstrumentEmoji('piano')).toBe('🎹')
+    expect(getInstrumentEmoji('violin')).toBe('🎻')
+    expect(getInstrumentEmoji('VIOLÍN')).toBe('🎻')
+    expect(getInstrumentEmoji('Cuatro')).toBe('🇻🇪')
+  })
+
+  it('returns an empty string for empty or unknown instruments', () => {
+    expect(getInstrumentEmoji('')).toBe('')
+    expect(getInstrumentEmoji(null)).toBe('')
+    expect(getInstrumentEmoji('Theremin')).toBe('')
+  })
+})
+
+describe('formatInstrument', () => {
+  it('prefixes the emoji for known instruments', () => {
+    expect(formatInstrument('Cuatro')).toBe('🇻🇪 Cuatro')
+    expect(formatInstrument('Flauta')).toBe('🪈 Flauta')
+  })
+
+  it('keeps unknown instruments as plain text', () => {
+    expect(formatInstrument('Theremin')).toBe('Theremin')
+  })
+
+  it('returns an empty string for empty input', () => {
+    expect(formatInstrument('   ')).toBe('')
+    expect(formatInstrument(null)).toBe('')
   })
 })
 

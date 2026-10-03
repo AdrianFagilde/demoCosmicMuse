@@ -1,6 +1,26 @@
 export const DELINQUENCY_DAYS = 30
 
-export const INSTRUMENT_OPTIONS = ['Piano', 'Guitarra', 'Violín', 'Saxofón', 'Batería', 'Otro']
+export const INSTRUMENT_OPTIONS = [
+  'Piano',
+  'Violín',
+  'Cuatro',
+  'Guitarra',
+  'Canto',
+  'Bajo',
+  'Arpa',
+  'Flauta',
+]
+
+export const INSTRUMENT_EMOJI = {
+  Piano: '🎹',
+  Violín: '🎻',
+  Cuatro: '🇻🇪',
+  Guitarra: '🎸',
+  Canto: '🎤',
+  Bajo: '🎸',
+  Arpa: '🪉',
+  Flauta: '🪈',
+}
 
 export const LEVEL_OPTIONS = ['Principiante', 'Intermedio', 'Avanzado']
 
@@ -20,6 +40,19 @@ const CANONICAL_INSTRUMENT = new Map(INSTRUMENT_OPTIONS.map((name) => [normalize
 const instrumentRank = (name) => {
   if (name === UNASSIGNED_INSTRUMENT_LABEL) return Number.MAX_SAFE_INTEGER
   return INSTRUMENT_RANK.get(name) ?? INSTRUMENT_OPTIONS.length
+}
+
+export const getInstrumentEmoji = (instrument) => {
+  if (!instrument) return ''
+  const canonical = CANONICAL_INSTRUMENT.get(normalizedText(instrument))
+  return INSTRUMENT_EMOJI[canonical] || ''
+}
+
+export const formatInstrument = (instrument) => {
+  const name = (instrument || '').trim()
+  if (!name) return ''
+  const emoji = getInstrumentEmoji(name)
+  return emoji ? `${emoji} ${name}` : name
 }
 
 export const isActiveStudent = (student) => normalizedText(student?.status) === 'activo'
