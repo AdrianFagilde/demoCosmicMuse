@@ -1,0 +1,123 @@
+// =============================================
+// Estados compartidos: carga (skeleton) y vacío (EmptyState)
+// =============================================
+//
+// Un spinner centrado sustituía la vista entera mientras cargaba, así que la
+// tarjeta, los filtros y la cabecera desaparecían y volvían a aparecer. El
+// skeleton conserva la estructura y evita ese salto. El estado vacío se
+// centraliza en un solo componente para que todas las listas digan lo mismo.
+
+.skeleton {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  background-color: var(--cui-tertiary-bg);
+  border-radius: var(--cui-border-radius-sm);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--app-skeleton-highlight),
+      transparent
+    );
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+}
+
+.skeleton--sm {
+  border-radius: var(--cui-border-radius-sm);
+}
+.skeleton--md {
+  border-radius: var(--cui-border-radius-md);
+}
+.skeleton--pill {
+  border-radius: 999px;
+}
+
+.skeleton-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+.skeleton-table__row {
+  display: flex;
+  gap: var(--space-3);
+}
+.skeleton-table__cell {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@keyframes skeleton-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+.empty-state--compact {
+  padding: var(--space-5) var(--space-3);
+}
+.empty-state__icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--app-text-muted);
+}
+.empty-state--compact .empty-state__icon {
+  width: 2rem;
+  height: 2rem;
+}
+.empty-state__title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--cui-body-color);
+}
+.empty-state__text {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--app-text-muted);
+}
+.empty-state__action {
+  margin-top: var(--space-2);
+}
+
+// Anillo de foco único. Solo :focus-visible, así que con ratón no aparece; con
+// teclado es el único indicador fiable en los botones "ghost", que no tienen
+// borde propio. :where() mantiene la especificidad a 0 para que cualquier
+// componente pueda redefinirlo sin pelear.
+:where(
+  a,
+  button,
+  [tabindex]:not([tabindex='-1']),
+  .btn,
+  .form-control,
+  .form-select,
+  .form-check-input,
+  .nav-link,
+  .list-group-item-action,
+  .page-link
+):focus-visible {
+  outline: 2px solid var(--app-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}

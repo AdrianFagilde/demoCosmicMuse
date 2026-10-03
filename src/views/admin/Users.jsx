@@ -8,7 +8,6 @@ import {
   CCol,
   CFormSelect,
   CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -21,6 +20,8 @@ import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
+import EmptyState from '../../components/EmptyState'
+import { TableSkeletonRows } from '../../components/Skeleton'
 
 const Users = () => {
   const { user, profile } = useAuth()
@@ -54,14 +55,6 @@ const Users = () => {
 
   if (!profile || profile.role !== 'admin') {
     return <RestrictedAccess message="Solo los administradores pueden gestionar usuarios." />
-  }
-
-  if (loading) {
-    return (
-      <div className="text-center pt-4">
-        <CSpinner color="primary" />
-      </div>
-    )
   }
 
   const handleRoleChange = async (targetUser, newRole) => {
@@ -184,66 +177,82 @@ const Users = () => {
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              {users.map((user) => (
-                <CTableRow key={user.id}>
-                  <CTableDataCell>
-                    <div className="d-flex align-items-center gap-2">
-                      <CIcon icon={cilUser} className="text-medium-emphasis" aria-hidden="true" />
-                      {user.full_name}
-                    </div>
-                  </CTableDataCell>
-                  <CTableDataCell>{user.email}</CTableDataCell>
-                  <CTableDataCell>
-                    {user.id === currentUserId ? (
-                      <CBadge color="info">Tu cuenta</CBadge>
-                    ) : (
-                      <CFormSelect
-                        size="sm"
-                        value={user.role}
-                        onChange={(e) => handleRoleChange(user, e.target.value)}
-                        className="w-140"
-                      >
-                        <option value="admin">Admin</option>
-                        <option value="student">Estudiante</option>
-                      </CFormSelect>
-                    )}
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    {user.id === currentUserId ? (
-                      user.status
-                    ) : (
-                      <CFormSelect
-                        size="sm"
-                        value={user.status}
-                        onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                        className="w-130"
-                      >
-                        <option value="Activo">Activo</option>
-                        <option value="Inactivo">Inactivo</option>
-                      </CFormSelect>
-                    )}
-                  </CTableDataCell>
-                  <CTableDataCell>{user.instrument || '—'}</CTableDataCell>
-                  <CTableDataCell>
-                    {user.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : '—'}
-                  </CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    {user.id === currentUserId ? (
-                      '—'
-                    ) : (
-                      <CButton
-                        color="danger"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(user)}
-                        aria-label={`Eliminar a ${user.full_name}`}
-                      >
-                        <CIcon icon={cilTrash} aria-hidden="true" />
-                      </CButton>
-                    )}
+              {loading ? (
+                <TableSkeletonRows rows={6} columns={7} />
+              ) : users.length === 0 ? (
+                <CTableRow>
+                  <CTableDataCell colSpan={7} className="p-0">
+                    <EmptyState
+                      compact
+                      title="Sin usuarios"
+                      description="No hay usuarios registrados todavía."
+                    />
                   </CTableDataCell>
                 </CTableRow>
-              ))}
+              ) : (
+                users.map((user) => (
+                  <CTableRow key={user.id}>
+                    <CTableDataCell>
+                      <div className="d-flex align-items-center gap-2">
+                        <CIcon icon={cilUser} className="text-medium-emphasis" aria-hidden="true" />
+                        {user.full_name}
+                      </div>
+                    </CTableDataCell>
+                    <CTableDataCell>{user.email}</CTableDataCell>
+                    <CTableDataCell>
+                      {user.id === currentUserId ? (
+                        <CBadge color="info">Tu cuenta</CBadge>
+                      ) : (
+                        <CFormSelect
+                          size="sm"
+                          value={user.role}
+                          onChange={(e) => handleRoleChange(user, e.target.value)}
+                          className="w-140"
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="student">Estudiante</option>
+                        </CFormSelect>
+                      )}
+                    </CTableDataCell>
+                    <CTableDataCell>
+                      {user.id === currentUserId ? (
+                        user.status
+                      ) : (
+                        <CFormSelect
+                          size="sm"
+                          value={user.status}
+                          onChange={(e) => handleStatusChange(user.id, e.target.value)}
+                          className="w-130"
+                        >
+                          <option value="Activo">Activo</option>
+                          <option value="Inactivo">Inactivo</option>
+                        </CFormSelect>
+                      )}
+                    </CTableDataCell>
+                    <CTableDataCell>{user.instrument || '—'}</CTableDataCell>
+                    <CTableDataCell>
+                      {user.created_at
+                        ? new Date(user.created_at).toLocaleDateString('es-ES')
+                        : '—'}
+                    </CTableDataCell>
+                    <CTableDataCell className="text-center">
+                      {user.id === currentUserId ? (
+                        '—'
+                      ) : (
+                        <CButton
+                          color="danger"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(user)}
+                          aria-label={`Eliminar a ${user.full_name}`}
+                        >
+                          <CIcon icon={cilTrash} aria-hidden="true" />
+                        </CButton>
+                      )}
+                    </CTableDataCell>
+                  </CTableRow>
+                ))
+              )}
             </CTableBody>
           </CTable>
         </CCardBody>

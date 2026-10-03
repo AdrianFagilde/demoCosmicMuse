@@ -13,7 +13,6 @@ import {
   CModalFooter,
   CModalHeader,
   CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -28,6 +27,8 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
+import EmptyState from '../../components/EmptyState'
+import { TableSkeletonRows } from '../../components/Skeleton'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS, formatInstrument } from '../../utils/students'
 import { buildHash } from '../../utils/version'
 
@@ -66,14 +67,6 @@ const Students = () => {
   if (!profile || profile.role !== 'admin') {
     return (
       <RestrictedAccess message="Solo los administradores pueden ver la lista de estudiantes y el control de la academia." />
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="text-center pt-4">
-        <CSpinner color="primary" />
-      </div>
     )
   }
 
@@ -174,40 +167,50 @@ const Students = () => {
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              {filtered.map((student) => (
-                <CTableRow key={student.id}>
-                  <CTableDataCell>
-                    <Link to={`/students/${student.id}`}>{student.full_name}</Link>
-                  </CTableDataCell>
-                  <CTableDataCell>{formatInstrument(student.instrument)}</CTableDataCell>
-                  <CTableDataCell>{student.teacher}</CTableDataCell>
-                  <CTableDataCell>
-                    <div className="d-flex align-items-center gap-2">
-                      <CBadge color="primary">{student.progress}%</CBadge>
-                    </div>
-                  </CTableDataCell>
-                  <CTableDataCell>{student.attendance}%</CTableDataCell>
-                  <CTableDataCell>
-                    {student.next_lesson && !isNaN(new Date(student.next_lesson).getTime())
-                      ? new Date(student.next_lesson).toLocaleString('es-ES', {
-                          dateStyle: 'short',
-                          timeStyle: 'short',
-                        })
-                      : '—'}
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <CBadge color={student.status === 'Activo' ? 'success' : 'secondary'}>
-                      {student.status}
-                    </CBadge>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-              {filtered.length === 0 && (
-                <CTableRow>
-                  <CTableDataCell colSpan={7} className="text-center text-medium-emphasis">
-                    No se encontraron estudiantes con esos filtros.
-                  </CTableDataCell>
-                </CTableRow>
+              {loading ? (
+                <TableSkeletonRows rows={6} columns={7} />
+              ) : (
+                <>
+                  {filtered.map((student) => (
+                    <CTableRow key={student.id}>
+                      <CTableDataCell>
+                        <Link to={`/students/${student.id}`}>{student.full_name}</Link>
+                      </CTableDataCell>
+                      <CTableDataCell>{formatInstrument(student.instrument)}</CTableDataCell>
+                      <CTableDataCell>{student.teacher}</CTableDataCell>
+                      <CTableDataCell>
+                        <div className="d-flex align-items-center gap-2">
+                          <CBadge color="primary">{student.progress}%</CBadge>
+                        </div>
+                      </CTableDataCell>
+                      <CTableDataCell>{student.attendance}%</CTableDataCell>
+                      <CTableDataCell>
+                        {student.next_lesson && !isNaN(new Date(student.next_lesson).getTime())
+                          ? new Date(student.next_lesson).toLocaleString('es-ES', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })
+                          : '—'}
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color={student.status === 'Activo' ? 'success' : 'secondary'}>
+                          {student.status}
+                        </CBadge>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+                  {filtered.length === 0 && (
+                    <CTableRow>
+                      <CTableDataCell colSpan={7} className="p-0">
+                        <EmptyState
+                          compact
+                          title="Sin estudiantes"
+                          description="No se encontraron estudiantes con esos filtros."
+                        />
+                      </CTableDataCell>
+                    </CTableRow>
+                  )}
+                </>
               )}
             </CTableBody>
           </CTable>

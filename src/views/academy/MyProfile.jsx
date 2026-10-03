@@ -10,7 +10,6 @@ import {
   CFormInput,
   CFormSelect,
   CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -25,6 +24,8 @@ import useSupabaseLessons from '../../hooks/useSupabaseLessons'
 import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
 import AvatarCropModal from '../../components/AvatarCropModal'
+import EmptyState from '../../components/EmptyState'
+import { TableSkeleton } from '../../components/Skeleton'
 import { INSTRUMENT_OPTIONS, formatInstrument } from '../../utils/students'
 
 const MyProfile = () => {
@@ -302,7 +303,7 @@ const MyProfile = () => {
             <CCardHeader>Proximas clases</CCardHeader>
             <CCardBody>
               {loading ? (
-                <CSpinner color="primary" />
+                <TableSkeleton rows={4} columns={5} />
               ) : (
                 <CTable hover responsive>
                   <CTableHead>
@@ -327,7 +328,13 @@ const MyProfile = () => {
                       ))
                     ) : (
                       <CTableRow>
-                        <CTableDataCell colSpan={5}>No hay clases programadas.</CTableDataCell>
+                        <CTableDataCell colSpan={5} className="p-0">
+                          <EmptyState
+                            compact
+                            title="Sin clases"
+                            description="No hay clases programadas."
+                          />
+                        </CTableDataCell>
                       </CTableRow>
                     )}
                   </CTableBody>

@@ -13,7 +13,6 @@ import {
   CModalFooter,
   CModalHeader,
   CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -27,6 +26,8 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabaseLessons from '../../hooks/useSupabaseLessons'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import RestrictedAccess from '../../components/RestrictedAccess'
+import EmptyState from '../../components/EmptyState'
+import { TableSkeletonRows } from '../../components/Skeleton'
 
 const emptyForm = {
   studentId: '',
@@ -63,14 +64,6 @@ const Lessons = () => {
 
   if (!profile || profile.role !== 'admin') {
     return <RestrictedAccess message="Solo los administradores pueden gestionar las clases." />
-  }
-
-  if (loading) {
-    return (
-      <div className="text-center pt-4">
-        <CSpinner color="primary" />
-      </div>
-    )
   }
 
   const openCreate = () => {
@@ -170,50 +163,60 @@ const Lessons = () => {
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              {filtered.map((lesson) => (
-                <CTableRow key={lesson.id}>
-                  <CTableDataCell>{lesson.profiles?.full_name || '—'}</CTableDataCell>
-                  <CTableDataCell>
-                    <CBadge color="info">{lesson.instrument}</CBadge>
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    {lesson.lesson_start
-                      ? new Date(lesson.lesson_start).toLocaleString('es-ES', {
-                          dateStyle: 'short',
-                          timeStyle: 'short',
-                        })
-                      : '—'}
-                  </CTableDataCell>
-                  <CTableDataCell>{lesson.duration} min</CTableDataCell>
-                  <CTableDataCell>{lesson.teacher}</CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    <CButton
-                      color="primary"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(lesson)}
-                      aria-label={`Editar la clase del ${lesson.student?.full_name || 'estudiante'}`}
-                    >
-                      <CIcon icon={cilPencil} aria-hidden="true" />
-                    </CButton>
-                    <CButton
-                      color="danger"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(lesson.id)}
-                      aria-label={`Eliminar la clase del ${lesson.student?.full_name || 'estudiante'}`}
-                    >
-                      <CIcon icon={cilTrash} aria-hidden="true" />
-                    </CButton>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-              {filtered.length === 0 && (
-                <CTableRow>
-                  <CTableDataCell colSpan={7} className="text-center text-medium-emphasis">
-                    No se encontraron clases.
-                  </CTableDataCell>
-                </CTableRow>
+              {loading ? (
+                <TableSkeletonRows rows={6} columns={6} />
+              ) : (
+                <>
+                  {filtered.map((lesson) => (
+                    <CTableRow key={lesson.id}>
+                      <CTableDataCell>{lesson.profiles?.full_name || '—'}</CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color="info">{lesson.instrument}</CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        {lesson.lesson_start
+                          ? new Date(lesson.lesson_start).toLocaleString('es-ES', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })
+                          : '—'}
+                      </CTableDataCell>
+                      <CTableDataCell>{lesson.duration} min</CTableDataCell>
+                      <CTableDataCell>{lesson.teacher}</CTableDataCell>
+                      <CTableDataCell className="text-center">
+                        <CButton
+                          color="primary"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEdit(lesson)}
+                          aria-label={`Editar la clase del ${lesson.student?.full_name || 'estudiante'}`}
+                        >
+                          <CIcon icon={cilPencil} aria-hidden="true" />
+                        </CButton>
+                        <CButton
+                          color="danger"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(lesson.id)}
+                          aria-label={`Eliminar la clase del ${lesson.student?.full_name || 'estudiante'}`}
+                        >
+                          <CIcon icon={cilTrash} aria-hidden="true" />
+                        </CButton>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+                  {filtered.length === 0 && (
+                    <CTableRow>
+                      <CTableDataCell colSpan={6} className="p-0">
+                        <EmptyState
+                          compact
+                          title="Sin clases"
+                          description="No se encontraron clases con esos filtros."
+                        />
+                      </CTableDataCell>
+                    </CTableRow>
+                  )}
+                </>
               )}
             </CTableBody>
           </CTable>

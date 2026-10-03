@@ -12,7 +12,6 @@ import {
   CForm,
   CFormInput,
   CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -27,6 +26,8 @@ import useSupabaseCourses from '../../hooks/useSupabaseCourses'
 import { formatInstrument } from '../../utils/students'
 import RestrictedAccess from '../../components/RestrictedAccess'
 import LinkifiedText from '../../components/LinkifiedText'
+import EmptyState from '../../components/EmptyState'
+import Skeleton, { TableSkeleton } from '../../components/Skeleton'
 
 const StudentDetail = () => {
   const { id } = useParams()
@@ -78,8 +79,9 @@ const StudentDetail = () => {
 
   if (studentsLoading) {
     return (
-      <div className="text-center pt-4">
-        <CSpinner color="primary" />
+      <div className="d-flex flex-column gap-3">
+        <Skeleton height="9rem" rounded="md" />
+        <Skeleton height="14rem" rounded="md" />
       </div>
     )
   }
@@ -205,7 +207,7 @@ const StudentDetail = () => {
                 </CButton>
               </div>
               {tasksLoading ? (
-                <CSpinner color="primary" />
+                <TableSkeleton rows={4} columns={5} />
               ) : (
                 <CTable hover responsive>
                   <CTableHead>
@@ -265,6 +267,17 @@ const StudentDetail = () => {
                         </CTableDataCell>
                       </CTableRow>
                     ))}
+                    {studentTasks.length === 0 && (
+                      <CTableRow>
+                        <CTableDataCell colSpan={5} className="p-0">
+                          <EmptyState
+                            compact
+                            title="Sin tareas"
+                            description="Este estudiante no tiene tareas asignadas."
+                          />
+                        </CTableDataCell>
+                      </CTableRow>
+                    )}
                   </CTableBody>
                 </CTable>
               )}

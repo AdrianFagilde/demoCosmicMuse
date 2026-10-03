@@ -45,7 +45,7 @@ const WelcomeModal = () => {
   const firstName = profile?.full_name?.split(' ')[0] || ''
 
   return (
-    <CModal visible={visible} onClose={handleClose} alignment="center" size="lg">
+    <CModal visible={visible} onClose={handleClose} alignment="center" size="lg" scrollable>
       <CModalBody className="text-center py-5 px-4 position-relative overflow-hidden">
         <TrebleClef size={130} color="var(--cui-primary)" className="music-modal-clef" />
         <MusicNote size={40} color="var(--cui-primary)" className="mb-3" />

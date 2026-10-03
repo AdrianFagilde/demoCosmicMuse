@@ -13,7 +13,6 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -34,6 +33,8 @@ import {
 import CIcon from '@coreui/icons-react'
 import { useAuth } from '../../context/AuthContext'
 import LinkifiedText from '../../components/LinkifiedText'
+import EmptyState from '../../components/EmptyState'
+import { TableSkeleton } from '../../components/Skeleton'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import { isOverdue } from '../../utils/dates'
@@ -534,7 +535,7 @@ const Tasks = () => {
             </div>
           )}
           {loading ? (
-            <CSpinner color="primary" />
+            <TableSkeleton rows={6} columns={isAdmin ? 7 : 6} />
           ) : (
             <CTable hover responsive>
               <CTableHead>
@@ -679,10 +680,16 @@ const Tasks = () => {
                   ))
                 ) : (
                   <CTableRow>
-                    <CTableDataCell colSpan={isAdmin ? 7 : 6} className="text-center">
-                      {isAdmin
-                        ? 'No hay tareas registradas todavía.'
-                        : 'No tienes tareas asignadas por el momento.'}
+                    <CTableDataCell colSpan={isAdmin ? 7 : 6} className="p-0">
+                      <EmptyState
+                        compact
+                        title="Sin tareas"
+                        description={
+                          isAdmin
+                            ? 'No hay tareas registradas todavía.'
+                            : 'No tienes tareas asignadas por el momento.'
+                        }
+                      />
                     </CTableDataCell>
                   </CTableRow>
                 )}

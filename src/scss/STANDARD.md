@@ -166,3 +166,26 @@ El contenido `aria-hidden` decorativo (`.staff-divider`, `.staff-caption`,
 marcos de esquina, watermarks, barras de `weekly-dot`) no es texto para el
 usuario de lector de pantalla y no entra en el requisito AAA. Aun así sus tonos
 apuntan a los mismos tokens para que la lectura visual sea coherente.
+
+## 9. Estados
+
+Las listas comparten dos componentes, en `src/components/`:
+
+- **`Skeleton`** (`Skeleton.jsx`, estilos en `_states.scss`): primitivo de carga
+  con brillo. `TableSkeletonRows` va dentro de un `CTableBody` y conserva la
+  cabecera de la tabla, que es lo que evita el salto al terminar de cargar;
+  `TableSkeleton` es el bloque suelto para listas de tarjetas. El brillo usa
+  `--app-skeleton-highlight` y se detiene bajo `prefers-reduced-motion: reduce`.
+- **`EmptyState`**: icono, título, descripción y acción opcional. Dentro de una
+  tabla se usa con `compact` y `p-0` en la celda que ocupa el `colSpan` completo;
+  fuera de ella, sin `compact`.
+
+Un `CSpinner` suelto ya no sustituye a la vista entera: mientras carga se mantiene
+la tarjeta y su cabecera, y el spinner queda solo para acciones puntuales (por
+ejemplo, el botón de guardar).
+
+El foco es global en `_states.scss`: un anillo de 2px con `--app-focus-ring`
+sobre `a`, `button`, controles de formulario y elementos `[tabindex]`. Solo
+`:focus-visible`, así que con ratón no aparece; con teclado es el único indicador
+fiable en los botones `ghost`. El selector usa `:where()`, de especificidad 0,
+para que ningún componente tenga que pelear con él.

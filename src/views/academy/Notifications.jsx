@@ -1,23 +1,17 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { CBadge, CButton, CCard, CCardBody, CCardHeader, CSpinner } from '@coreui/react'
-import { cilCheckAlt, cilChevronRight } from '@coreui/icons'
+import { CBadge, CButton, CCard, CCardBody, CCardHeader } from '@coreui/react'
+import { cilBell, cilCheckAlt, cilChevronRight } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNotifications } from '../../context/NotificationContext'
 import { getNotificationTarget } from '../../utils/notificationRouting'
 import { formatDateTime } from '../../utils/format'
+import EmptyState from '../../components/EmptyState'
+import { TableSkeleton } from '../../components/Skeleton'
 
 const Notifications = () => {
   const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead } =
     useNotifications()
-
-  if (loading) {
-    return (
-      <div className="text-center pt-4">
-        <CSpinner color="primary" />
-      </div>
-    )
-  }
 
   return (
     <CCard className="app-card">
@@ -33,14 +27,20 @@ const Notifications = () => {
         </div>
       </CCardHeader>
       <CCardBody>
-        {error ? (
+        {loading ? (
+          <TableSkeleton rows={4} columns={1} />
+        ) : error ? (
           // Sin esto, un fallo de red o de RLS se leería al alumno como
           // "no tienes notificaciones", indistinguible del estado real.
           <div className="alert alert-warning mb-0">
             No se pudieron cargar tus notificaciones. Comprueba tu conexión e inténtalo de nuevo.
           </div>
         ) : notifications.length === 0 ? (
-          <div className="text-center text-medium-emphasis py-4">No tienes notificaciones.</div>
+          <EmptyState
+            icon={cilBell}
+            title="Sin notificaciones"
+            description="Aquí verás los avisos de tareas, cursos y clases."
+          />
         ) : (
           <div className="list-group">
             {notifications.map((n) => {

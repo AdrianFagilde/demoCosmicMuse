@@ -57,6 +57,7 @@ $cosmic-magenta-light: #a12666;
 @use './card';
 @use './form';
 @use './layout';
+@use './states';
 
 :root {
   --color-primary-dark: #{$cosmic-navy};
@@ -123,6 +124,11 @@ $cosmic-magenta-light: #a12666;
   --cui-success-rgb: 16, 91, 36;
   --cui-warning: #684803; // 7.09:1
   --cui-warning-rgb: 104, 72, 3;
+
+  // Anillo de foco (solo :focus-visible). Magenta oscura: se ve sobre blanco y
+  // sobre los grises claros de la app. El skeleton brilla hacia blanco.
+  --app-focus-ring: #{$cosmic-magenta};
+  --app-skeleton-highlight: rgba(255, 255, 255, 0.5);
 }
 
 // AAA sobre fondo oscuro: los grises suben de luminosidad y los colores de
@@ -140,6 +146,9 @@ $cosmic-magenta-light: #a12666;
   --cui-danger-rgb: 226, 141, 186;
   --cui-success: #21c24c; // 7.13:1
   --cui-success-rgb: 33, 194, 76;
+
+  --app-focus-ring: #d88fd8; // mismo tono claro que --cui-primary en oscuro
+  --app-skeleton-highlight: rgba(255, 255, 255, 0.06);
 }
 
 // =============================================

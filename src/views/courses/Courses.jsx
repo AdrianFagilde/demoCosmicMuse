@@ -24,10 +24,12 @@ import {
   CSpinner,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilTrash } from '@coreui/icons'
+import { cilMusicNote, cilPlus, cilTrash } from '@coreui/icons'
 import { useAuth } from '../../context/AuthContext'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
 import { INSTRUMENT_OPTIONS, LEVEL_OPTIONS, formatInstrument } from '../../utils/students'
+import EmptyState from '../../components/EmptyState'
+import { TableSkeleton } from '../../components/Skeleton'
 
 const emptyForm = {
   title: '',
@@ -145,14 +147,24 @@ const Courses = () => {
       <CRow>
         <CCol xs={12}>
           {loading ? (
-            <div className="text-center py-5">
-              <CSpinner color="primary" />
-            </div>
+            <TableSkeleton rows={3} columns={2} />
           ) : isAdmin ? (
             courses.length === 0 ? (
               <CCard className="app-card">
-                <CCardBody className="text-center text-medium-emphasis">
-                  Todavía no hay cursos. Crea el primero con el botón "Nuevo curso".
+                <CCardBody>
+                  <EmptyState
+                    icon={cilMusicNote}
+                    title="Sin cursos"
+                    description={
+                      'Todavía no hay cursos. Crea el primero con el botón "Nuevo curso".'
+                    }
+                    action={
+                      <CButton color="primary" onClick={handleOpenCreate}>
+                        <CIcon icon={cilPlus} className="me-1" aria-hidden="true" />
+                        Nuevo curso
+                      </CButton>
+                    }
+                  />
                 </CCardBody>
               </CCard>
             ) : (
@@ -199,9 +211,12 @@ const Courses = () => {
             )
           ) : courses.length === 0 ? (
             <CCard className="app-card">
-              <CCardBody className="text-center text-medium-emphasis">
-                No estás inscrito en ningún curso todavía. Cuando tu profesor te inscriba, lo verás
-                aquí.
+              <CCardBody>
+                <EmptyState
+                  icon={cilMusicNote}
+                  title="Sin cursos"
+                  description="No estás inscrito en ningún curso todavía. Cuando tu profesor te inscriba, lo verás aquí."
+                />
               </CCardBody>
             </CCard>
           ) : (
