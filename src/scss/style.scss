@@ -677,7 +677,13 @@ h6,
 // lateral en vez de apilar dos .container-fluid. La barra va en
 // .app-header-main para conservar el flex horizontal y la linea divisoria; el
 // breadcrumb queda como hijo directo del container.
-.app-header-bar {
+//
+// CoreUI aplica `.header > .container-fluid` con `display:flex`,
+// `justify-content:space-between` y `align-items:center` (especificidad 0,2,0).
+// Ese align-items:center centraba horizontalmente los hijos y los dejaba sin
+// abarcar el ancho. El selector con hijo directo (0,2,0) empata en
+// especificidad y, al ir despues, gana: recuperamos align-items:stretch.
+.app-header > .app-header-bar {
   flex-direction: column;
   align-items: stretch;
 }
