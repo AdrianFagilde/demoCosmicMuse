@@ -93,11 +93,10 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
         ))}
       </ul>
 
-      <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+      <div className="mt-3 pt-3 border-top text-center">
         <button className="btn btn-outline-primary btn-sm" onClick={onStartPractice} type="button">
           <CIcon icon={cilFire} className="me-1" size="sm" aria-hidden="true" /> Practicar
         </button>
-        <div className="text-medium-emphasis small">Meta: 30 min/día</div>
       </div>
     </div>
   )

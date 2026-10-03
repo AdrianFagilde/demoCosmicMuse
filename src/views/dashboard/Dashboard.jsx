@@ -23,6 +23,7 @@ import {
   cilChart,
   cilFire,
   cilMediaPlay,
+  cilMediaStop,
   cilMusicNote,
 } from '@coreui/icons'
 
@@ -31,14 +32,12 @@ import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import useSupabasePractice from '../../hooks/useSupabasePractice'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
-import useSupabaseGamification from '../../hooks/useSupabaseGamification'
 import supabase from '../../lib/supabase'
 import LinkifiedText from '../../components/LinkifiedText'
 import KpiCard from '../../components/KpiCard'
 
 // New Duolingo-style components
 import ActionCard from '../../components/dashboard/ActionCard'
-import DailyGoalCard from '../../components/dashboard/DailyGoalCard'
 import WeeklyDots from '../../components/dashboard/WeeklyDots'
 import PracticeTaskSelector from '../../components/dashboard/PracticeTaskSelector'
 import { getInstrumentColor } from '../../utils/colors'
@@ -83,7 +82,6 @@ const Dashboard = () => {
   const { tasks } = useSupabaseTasks()
   const { courses } = useSupabaseCourses()
   const practice = useSupabasePractice(user?.id)
-  const gamification = useSupabaseGamification(user?.id)
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [summary, setSummary] = useState({
     activeStudents: 0,
@@ -201,19 +199,7 @@ const Dashboard = () => {
     })
   }
 
-  const urgentTasks = sortTasksByUrgency(pendingTasks).slice(0, 4)
-
-  // Solo cuentan las sesiones CERRADAS con duracion > 0. Antes se sumaban las
-  // abiertas (started_at de hoy sin ended_at), asi que abrir el temporizador ya
-  // marcaba minutos y meta cumplida sin haber practicado.
-  const practiceToday =
-    practice.sessions
-      ?.filter((s) => {
-        if (!s.started_at || !s.ended_at || !s.duration_minutes) return false
-        const sessionDate = new Date(s.started_at).toDateString()
-        return sessionDate === new Date().toDateString()
-      })
-      .reduce((sum, s) => sum + (s.duration_minutes || 0), 0) || 0
+  const urgentTasks = sortTasksByUrgency(pendingTasks).slice(0, 5)
 
   const openPracticeSelector = () => setSelectorOpen(true)
 
@@ -224,11 +210,9 @@ const Dashboard = () => {
     })
   }
 
-  // Al finalizar: la BD calcula duration_minutes, otorga XP y avanza la racha.
-  // Hay que releer la gamificacion para reflejar XP/nivel/logros al instante.
+  // Al finalizar: la BD calcula duration_minutes y avanza la racha.
   const handleFinishPractice = async (session) => {
     await practice.endPractice(session.id)
-    await gamification.refetch()
   }
 
   const instrumentColor = enrolledCourses[0]
@@ -249,37 +233,29 @@ const Dashboard = () => {
             </div>
             <Equalizer />
           </div>
-          {streakDays > 0 && (
-            <div className="dash-streak" title={`${streakDays} días de racha`}>
-              <CIcon icon={cilFire} size="sm" aria-hidden="true" />
-              <span className="fw-bold">{streakDays}</span>
-            </div>
-          )}
+          <div className="d-flex align-items-center gap-2">
+            {practice.activeSession && (
+              <button
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => handleFinishPractice(practice.activeSession)}
+                type="button"
+              >
+                <CIcon icon={cilMediaStop} className="me-1" size="sm" aria-hidden="true" />
+                Finalizar práctica
+              </button>
+            )}
+            {streakDays > 0 && (
+              <div className="dash-streak" title={`${streakDays} días de racha`}>
+                <CIcon icon={cilFire} size="sm" aria-hidden="true" />
+                <span className="fw-bold">{streakDays}</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ROW 1: Meta diaria (accion principal) + consistencia semanal */}
+        {/* ROW 1: Pendientes (accion principal) + consistencia semanal */}
         <CRow className="mb-3 g-3">
           <CCol lg={8} className="mb-0">
-            <DailyGoalCard
-              practiceMinutesToday={practiceToday}
-              goalMinutes={gamification.dailyGoalMinutes}
-              activeSession={practice.activeSession}
-              onStartPractice={openPracticeSelector}
-              onFinishPractice={handleFinishPractice}
-            />
-          </CCol>
-          <CCol lg={4} className="mb-0">
-            <WeeklyDots
-              weeklySummary={practice.weeklySummary}
-              instrumentColor={instrumentColor}
-              onStartPractice={openPracticeSelector}
-            />
-          </CCol>
-        </CRow>
-
-        {/* ROW 2: Que practicar ahora */}
-        <CRow className="mb-3 g-3">
-          <CCol lg={12} className="mb-0">
             <div className="app-card app-card-compact h-100 d-flex flex-column">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <span className="fw-semibold d-flex align-items-center gap-2">
@@ -289,7 +265,7 @@ const Dashboard = () => {
                     size="lg"
                     aria-hidden="true"
                   />
-                  Ahora mismo
+                  Tareas pendientes
                 </span>
                 <button
                   className="btn btn-sm btn-outline-primary"
@@ -301,7 +277,7 @@ const Dashboard = () => {
               </div>
               <div className="d-flex flex-column gap-2">
                 {urgentTasks.length > 0 ? (
-                  urgentTasks.slice(0, 3).map((task) => (
+                  urgentTasks.map((task) => (
                     <ActionCard
                       key={task.id}
                       task={{
@@ -315,7 +291,7 @@ const Dashboard = () => {
                   <div className="text-center text-medium-emphasis py-3">
                     <CIcon icon={cilMusicNote} size="lg" className="mb-2" aria-hidden="true" />
                     <div className="fw-semibold mb-1">¡Todo al día!</div>
-                    <div className="small mb-3">No tienes tareas urgentes</div>
+                    <div className="small mb-3">No tienes tareas pendientes</div>
                     <div className="d-flex justify-content-center gap-2 flex-wrap">
                       <button
                         className="btn btn-primary btn-sm"
@@ -346,6 +322,13 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
+          </CCol>
+          <CCol lg={4} className="mb-0">
+            <WeeklyDots
+              weeklySummary={practice.weeklySummary}
+              instrumentColor={instrumentColor}
+              onStartPractice={openPracticeSelector}
+            />
           </CCol>
         </CRow>
 
