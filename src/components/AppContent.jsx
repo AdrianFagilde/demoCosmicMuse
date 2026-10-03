@@ -11,7 +11,7 @@ const AppContent = () => {
 
   if (authError) {
     return (
-      <CContainer className="px-4 pt-4" lg>
+      <CContainer className="px-4 pt-4" fluid>
         <div className="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-2">
           <span>{authError}</span>
           <CButton color="danger" variant="outline" size="sm" onClick={retry}>
@@ -24,14 +24,14 @@ const AppContent = () => {
 
   if (loading || (isAuthenticated && !profile)) {
     return (
-      <CContainer className="px-4 d-flex justify-content-center pt-4" lg>
+      <CContainer className="px-4 d-flex justify-content-center pt-4" fluid>
         <Equalizer size={26} />
       </CContainer>
     )
   }
 
   return (
-    <CContainer className="px-4" lg>
+    <CContainer className="px-4" fluid>
       <Suspense fallback={<Equalizer size={26} className="d-block mx-auto" />}>
         <Routes>
           {routes.map((route, idx) => {

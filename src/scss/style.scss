@@ -659,9 +659,32 @@ h6,
   @include transition(padding 0.15s);
 }
 
-.header > .container-fluid,
 .sidebar-header {
   min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
+}
+
+// El header usa un solo container: la barra y el breadcrumb comparten padding
+// lateral en vez de apilar dos .container-fluid. La barra va en
+// .app-header-main para conservar el flex horizontal y la linea divisoria; el
+// breadcrumb queda como hijo directo del container.
+.app-header-bar {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.app-header-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4rem;
+  border-bottom: 1px solid var(--cui-header-border-color);
+}
+
+.app-header-bar > .breadcrumb {
+  min-height: 3rem;
+  align-items: center;
+  margin-bottom: 0;
 }
 
 .sidebar-brand-full {
@@ -700,10 +723,6 @@ h6,
   .sidebar-toggler {
     margin-inline-end: auto;
   }
-}
-
-.header > .container-fluid + .container-fluid {
-  min-height: 3rem;
 }
 
 .footer {

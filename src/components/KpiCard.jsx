@@ -2,8 +2,8 @@ import React from 'react'
 import { CCard, CCardBody, CCol } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 
-const KpiCard = ({ color = 'purple', label, value, subtext, icon, md = 3, sm = 6 }) => (
-  <CCol md={md} sm={sm} className="mb-3">
+const KpiCard = ({ color = 'purple', label, value, subtext, icon, xs = 12, md = 6, lg = 3 }) => (
+  <CCol xs={xs} md={md} lg={lg} className="mb-3">
     <CCard className={`app-card app-card-brand app-card-brand--${color} kpi-card h-100`}>
       <CCardBody className="d-flex align-items-center justify-content-between gap-3">
         <div>
