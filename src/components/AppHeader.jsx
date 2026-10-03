@@ -14,7 +14,7 @@ import {
   useColorModes,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilContrast, cilList, cilMenu, cilMoon, cilSun } from '@coreui/icons'
+import { cilContrast, cilMenu, cilMoon, cilSun } from '@coreui/icons'
 
 import { AppBreadcrumb } from './index'
 import { AppHeaderDropdown } from './header/index'
@@ -57,20 +57,8 @@ const AppHeader = () => {
               </CNavLink>
             </CNavItem>
           </CHeaderNav>
-          <CHeaderNav className="ms-auto">
-            <CNavItem>
-              <NotificationBell />
-            </CNavItem>
-            <CNavItem>
-              <CNavLink href="#" aria-label="Ver lista de actividades">
-                <CIcon icon={cilList} size="lg" aria-hidden="true" />
-              </CNavLink>
-            </CNavItem>
-          </CHeaderNav>
-          <CHeaderNav>
-            <li className="nav-item py-1">
-              <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-            </li>
+          <CHeaderNav className="ms-auto header-actions">
+            <NotificationBell />
             <CDropdown variant="nav-item" placement="bottom-end">
               <CDropdownToggle caret={false} aria-label={`Tema: ${colorModeLabel}. Cambiar tema`}>
                 {colorMode === 'dark' ? (
@@ -112,8 +100,8 @@ const AppHeader = () => {
                 </CDropdownItem>
               </CDropdownMenu>
             </CDropdown>
-            <li className="nav-item py-1">
-              <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
+            <li className="nav-item header-actions-divider" aria-hidden="true">
+              <div className="vr"></div>
             </li>
             <AppHeaderDropdown />
           </CHeaderNav>

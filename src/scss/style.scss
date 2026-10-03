@@ -690,6 +690,38 @@ h6,
   border-bottom: 1px solid var(--cui-header-border-color);
 }
 
+// Acciones de la derecha: notificaciones, tema y cuenta. Antes eran dos
+// CHeaderNav con divisores `h-100` que medían todo el alto de la barra y dejaban
+// los iconos pegados. Ahora es un solo grupo con gap real y un unico separador
+// corto antes de la cuenta.
+.app-header-main .header-actions {
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.header-actions .nav-link {
+  padding-inline: var(--space-2);
+  border-radius: var(--cui-border-radius);
+}
+
+.header-actions .nav-link:hover,
+.header-actions .nav-link:focus-visible {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.header-actions-divider {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+
+  .vr {
+    align-self: center;
+    height: 1.5rem;
+    margin-inline: var(--space-2);
+    opacity: 0.3;
+  }
+}
+
 .app-header-bar > .breadcrumb {
   min-height: 3rem;
   align-items: center;
