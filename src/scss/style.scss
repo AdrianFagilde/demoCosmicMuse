@@ -308,7 +308,7 @@ h6,
   }
 
   .app-header-main,
-  .app-header-bar > .breadcrumb {
+  .app-header-bar > nav[aria-label='breadcrumb'] {
     padding-inline: var(--space-3);
   }
 }
@@ -730,10 +730,14 @@ h6,
   }
 }
 
-.app-header-bar > .breadcrumb {
-  min-height: 3rem;
+// CBreadcrumb renderiza <nav aria-label="breadcrumb"><ol class="breadcrumb">.
+// El padding va en el <nav>, que es el hijo directo del container: el selector
+// anterior (.app-header-bar > .breadcrumb) nunca aplicaba porque el hijo directo
+// es el <nav>, y el breadcrumb quedaba pegado al borde.
+.app-header-bar > nav[aria-label='breadcrumb'] {
+  display: flex;
   align-items: center;
-  margin-bottom: 0;
+  min-height: 3rem;
   padding-inline: var(--space-4);
 }
 
