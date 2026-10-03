@@ -4,11 +4,15 @@ import { cilSpeedometer, cilCheck, cilFire } from '@coreui/icons'
 import ProgressRing from './ProgressRing'
 import { MusicNote } from '../MusicDecor'
 
-const DAILY_GOAL_MINUTES = 30
-
-const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }) => {
-  const progress = Math.min(100, Math.round((practiceMinutesToday / DAILY_GOAL_MINUTES) * 100))
-  const remaining = Math.max(0, DAILY_GOAL_MINUTES - practiceMinutesToday)
+const DailyGoalCard = ({
+  practiceMinutesToday = 0,
+  streak = 0,
+  goalMinutes = 30,
+  onStartPractice,
+}) => {
+  const goal = goalMinutes || 30
+  const progress = Math.min(100, Math.round((practiceMinutesToday / goal) * 100))
+  const remaining = Math.max(0, goal - practiceMinutesToday)
   const isComplete = progress >= 100
 
   return (
@@ -21,7 +25,7 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
           </div>
           <div>
             <div className="daily-goal-title fw-bold">Meta diaria</div>
-            <div className="text-body-secondary small">{DAILY_GOAL_MINUTES} min de práctica</div>
+            <div className="text-body-secondary small">{goal} min de práctica</div>
           </div>
         </div>
         <div className="text-end">
@@ -29,7 +33,7 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
             {isComplete ? '✓ Completada' : `${remaining} min`}
           </div>
           <div className="text-body-secondary small">
-            {practiceMinutesToday} / {DAILY_GOAL_MINUTES} min
+            {practiceMinutesToday} / {goal} min
           </div>
         </div>
       </div>

@@ -58,6 +58,7 @@ $cosmic-magenta-light: #a12666;
 @use './form';
 @use './layout';
 @use './states';
+@use './gamification';
 
 :root {
   --color-primary-dark: #{$cosmic-navy};

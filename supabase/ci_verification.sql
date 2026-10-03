@@ -60,6 +60,34 @@ BEGIN
     SELECT 'get_next_badges runs (3 badges)',
            (SELECT count(*) FROM public.get_next_badges(NULL::uuid)) = 3
     UNION ALL
+    -- 035: la racha debe dispararse al CERRAR la sesion (AFTER UPDATE), no al
+    -- insertarla (boton Practicar). El bug original contaba por entrar.
+    SELECT 'streak trigger fires on UPDATE',
+           COALESCE(
+             (SELECT pg_get_triggerdef(t.oid) LIKE '%AFTER UPDATE%'
+              FROM pg_trigger t
+              WHERE t.tgname = 'trg_update_practice_streak' AND NOT t.tgisinternal),
+             false)
+    UNION ALL
+    SELECT 'daily_goal_minutes column exists',
+           EXISTS (
+             SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public'
+               AND table_name = 'student_gamification'
+               AND column_name = 'daily_goal_minutes')
+    UNION ALL
+    SELECT 'xp_events table exists',
+           to_regclass('public.xp_events') IS NOT NULL
+    UNION ALL
+    SELECT 'award_xp(uuid, integer, text, uuid) exists',
+           to_regprocedure('public.award_xp(uuid, integer, text, uuid)') IS NOT NULL
+    UNION ALL
+    SELECT 'award_xp not callable by authenticated',
+           NOT has_function_privilege('authenticated', 'public.award_xp(uuid, integer, text, uuid)', 'EXECUTE')
+    UNION ALL
+    SELECT 'set_daily_goal(uuid, integer) exists',
+           to_regprocedure('public.set_daily_goal(uuid, integer)') IS NOT NULL
+    UNION ALL
     -- Enrollment helper used by the course read policies.
     SELECT 'is_enrolled_in(uuid) exists',
            to_regprocedure('public.is_enrolled_in(uuid)') IS NOT NULL

@@ -23,11 +23,15 @@ import { useAuth } from '../../context/AuthContext'
 import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
+import useSupabaseGamification from '../../hooks/useSupabaseGamification'
+import supabase from '../../lib/supabase'
 import { formatInstrument } from '../../utils/students'
 import RestrictedAccess from '../../components/RestrictedAccess'
 import LinkifiedText from '../../components/LinkifiedText'
 import EmptyState from '../../components/EmptyState'
 import Skeleton, { TableSkeleton } from '../../components/Skeleton'
+import XPLevelCard from '../../components/dashboard/XPLevelCard'
+import BadgesGallery from '../../components/dashboard/BadgesGallery'
 
 const StudentDetail = () => {
   const { id } = useParams()
@@ -36,6 +40,7 @@ const StudentDetail = () => {
   const { getStudent, updateStudentMetrics, loading: studentsLoading } = useSupabaseStudents()
   const { tasks, addTask, changeTaskStatus, loading: tasksLoading } = useSupabaseTasks()
   const { courses } = useSupabaseCourses()
+  const gamification = useSupabaseGamification(id)
 
   const student = getStudent(id)
 
@@ -59,6 +64,10 @@ const StudentDetail = () => {
   const [savingMetrics, setSavingMetrics] = useState(false)
   const [quickTaskLoading, setQuickTaskLoading] = useState(false)
   const [metricsError, setMetricsError] = useState('')
+  const [goalMinutes, setGoalMinutes] = useState(30)
+  const [savingGoal, setSavingGoal] = useState(false)
+  const [goalError, setGoalError] = useState('')
+  const [goalSaved, setGoalSaved] = useState(false)
 
   useEffect(() => {
     if (student && syncedId !== student.id) {
@@ -68,6 +77,11 @@ const StudentDetail = () => {
       setLocalAttendance(student.attendance || 0)
     }
   }, [student, syncedId])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGoalMinutes(gamification.dailyGoalMinutes || 30)
+  }, [gamification.dailyGoalMinutes])
 
   const clamp = (v) => Math.min(100, Math.max(0, Math.round(Number(v) || 0)))
 
@@ -122,6 +136,27 @@ const StudentDetail = () => {
     })
     setQuickTaskLoading(false)
     if (!ok) setMetricsError('No se pudo crear la tarea rápida.')
+  }
+
+  const clampGoal = (v) => Math.min(240, Math.max(5, Math.round(Number(v) || 0)))
+
+  const handleSaveGoal = async () => {
+    setSavingGoal(true)
+    setGoalError('')
+    setGoalSaved(false)
+    const minutes = clampGoal(goalMinutes)
+    const { error } = await supabase.rpc('set_daily_goal', {
+      p_student_id: id,
+      p_minutes: minutes,
+    })
+    setSavingGoal(false)
+    if (error) {
+      setGoalError('No se pudo guardar la meta. Intenta de nuevo.')
+      return
+    }
+    setGoalMinutes(minutes)
+    setGoalSaved(true)
+    await gamification.refetch()
   }
 
   return (
@@ -283,6 +318,60 @@ const StudentDetail = () => {
               )}
             </CCardBody>
           </CCard>
+        </CCol>
+      </CRow>
+
+      <CRow className="mb-4">
+        <CCol md={6} className="mb-3">
+          <XPLevelCard
+            xp={gamification.xp}
+            totalPracticeMinutes={gamification.totalPracticeMinutes}
+            tasksCompleted={gamification.tasksCompleted}
+            coursesCompleted={gamification.coursesCompleted}
+          />
+        </CCol>
+        <CCol md={6} className="mb-3">
+          <CCard className="app-card h-100">
+            <CCardHeader>Meta diaria de práctica</CCardHeader>
+            <CCardBody>
+              <p className="text-medium-emphasis small">
+                Minutos que este alumno debe practicar cada día. Su panel los usa para calcular el
+                progreso diario.
+              </p>
+              {goalError && (
+                <CAlert color="danger" className="mb-2">
+                  {goalError}
+                </CAlert>
+              )}
+              <CForm>
+                <div className="mb-2">
+                  <label className="form-label">Minutos por día (5–240)</label>
+                  <CFormInput
+                    type="number"
+                    min={5}
+                    max={240}
+                    value={goalMinutes}
+                    onChange={(e) => {
+                      setGoalMinutes(clampGoal(e.target.value))
+                      setGoalSaved(false)
+                    }}
+                  />
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <CButton color="primary" onClick={handleSaveGoal} disabled={savingGoal}>
+                    {savingGoal ? 'Guardando...' : 'Guardar meta'}
+                  </CButton>
+                  {goalSaved && <span className="text-success small">Meta actualizada</span>}
+                </div>
+              </CForm>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+
+      <CRow className="mb-4">
+        <CCol md={12} className="mb-3">
+          <BadgesGallery badges={gamification.badges} nextBadges={gamification.nextBadges} />
         </CCol>
       </CRow>
     </>

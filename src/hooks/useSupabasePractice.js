@@ -178,10 +178,16 @@ const useSupabasePractice = (studentId) => {
     [setData],
   )
 
+  // Sesion en curso (sin ended_at). La lista viene ordenada por started_at
+  // DESC, asi que la primera abierta es la mas reciente. El temporizador de
+  // practica la usa para pintarse y para ofrecer "Finalizar".
+  const activeSession = (data?.sessions || []).find((s) => !s.ended_at) || null
+
   return {
     sessions: data?.sessions || [],
     streak: data?.streak || EMPTY_STREAK,
     weeklySummary: data?.weeklySummary || [],
+    activeSession,
     loading,
     error,
     startPractice,

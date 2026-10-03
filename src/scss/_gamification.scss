@@ -1,0 +1,235 @@
+// =============================================
+// Gamificación: selector de práctica, temporizador flotante, nivel/XP y logros
+//
+// Vive en el chunk global (style.scss) igual que _card.scss porque el mismo
+// contrato lo usan Dashboard y StudentDetail; moverlo a un CSS de componente
+// lo dejaría fuera cuando se entra directo a la ruta.
+// =============================================
+
+// --- Selector "¿Qué vas a practicar?" ---
+.practice-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--radius-card);
+  background: var(--cui-body-bg);
+  color: var(--cui-body-color);
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--cui-primary);
+    background: var(--cui-tertiary-bg);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cui-primary);
+    outline-offset: 2px;
+  }
+
+  // La flecha de la derecha
+  > svg:last-child {
+    flex: 0 0 auto;
+    color: var(--app-text-muted);
+  }
+}
+
+.practice-choice__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: rgba(var(--cui-primary-rgb), 0.15);
+  color: var(--cui-primary);
+  font-size: 1.1rem;
+}
+
+.practice-choice__icon--task {
+  background: rgba(var(--cui-info-rgb), 0.15);
+  color: var(--cui-info);
+}
+
+.practice-choice__icon--course {
+  background: rgba(var(--cui-success-rgb), 0.15);
+  color: var(--cui-success);
+}
+
+.practice-choice__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.practice-choice__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+// --- Temporizador flotante de práctica en curso ---
+//
+// Gradiente de marca fijo (no var(--cui-primary)): en oscuro --cui-primary es un
+// rosa claro (#db99db) sobre el que el texto blanco queda por debajo de AAA.
+// Este par #712771 -> #4b1f5e mantiene >= 7:1 con blanco en ambos temas.
+.practice-timer {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-3);
+  z-index: 1050;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: min(680px, calc(100vw - 2 * var(--space-3)));
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-card);
+  background: linear-gradient(135deg, #712771 0%, #4b1f5e 100%);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.practice-timer__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
+}
+
+.practice-timer__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.practice-timer__label {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.practice-timer__hint {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.practice-timer__clock {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.practice-timer__stop {
+  flex: 0 0 auto;
+  color: #4b1f5e;
+  font-weight: 600;
+}
+
+@media (max-width: 575.98px) {
+  .practice-timer {
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
+  }
+
+  .practice-timer__text {
+    flex-basis: 60%;
+  }
+}
+
+// --- Tarjeta de nivel/XP ---
+.xp-card__bar {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--cui-tertiary-bg);
+}
+
+.xp-card__stats {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.xp-card__stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.xp-card__stat-value {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.1;
+}
+
+.xp-card__stat-label {
+  color: var(--app-text-muted);
+  font-size: 0.78rem;
+}
+
+// --- Logros ---
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 0.75rem;
+}
+
+.badge-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.badge-chip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  // Fallback primero; color-mix lo sobreescribe en navegadores modernos.
+  background: var(--cui-tertiary-bg);
+  background: color-mix(in srgb, var(--badge-color) 18%, transparent);
+  color: var(--badge-color);
+}
+
+.badge-chip__icon--muted {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.badge-chip__name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.next-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.next-badge .badge-chip__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1.05rem;
+}

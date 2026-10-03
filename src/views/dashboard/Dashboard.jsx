@@ -31,6 +31,7 @@ import useSupabaseStudents from '../../hooks/useSupabaseStudents'
 import useSupabaseTasks from '../../hooks/useSupabaseTasks'
 import useSupabasePractice from '../../hooks/useSupabasePractice'
 import useSupabaseCourses from '../../hooks/useSupabaseCourses'
+import useSupabaseGamification from '../../hooks/useSupabaseGamification'
 import supabase from '../../lib/supabase'
 import LinkifiedText from '../../components/LinkifiedText'
 import KpiCard from '../../components/KpiCard'
@@ -40,6 +41,10 @@ import JourneyPath from '../../components/dashboard/JourneyPath'
 import ActionCard from '../../components/dashboard/ActionCard'
 import DailyGoalCard from '../../components/dashboard/DailyGoalCard'
 import WeeklyDots from '../../components/dashboard/WeeklyDots'
+import XPLevelCard from '../../components/dashboard/XPLevelCard'
+import BadgesGallery from '../../components/dashboard/BadgesGallery'
+import PracticeTaskSelector from '../../components/dashboard/PracticeTaskSelector'
+import PracticeTimer from '../../components/dashboard/PracticeTimer'
 import { getInstrumentColor } from '../../utils/colors'
 import { localDateKey, parseDbDate } from '../../utils/dates'
 import { Equalizer, MusicNote, StaffDivider } from '../../components/MusicDecor'
@@ -104,6 +109,10 @@ const Dashboard = () => {
   const { tasks } = useSupabaseTasks()
   const { courses, fetchStudentCourseProgress } = useSupabaseCourses()
   const practice = useSupabasePractice(user?.id)
+  const gamification = useSupabaseGamification(user?.id)
+  const [selectorOpen, setSelectorOpen] = useState(false)
+  const [practiceLabel, setPracticeLabel] = useState('')
+  const [finishingPractice, setFinishingPractice] = useState(false)
   const [summary, setSummary] = useState({
     activeStudents: 0,
     lessonsThisWeek: 0,
@@ -233,14 +242,40 @@ const Dashboard = () => {
 
   const urgentTasks = sortTasksByUrgency(pendingTasks).slice(0, 4)
 
+  // Solo cuentan las sesiones CERRADAS con duracion > 0. Antes se sumaban las
+  // abiertas (started_at de hoy sin ended_at), asi que abrir el temporizador ya
+  // marcaba minutos y meta cumplida sin haber practicado.
   const practiceToday =
     practice.sessions
       ?.filter((s) => {
-        if (!s.started_at) return false
+        if (!s.started_at || !s.ended_at || !s.duration_minutes) return false
         const sessionDate = new Date(s.started_at).toDateString()
         return sessionDate === new Date().toDateString()
       })
       .reduce((sum, s) => sum + (s.duration_minutes || 0), 0) || 0
+
+  const openPracticeSelector = () => setSelectorOpen(true)
+
+  const handleSelectPractice = async (payload) => {
+    setPracticeLabel(payload.label || '')
+    await practice.startPractice({
+      taskId: payload.taskId,
+      courseTaskId: payload.courseTaskId,
+    })
+  }
+
+  // Al finalizar: la BD calcula duration_minutes, otorga XP y avanza la racha.
+  // Hay que releer la gamificacion para reflejar XP/nivel/logros al instante.
+  const handleFinishPractice = async (session) => {
+    setFinishingPractice(true)
+    try {
+      await practice.endPractice(session.id)
+      await gamification.refetch()
+    } finally {
+      setFinishingPractice(false)
+      setPracticeLabel('')
+    }
+  }
 
   const instrumentColor = enrolledCourses[0]
     ? getInstrumentColor(enrolledCourses[0].instrument)
@@ -270,7 +305,8 @@ const Dashboard = () => {
             <DailyGoalCard
               practiceMinutesToday={practiceToday}
               streak={streakDays}
-              onStartPractice={() => practice.startPractice({})}
+              goalMinutes={gamification.dailyGoalMinutes}
+              onStartPractice={openPracticeSelector}
             />
           </CCol>
           <CCol lg={6} className="mb-0">
@@ -331,7 +367,7 @@ const Dashboard = () => {
                     <div className="small mb-2">No tienes tareas urgentes</div>
                     <button
                       className="btn btn-primary btn-sm"
-                      onClick={() => practice.startPractice({})}
+                      onClick={openPracticeSelector}
                       type="button"
                     >
                       <CIcon icon={cilMediaPlay} className="me-1" size="sm" aria-hidden="true" />{' '}
@@ -346,7 +382,7 @@ const Dashboard = () => {
             <WeeklyDots
               weeklySummary={practice.weeklySummary}
               instrumentColor={instrumentColor}
-              onStartPractice={() => practice.startPractice({})}
+              onStartPractice={openPracticeSelector}
             />
           </CCol>
         </CRow>
@@ -429,6 +465,37 @@ const Dashboard = () => {
             </div>
           </CCol>
         </CRow>
+
+        {/* ROW 4: Nivel/XP + Logros */}
+        <CRow className="g-3">
+          <CCol lg={6} className="mb-0">
+            <XPLevelCard
+              xp={gamification.xp}
+              totalPracticeMinutes={gamification.totalPracticeMinutes}
+              tasksCompleted={gamification.tasksCompleted}
+              coursesCompleted={gamification.coursesCompleted}
+            />
+          </CCol>
+          <CCol lg={6} className="mb-0">
+            <BadgesGallery badges={gamification.badges} nextBadges={gamification.nextBadges} />
+          </CCol>
+        </CRow>
+
+        <PracticeTaskSelector
+          visible={selectorOpen}
+          onClose={() => setSelectorOpen(false)}
+          onSelect={handleSelectPractice}
+          tasks={pendingTasks}
+        />
+
+        {practice.activeSession && (
+          <PracticeTimer
+            session={practice.activeSession}
+            label={practiceLabel}
+            onFinish={handleFinishPractice}
+            finishing={finishingPractice}
+          />
+        )}
       </div>
     )
   }
