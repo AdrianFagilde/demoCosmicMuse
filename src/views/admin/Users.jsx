@@ -201,7 +201,7 @@ const Users = () => {
                         size="sm"
                         value={user.role}
                         onChange={(e) => handleRoleChange(user, e.target.value)}
-                        style={{ width: '140px' }}
+                        className="w-140"
                       >
                         <option value="admin">Admin</option>
                         <option value="student">Estudiante</option>
@@ -216,7 +216,7 @@ const Users = () => {
                         size="sm"
                         value={user.status}
                         onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                        style={{ width: '130px' }}
+                        className="w-130"
                       >
                         <option value="Activo">Activo</option>
                         <option value="Inactivo">Inactivo</option>

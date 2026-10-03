@@ -52,7 +52,7 @@ const Notifications = () => {
                     <div>
                       <div className="fw-semibold">{n.title}</div>
                       <div className="small text-body-secondary">{n.message}</div>
-                      <div className="text-medium-emphasis mt-1" style={{ fontSize: '0.75rem' }}>
+                      <div className="text-medium-emphasis mt-1 text-xs">
                         {n.sender?.full_name ? `De: ${n.sender.full_name}` : ''} -{' '}
                         {formatDateTime(n.created_at)}
                       </div>
@@ -86,12 +86,7 @@ const Notifications = () => {
                 )
               }
               return (
-                <div
-                  key={n.id}
-                  className={className}
-                  style={{ cursor: 'pointer' }}
-                  onClick={handleClick}
-                >
+                <div key={n.id} className={`${className} is-clickable`} onClick={handleClick}>
                   {inner}
                 </div>
               )

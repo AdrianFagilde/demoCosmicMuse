@@ -150,7 +150,7 @@ const FormResponsesModal = ({ course, form, onClose }) => {
       <CModalHeader closeButton>
         <CModalTitle>Respuestas: {form.title}</CModalTitle>
       </CModalHeader>
-      <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+      <CModalBody className="modal-body-scroll">
         {loading ? (
           <div className="text-center py-4">
             <CSpinner color="primary" />

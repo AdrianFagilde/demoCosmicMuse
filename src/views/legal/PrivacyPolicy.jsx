@@ -163,8 +163,7 @@ const PrivacyPolicy = () => {
               <div className="d-flex gap-3 mb-2">
                 <CIcon
                   icon={section.icon}
-                  className="text-primary"
-                  style={{ fontSize: '1.25rem', flexShrink: 0 }}
+                  className="text-primary legal-section-icon"
                   aria-hidden="true"
                 />
                 <h4 className="mb-0 fw-semibold">{section.title}</h4>

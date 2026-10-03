@@ -34,8 +34,7 @@ const SortableItem = ({ item, onDelete }) => {
         {...attributes}
         {...listeners}
         aria-label={`Reordenar ${item.label}`}
-        className="text-medium-emphasis"
-        style={{ cursor: 'grab', touchAction: 'none' }}
+        className="text-medium-emphasis drag-handle"
       >
         <CIcon icon={cilMenu} aria-hidden="true" />
       </span>

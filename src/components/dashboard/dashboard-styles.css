@@ -28,7 +28,11 @@
   left: 0;
   right: 0;
   height: 11px;
-  background: repeating-linear-gradient(to bottom, var(--cui-border-color) 0 1px, transparent 1px 3px);
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--cui-border-color) 0 1px,
+    transparent 1px 3px
+  );
   pointer-events: none;
   z-index: 0;
 }
@@ -55,6 +59,10 @@
   flex: 0 0 auto;
   width: 72px;
   scroll-snap-align: start;
+}
+
+.journey-node--clickable {
+  cursor: pointer;
 }
 
 .journey-node-icon {
@@ -135,12 +143,54 @@
 
 /* Daily goal ring */
 .daily-goal-card {
-  background: linear-gradient(135deg, var(--daily-color) 0%, color-mix(in srgb, var(--daily-color) 80%, black) 100%);
+  --daily-color: #6366f1;
+  background: linear-gradient(
+    135deg,
+    var(--daily-color) 0%,
+    color-mix(in srgb, var(--daily-color) 80%, black) 100%
+  );
   color: white;
-  border-radius: 16px;
-  padding: 12px;
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
   position: relative;
   overflow: hidden;
+}
+
+/* El .app-card oscuro define su propio fondo y ganaria por especificidad sobre
+   el gradiente; se reafirma aqui con la misma especificidad. */
+[data-coreui-theme='dark'] .daily-goal-card {
+  background: linear-gradient(
+    135deg,
+    var(--daily-color) 0%,
+    color-mix(in srgb, var(--daily-color) 80%, black) 100%
+  );
+}
+
+.daily-goal-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.daily-goal-title {
+  font-size: 1rem;
+}
+
+.daily-goal-remaining {
+  font-size: 1.15rem;
+}
+
+.daily-goal-actions {
+  min-width: 120px;
+}
+
+.daily-goal-btn {
+  padding: var(--space-2) var(--space-3);
+  font-weight: 600;
+}
+
+.daily-goal-complete {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .daily-goal-note {
@@ -156,14 +206,39 @@
   --daily-ring-bg: rgba(255, 255, 255, 0.2);
 }
 
-/* Action cards */
+/* Action cards
+   El color de urgencia llega por los modificadores de abajo, no por un style
+   inline: la tarjeta y su badge leen --action-color, un unico origen. */
 .action-card {
   border-radius: 12px;
-  padding: 12px;
+  padding: var(--space-3);
   background: var(--cui-card-bg);
   border: 1px solid var(--cui-border-color);
   transition: all 0.15s ease;
   cursor: pointer;
+}
+
+.action-card.none {
+  --action-color: #64748b;
+}
+
+.action-card.urgent-overdue {
+  --action-color: #ef4444;
+  border-left: 3px solid var(--action-color);
+}
+
+.action-card.urgent-today {
+  --action-color: #f59e0b;
+  border-left: 3px solid var(--action-color);
+}
+
+.action-card.urgent-week {
+  --action-color: #06b6d4;
+  border-left: 3px solid var(--action-color);
+}
+
+.action-card.urgent-future {
+  --action-color: #22c55e;
 }
 
 .action-card:hover {
@@ -171,23 +246,39 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
+.action-card-title {
+  max-width: 100%;
+}
+
+.action-card-course {
+  max-width: 200px;
+}
+
+.action-badge {
+  background-color: color-mix(in srgb, var(--action-color) 12%, transparent);
+  color: var(--action-color);
+  border: 1px solid color-mix(in srgb, var(--action-color) 40%, transparent);
+  font-size: 0.6rem;
+  padding: 2px 6px;
+}
+
+.action-progress-value {
+  color: var(--instrument-color, var(--action-color));
+}
+
+.action-progress-label {
+  font-size: 0.65rem;
+}
+
+.action-arrow {
+  opacity: 0.5;
+}
+
 /* `min-w-0` is a Bootstrap utility that CoreUI does not ship. Without a real
    min-width: 0 the flex item keeps min-width: auto and its truncated children
    push long task titles past the viewport. */
 .action-card-body {
   min-width: 0;
-}
-
-.action-card.urgent-overdue {
-  border-left: 3px solid #ef4444;
-}
-
-.action-card.urgent-today {
-  border-left: 3px solid #f59e0b;
-}
-
-.action-card.urgent-week {
-  border-left: 3px solid #06b6d4;
 }
 
 .action-icon {
@@ -200,6 +291,21 @@
   background: color-mix(in srgb, var(--action-color) 15%, transparent);
   color: var(--action-color);
   flex-shrink: 0;
+}
+
+.action-icon--danger {
+  --action-color: #ef4444;
+}
+
+/* Icono sobre superficie de marca (texto blanco). */
+.brand-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.streak-value {
+  font-size: 1.25rem;
 }
 
 /* Top bar */
@@ -260,4 +366,9 @@
   color: var(--cui-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.weekly-dot-badge {
+  font-size: 0.55rem;
+  padding: 1px 4px;
 }

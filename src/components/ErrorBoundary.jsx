@@ -30,10 +30,7 @@ class ErrorBoundary extends React.Component {
                 <p className="text-body-secondary">
                   Ocurrio un error inesperado en la aplicacion. Intenta recargar la pagina.
                 </p>
-                <pre
-                  className="text-danger small text-start bg-body-secondary p-2 rounded"
-                  style={{ maxHeight: '200px', overflow: 'auto' }}
-                >
+                <pre className="text-danger small text-start bg-body-secondary p-2 rounded scroll-area-200">
                   {String(this.state.error)}
                 </pre>
                 <CButton color="primary" onClick={this.handleReload}>

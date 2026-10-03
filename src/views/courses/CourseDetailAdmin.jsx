@@ -488,7 +488,7 @@ const CourseDetailAdmin = ({
                   return (
                     <CTableRow key={studentProfile.id}>
                       <CTableDataCell>{studentProfile.full_name}</CTableDataCell>
-                      <CTableDataCell style={{ minWidth: 160 }}>
+                      <CTableDataCell className="min-w-160">
                         <CProgress value={stats.percent} height={8} />
                       </CTableDataCell>
                       <CTableDataCell>
@@ -540,7 +540,7 @@ const CourseDetailAdmin = ({
             <CModalHeader closeButton>
               <CModalTitle>Editar curso</CModalTitle>
             </CModalHeader>
-            <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            <CModalBody className="modal-body-scroll">
               <div className="mb-3">
                 <CFormLabel>Título *</CFormLabel>
                 <CFormInput

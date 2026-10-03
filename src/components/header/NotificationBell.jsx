@@ -62,21 +62,13 @@ const NotificationBell = () => {
             color="danger"
             position="top-end"
             shape="rounded-pill"
-            className="p-1"
-            style={{ fontSize: '0.6rem', minWidth: '18px' }}
+            className="p-1 notif-badge"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </CBadge>
         )}
       </CDropdownToggle>
-      <CDropdownMenu
-        className="p-0"
-        style={{
-          width: 'min(360px, calc(100vw - 2rem))',
-          maxHeight: 'min(420px, 60vh)',
-          overflow: 'auto',
-        }}
-      >
+      <CDropdownMenu className="p-0 notif-menu">
         <CDropdownHeader className="bg-body-secondary d-flex justify-content-between align-items-center">
           <span>Notificaciones</span>
           {unreadCount > 0 && (
@@ -97,27 +89,21 @@ const NotificationBell = () => {
           <CDropdownItem
             key={n.id}
             onClick={() => handleNotificationClick(n)}
-            className={`py-2 ${!n.read ? 'bg-body-secondary bg-opacity-25' : ''}`}
-            style={{ cursor: 'pointer' }}
+            className={`py-2 is-clickable ${!n.read ? 'bg-body-secondary bg-opacity-25' : ''}`}
           >
             <div className="d-flex justify-content-between align-items-start">
               <div className="flex-grow-1 me-2">
                 <div className={`fw-semibold small ${!n.read ? '' : 'text-medium-emphasis'}`}>
                   {n.title}
                 </div>
-                <div className="small text-truncate" style={{ maxWidth: '260px' }}>
-                  {n.message}
-                </div>
-                <div className="text-medium-emphasis" style={{ fontSize: '0.7rem' }}>
+                <div className="small text-truncate max-w-260">{n.message}</div>
+                <div className="text-medium-emphasis text-3xs">
                   {n.sender?.full_name ? `De: ${n.sender.full_name}` : ''}{' '}
                   {formatRelativeTime(n.created_at)}
                 </div>
               </div>
               {!n.read && (
-                <span
-                  className="rounded-circle bg-primary flex-shrink-0 mt-1"
-                  style={{ width: '8px', height: '8px' }}
-                />
+                <span className="rounded-circle bg-primary flex-shrink-0 mt-1 notif-dot" />
               )}
             </div>
           </CDropdownItem>
@@ -127,8 +113,7 @@ const NotificationBell = () => {
             <CDropdownDivider className="m-0" />
             <CDropdownItem
               onClick={() => navigate('/notifications')}
-              className="text-center text-primary py-2"
-              style={{ cursor: 'pointer' }}
+              className="text-center text-primary py-2 is-clickable"
             >
               Ver todas las notificaciones
             </CDropdownItem>

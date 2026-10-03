@@ -268,7 +268,7 @@ const TaskDetail = () => {
                 <dd className={overdue ? 'text-danger fw-semibold mb-0' : 'mb-0'}>
                   {task.due_date || '—'}
                   {overdue && (
-                    <CBadge color="danger" className="ms-2" style={{ fontSize: '0.65rem' }}>
+                    <CBadge color="danger" className="ms-2 text-2xs">
                       Vencida
                     </CBadge>
                   )}

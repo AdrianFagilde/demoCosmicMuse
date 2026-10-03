@@ -64,28 +64,18 @@ const WeeklyDots = ({ weeklySummary, instrumentColor, onStartPractice }) => {
           anuncian. El grafico visual queda como decoracion y los datos van en
           una lista oculta con la misma informacion. */}
       <div className="weekly-dots" aria-hidden="true">
-        {chartData.map((d, i) => (
+        {chartData.map((d) => (
           <div key={d.date} className="weekly-dot" style={{ '--dot-color': instrumentColor }}>
             <div
               className={`weekly-dot-bar ${d.isToday ? 'today' : ''} ${d.minutes > 0 ? 'active' : ''}`}
               style={{
                 height: `${Math.max(6, (d.minutes / maxMinutes) * 40)}px`,
-                background: d.isToday
-                  ? 'var(--cui-primary)'
-                  : d.minutes > 0
-                    ? instrumentColor
-                    : 'var(--cui-border-color)',
               }}
               title={`${d.dayFull} ${d.date}: ${d.minutes} min (${d.sessions} sesiones)`}
             />
             <span className="weekly-dot-label">{d.day}</span>
             {d.minutes > 0 && d.isToday && (
-              <span
-                className="badge bg-primary"
-                style={{ fontSize: '0.55rem', padding: '1px 4px' }}
-              >
-                Hoy
-              </span>
+              <span className="weekly-dot-badge badge bg-primary">Hoy</span>
             )}
           </div>
         ))}

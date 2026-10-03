@@ -115,7 +115,7 @@ const Students = () => {
   return (
     <>
       {/* Build version marker - forces new build hash on deploy */}
-      <div data-build-version={buildHash} style={{ display: 'none' }} />
+      <div data-build-version={buildHash} className="d-none" />
       <CRow className="mb-4">
         <CCol md={3} sm={6} className="mb-3">
           <CCard className="app-card h-100">

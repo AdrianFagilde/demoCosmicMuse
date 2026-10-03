@@ -477,7 +477,7 @@ const Tasks = () => {
           <span>{isAdmin ? 'Tareas asignadas' : 'Tus tareas'}</span>
           <div className="d-flex flex-wrap gap-2">
             {!isAdmin && (
-              <CInputGroup size="sm" style={{ minWidth: 250 }}>
+              <CInputGroup size="sm" className="min-w-250">
                 <CInputGroupText>
                   <CIcon icon={cilFilter} aria-hidden="true" />
                 </CInputGroupText>
@@ -492,7 +492,7 @@ const Tasks = () => {
             <CFormSelect
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              style={{ minWidth: 160 }}
+              className="min-w-160"
             >
               {statusOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -504,7 +504,7 @@ const Tasks = () => {
               <CFormSelect
                 value={studentFilter}
                 onChange={(e) => setStudentFilter(e.target.value)}
-                style={{ minWidth: 200 }}
+                className="min-w-200"
               >
                 <option value={ALL_STUDENTS_FILTER}>Todos los alumnos</option>
                 {sortedStudents.map((student) => (
@@ -517,7 +517,7 @@ const Tasks = () => {
             <CFormSelect
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              style={{ minWidth: 200 }}
+              className="min-w-200"
             >
               {sortOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -599,7 +599,7 @@ const Tasks = () => {
                           {task.due_date}
                         </span>
                         {isOverdue(task.due_date) && !isTaskDone(task) && (
-                          <CBadge color="danger" className="ms-1" style={{ fontSize: '0.65rem' }}>
+                          <CBadge color="danger" className="ms-1 text-2xs">
                             Vencida
                           </CBadge>
                         )}
@@ -624,7 +624,7 @@ const Tasks = () => {
                           <span>
                             {isCourseTask(task) ? (task.checklist_percent ?? 0) : task.progress}%
                           </span>
-                          <div className="progress flex-grow-1" style={{ minWidth: 120 }}>
+                          <div className="progress flex-grow-1 min-w-120">
                             <div
                               className="progress-bar"
                               role="progressbar"

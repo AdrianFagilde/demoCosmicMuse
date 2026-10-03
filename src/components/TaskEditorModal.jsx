@@ -91,7 +91,7 @@ const TaskEditorModal = ({
         <CModalHeader closeButton>
           <CModalTitle>Editar tarea</CModalTitle>
         </CModalHeader>
-        <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+        <CModalBody className="modal-body-scroll">
           <div className="mb-3">
             <CFormLabel>Título *</CFormLabel>
             <CFormInput

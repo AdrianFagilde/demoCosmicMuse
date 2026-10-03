@@ -57,8 +57,7 @@ const MaterialRow = ({ material, readOnly, onDelete }) => {
           {...attributes}
           {...listeners}
           aria-label={`Reordenar ${material.title}`}
-          className="text-medium-emphasis"
-          style={{ cursor: 'grab', touchAction: 'none' }}
+          className="text-medium-emphasis drag-handle"
         >
           <CIcon icon={cilMenu} aria-hidden="true" />
         </span>
@@ -72,9 +71,7 @@ const MaterialRow = ({ material, readOnly, onDelete }) => {
           <CBadge color={meta.color}>{meta.label}</CBadge>
         </div>
         {material.type === 'text' && material.body && (
-          <p className="mb-0 text-body-secondary" style={{ whiteSpace: 'pre-wrap' }}>
-            {material.body}
-          </p>
+          <p className="mb-0 text-body-secondary text-pre-wrap">{material.body}</p>
         )}
         {material.type === 'link' && (
           <a href={material.url} target="_blank" rel="noreferrer noopener" className="small">

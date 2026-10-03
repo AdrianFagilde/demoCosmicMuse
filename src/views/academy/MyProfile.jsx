@@ -223,14 +223,11 @@ const MyProfile = () => {
                   <CAvatar
                     src={currentAvatar}
                     size="lg"
-                    style={{ flexShrink: 0 }}
+                    className="flex-shrink-0"
                     aria-hidden="true"
                   />
                 ) : (
-                  <div
-                    className="rounded-circle d-flex align-items-center justify-content-center bg-body-secondary overflow-hidden"
-                    style={{ width: '72px', height: '72px', flexShrink: 0 }}
-                  >
+                  <div className="avatar-fallback rounded-circle d-flex align-items-center justify-content-center bg-body-secondary overflow-hidden">
                     <CIcon
                       icon={cilUser}
                       size="xl"
@@ -252,7 +249,7 @@ const MyProfile = () => {
                     variant="outline"
                     as="label"
                     htmlFor="avatarUpload"
-                    style={{ cursor: 'pointer' }}
+                    className="is-clickable"
                   >
                     <CIcon icon={cilCamera} className="me-1" aria-hidden="true" />
                     Seleccionar foto

@@ -65,8 +65,7 @@ const SortableQuestionCard = ({ question, index, onChange, onDelete }) => {
             {...attributes}
             {...listeners}
             aria-label={`Reordenar ${question.question_text || `pregunta ${index + 1}`}`}
-            className="text-medium-emphasis mt-2"
-            style={{ cursor: 'grab', touchAction: 'none' }}
+            className="text-medium-emphasis mt-2 drag-handle"
           >
             <CIcon icon={cilMenu} aria-hidden="true" />
           </span>

@@ -79,6 +79,7 @@ $cosmic-magenta-light: #a12666;
 
   // Escala de espacio. Alineada con el mapa $spacers de Bootstrap para que
   // --space-3 sea exactamente lo mismo que la utilidad mb-3 / p-3.
+  --space-0: 0; //        0px
   --space-1: 0.25rem; //  4px
   --space-2: 0.5rem; //   8px
   --space-3: 1rem; //    16px
@@ -89,6 +90,14 @@ $cosmic-magenta-light: #a12666;
   // Medidas de lectura. El texto largo sin medida se vuelve ilegible.
   --measure-legal: 68ch;
   --measure-form: 34rem;
+
+  // Radio y elevación de tarjeta. Los radios reutilizan lo que CoreUI ya
+  // publica; la elevación se centraliza aquí para que las variantes de
+  // _card.scss no escriban rgba sueltos.
+  --radius-card: var(--cui-border-radius-xl);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 6px 20px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-brand: 0 0.5rem 1rem rgba(22, 26, 60, 0.18);
 
   // Contraste de texto (WCAG AAA >= 7:1). Los valores base de CoreUI usan
   // rgba(37, 42.92, 54.02, 0.681) y dan solo 5.08:1 sobre blanco, asi que
@@ -704,14 +713,13 @@ h6,
 // =============================================
 // Dashboard - Brand Contrast Cards (white as secondary color)
 // =============================================
+//
+// .kpi-card ya no define su propia superficie: compone con
+// .app-card .app-card-brand (ver _card.scss) y aquí solo conserva el arte
+// interno (etiquetas, subtexto e icono). Los gradientes viven en
+// .app-card-brand--*.
 
 .kpi-card {
-  border: none;
-  color: #ffffff;
-  box-shadow:
-    0 0.5rem 1rem rgba($cosmic-navy, 0.18),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-
   .kpi-label {
     color: #ffffff;
     font-size: 0.875rem;
@@ -736,160 +744,54 @@ h6,
   }
 }
 
-.kpi-card--purple {
+// Doble clase a proposito: [data-coreui-theme='dark'] .app-card define su propio
+// fondo y ganaria por especificidad al modificador de marca. Con .app-card
+// delante, la marca empata y gana por orden (se emite despues de _card.scss).
+.app-card.app-card-brand--purple {
   background: linear-gradient(135deg, #{$cosmic-purple} 0%, #{$cosmic-purple-light} 100%);
 }
 
-.kpi-card--cyan {
+.app-card.app-card-brand--cyan {
   // Los dos extremos pasan AAA: el original #0f97ab daba 3.48:1 y #16c1d6 2.18:1.
   background: linear-gradient(135deg, #064a55 0%, #{$cosmic-cyan-dark} 100%);
 }
 
-.kpi-card--magenta {
+.app-card.app-card-brand--magenta {
   background: linear-gradient(135deg, #{$cosmic-magenta} 0%, #{$cosmic-magenta-light} 100%);
 }
 
-.kpi-card--navy {
+.app-card.app-card-brand--navy {
   background: linear-gradient(135deg, #{$cosmic-navy} 0%, #36407e 100%);
 }
 
-.welcome-banner {
-  border: none;
+// Indigo fijo (no var(--cui-primary), que en oscuro se aclara y dejaría el
+// texto blanco por debajo de AAA). Los dos extremos dan >= 7.7:1 con blanco.
+.app-card.app-card-brand--indigo {
+  background: linear-gradient(135deg, #3f4a9e 0%, #1f2557 100%);
+}
+
+.app-card.app-card-brand--primary {
   background: var(--gradient-primary);
-  box-shadow: 0 0.5rem 1rem rgba($cosmic-navy, 0.18);
+}
+
+// Gancho de arte del banner de bienvenida. La superficie (gradiente de marca +
+// texto AAA) la aporta .app-card-brand--primary; aquí queda solo el ornamento
+// propio del banner.
+.welcome-banner {
+  position: relative;
+  overflow: hidden;
 
   .welcome-title {
-    color: #ffffff;
+    color: var(--app-text-on-brand);
     font-weight: 600;
     margin-bottom: 0.25rem;
   }
 
   .welcome-text {
-    color: #ffffff;
+    color: var(--app-text-on-brand);
     margin-bottom: 0;
   }
-}
 
-.chart-card {
-  background-color: #ffffff;
-
-  > .card-header {
-    background-color: rgba($cosmic-purple, 0.06);
-    font-weight: 600;
-    color: $cosmic-navy;
-  }
-}
-
-.student-card {
-  border-top: 3px solid transparent;
-}
-
-.student-card--purple {
-  border-top-color: #{$cosmic-purple};
-}
-
-.student-card--cyan {
-  border-top-color: #{$cosmic-cyan};
-}
-
-.student-card--magenta {
-  border-top-color: #{$cosmic-magenta};
-}
-
-@include color-mode(dark) {
-  .chart-card {
-    background-color: rgba(#ffffff, 0.04);
-
-    > .card-header {
-      background-color: rgba($cosmic-purple, 0.25);
-      color: #ffffff;
-    }
-  }
-}
-
-// =============================================
-// Student Dashboard - Enhanced Cards
-// =============================================
-
-.streak-card {
-  border: none;
-  background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
-  position: relative;
-  overflow: hidden;
-  &::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    right: -20px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(#ff4d4d, 0.15) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-}
-
-.xp-card {
-  border: none;
-  background: linear-gradient(135deg, #fffbf0 0%, #fff3d4 100%);
-  position: relative;
-  overflow: hidden;
-  &::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    right: -20px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(#ffc107, 0.15) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-}
-
-.practice-card {
-  border: none;
-  background: linear-gradient(135deg, #f0fcff 0%, #d4f4ff 100%);
-  position: relative;
-  overflow: hidden;
-  &::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    right: -20px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(#16c1d6, 0.15) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-}
-
-.tasks-card {
-  border: none;
-  background: linear-gradient(135deg, #f0fff4 0%, #d4ffe0 100%);
-  position: relative;
-  overflow: hidden;
-  &::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    right: -20px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(#28a745, 0.15) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-}
-
-.next-lesson-card {
-  border: none;
-  background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
-}
-
-.welcome-banner {
-  border: none;
-  background: var(--gradient-primary);
-  box-shadow: 0 0.5rem 1rem rgba($cosmic-navy, 0.18);
-  position: relative;
-  overflow: hidden;
   &::after {
     content: '';
     position: absolute;
@@ -897,22 +799,43 @@ h6,
     right: -50px;
     width: 200px;
     height: 200px;
-    background: radial-gradient(circle, rgba(#16c1d6, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba($cosmic-cyan, 0.1) 0%, transparent 70%);
     border-radius: 50%;
+    pointer-events: none;
   }
 }
 
-.recent-practice-card {
-  .list-group-item {
-    border: none;
-    border-bottom: 1px solid rgba($cosmic-navy, 0.05);
-    transition: background-color 0.15s;
-    &:hover {
-      background-color: rgba($cosmic-purple, 0.03);
-    }
-    &:last-child {
-      border-bottom: none;
-    }
+// Tinte de cabecera de los bloques de datos. La superficie la aporta
+// .app-card-elevated; esto solo colorea la cabecera.
+.chart-card {
+  > .card-header {
+    background-color: rgba($cosmic-purple, 0.06);
+    font-weight: 600;
+    color: $cosmic-navy;
+  }
+}
+
+// Acento superior de tarjeta destacada (alumnos). Compone con .app-card-elevated.
+.app-card-accent {
+  border-top: 3px solid transparent;
+}
+
+.app-card-accent--purple {
+  border-top-color: #{$cosmic-purple};
+}
+
+.app-card-accent--cyan {
+  border-top-color: #{$cosmic-cyan};
+}
+
+.app-card-accent--magenta {
+  border-top-color: #{$cosmic-magenta};
+}
+
+@include color-mode(dark) {
+  .chart-card > .card-header {
+    background-color: rgba($cosmic-purple, 0.25);
+    color: #ffffff;
   }
 }
 
@@ -922,49 +845,6 @@ h6,
 
 .badge-icon {
   flex-shrink: 0;
-}
-
-@include color-mode(dark) {
-  .streak-card {
-    background: linear-gradient(135deg, rgba(#ff4d4d, 0.15) 0%, rgba(#ff4d4d, 0.05) 100%);
-    &::before {
-      background: radial-gradient(circle, rgba(#ff4d4d, 0.2) 0%, transparent 70%);
-    }
-  }
-
-  .xp-card {
-    background: linear-gradient(135deg, rgba(#ffc107, 0.15) 0%, rgba(#ffc107, 0.05) 100%);
-    &::before {
-      background: radial-gradient(circle, rgba(#ffc107, 0.2) 0%, transparent 70%);
-    }
-  }
-
-  .practice-card {
-    background: linear-gradient(135deg, rgba(#16c1d6, 0.15) 0%, rgba(#16c1d6, 0.05) 100%);
-    &::before {
-      background: radial-gradient(circle, rgba(#16c1d6, 0.2) 0%, transparent 70%);
-    }
-  }
-
-  .tasks-card {
-    background: linear-gradient(135deg, rgba(#28a745, 0.15) 0%, rgba(#28a745, 0.05) 100%);
-    &::before {
-      background: radial-gradient(circle, rgba(#28a745, 0.2) 0%, transparent 70%);
-    }
-  }
-
-  .next-lesson-card {
-    background: linear-gradient(135deg, rgba(#712771, 0.15) 0%, rgba(#712771, 0.05) 100%);
-  }
-
-  .recent-practice-card {
-    .list-group-item {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      &:hover {
-        background-color: rgba(#712771, 0.1);
-      }
-    }
-  }
 }
 
 // =============================================

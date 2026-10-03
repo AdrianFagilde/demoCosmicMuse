@@ -110,10 +110,7 @@ const Login = () => {
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard
-                className="login-side-panel text-white bg-primary py-5 d-none d-lg-flex"
-                style={{ width: '44%' }}
-              >
+              <CCard className="auth-side-panel login-side-panel text-white bg-primary py-5 d-none d-lg-flex">
                 <CCardBody className="text-center">
                   <TrebleClef
                     size={210}

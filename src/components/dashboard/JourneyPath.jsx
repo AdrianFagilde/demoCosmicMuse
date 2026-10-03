@@ -114,20 +114,12 @@ const JourneyPath = ({ courses, myProgressRows, onViewCourse, onViewAll }) => {
         {pathNodes.map((node, index) => (
           <div
             key={node.id || index}
-            className={`journey-node ${node.type}`}
-            style={{
-              '--node-color': node.color,
-              cursor: node.onClick ? 'pointer' : 'default',
-            }}
+            className={`journey-node ${node.type} ${node.onClick ? 'journey-node--clickable' : ''}`}
+            style={{ '--node-color': node.color }}
             role="listitem"
             onClick={node.onClick}
           >
-            <div
-              className="journey-node-icon"
-              style={{
-                background: node.type === 'locked' ? 'var(--cui-secondary-bg)' : node.color,
-              }}
-            >
+            <div className="journey-node-icon">
               {node.type === 'completed' ? (
                 <CIcon icon={cilCheck} size="xl" color="white" aria-hidden="true" />
               ) : node.type === 'current' ? (

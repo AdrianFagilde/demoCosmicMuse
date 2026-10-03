@@ -137,10 +137,7 @@ export const StudentSortableChecklistItem = ({ item, checked, onChange, disabled
   })
   return (
     <div ref={setNodeRef} style={baseStyle(transform, transition, isDragging)} className="mb-2">
-      <div
-        className="text-medium-emphasis d-flex align-items-center gap-2"
-        style={{ padding: '4px 8px', borderRadius: '4px' }}
-      >
+      <div className="text-medium-emphasis d-flex align-items-center gap-2 drag-row">
         {/* El reordenado es una operacion de admin: reescribe la posicion de
             los items del curso entero. El alumno solo marca, asi que el asa
             no se renderiza y useSortable queda deshabilitado. */}

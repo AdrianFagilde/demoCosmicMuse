@@ -11,12 +11,18 @@
 // aquí nada que usen componentes compartidos.
 // =============================================
 
+// Las cinco variantes del sistema son:
+//   .app-card             superficie de contenido base
+//   .app-card-compact     mismo contrato, inset reducido
+//   .app-card-elevated    superficie elevada sin hover-lift (charts, destacados)
+//   .app-card-brand       gradiente de marca con texto AAA
+//   .app-card-stat        tinte suave de estado (dashboard del alumno)
+// Cualquier otra clase (kpi-card, welcome-banner, chart-card, ...) es un gancho
+// de arte que compone con una de las cinco, no una superficie por su cuenta.
 .app-card {
-  border-radius: var(--cui-border-radius-xl);
+  border-radius: var(--radius-card);
   border: none;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-card);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
@@ -25,9 +31,61 @@
 
 .app-card:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.08),
-    0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-card-hover);
+}
+
+// Superficie elevada que NO se mueve al pasar el ratón: se usa en bloques de
+// datos (charts, resúmenes) donde el hover-lift distraía más que ayudaba.
+.app-card-elevated {
+  box-shadow: var(--shadow-card);
+}
+
+.app-card-elevated:hover {
+  transform: none;
+  box-shadow: var(--shadow-card-hover);
+}
+
+// Superficie de marca. El texto blanco sobre los gradientes está medido en
+// style.scss (>= 7:1); aquí solo se declara el contrato de color y la sombra,
+// los gradientes concretos llegan por los modificadores --purple/--cyan/...
+.app-card-brand {
+  color: var(--app-text-on-brand);
+  box-shadow: var(--shadow-brand);
+
+  .card-header,
+  .card-footer {
+    color: inherit;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.app-card-brand:hover {
+  transform: none;
+}
+
+// Superficie con tinte suave de estado, para los datos del alumno (racha,
+// próxima clase) donde el gradiente de marca resultaba demasiado intenso. El
+// texto usa los tokens del tema, que ya pasan AAA sobre estos tintes claros.
+.app-card-stat {
+  border: none;
+}
+
+.app-card-stat--lesson {
+  background: linear-gradient(135deg, #eef1ff 0%, #e2e9ff 100%);
+}
+
+.app-card-stat--streak {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+}
+
+[data-coreui-theme='dark'] .app-card-stat--lesson {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(66, 81, 170, 0.1) 100%);
+  border: 1px solid #3d4557;
+}
+
+[data-coreui-theme='dark'] .app-card-stat--streak {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(239, 68, 68, 0.06) 100%);
+  border: 1px solid #3d4557;
 }
 
 // Integración con CCardHeader / CCardFooter de CoreUI

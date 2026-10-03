@@ -79,12 +79,12 @@ const AppHeaderDropdown = () => {
         <CDropdownItem
           onClick={() => navigate('/my-profile')}
           type="button"
-          style={{ cursor: 'pointer' }}
+          className="is-clickable"
         >
           <CIcon icon={cilSettings} className="me-2" aria-hidden="true" />
           Perfil
         </CDropdownItem>
-        <CDropdownItem onClick={handleLogout} type="button" style={{ cursor: 'pointer' }}>
+        <CDropdownItem onClick={handleLogout} type="button" className="is-clickable">
           <CIcon icon={cilLockLocked} className="me-2" aria-hidden="true" />
           Cerrar sesión
         </CDropdownItem>

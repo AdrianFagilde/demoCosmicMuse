@@ -604,10 +604,7 @@ const Register = () => {
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard
-                className="text-white bg-primary py-5 login-side-panel d-none d-lg-flex"
-                style={{ width: '44%' }}
-              >
+              <CCard className="auth-side-panel text-white bg-primary py-5 login-side-panel d-none d-lg-flex">
                 <CCardBody className="text-center">
                   <TrebleClef size={210} color="#ffffff" className="treble-watermark" />
                   <Vinyl size={180} color="#ffffff" className="vinyl-watermark" />

@@ -252,7 +252,7 @@ const Dashboard = () => {
   if (isStudent) {
     return (
       <div className="student-dashboard d-flex flex-column">
-        <div data-build-version={buildHash} style={{ display: 'none' }} />
+        <div data-build-version={buildHash} className="d-none" />
 
         {/* TOP BAR - Compact greeting */}
         <div className="dash-topbar px-2">
@@ -354,18 +354,9 @@ const Dashboard = () => {
         {/* ROW 3: Próxima clase + Racha */}
         <CRow className="g-3 flex-grow-1">
           <CCol lg={6} className="mb-0">
-            <div
-              className="app-card app-card-compact h-100 d-flex flex-column justify-content-center"
-              style={{
-                background: 'linear-gradient(135deg, var(--cui-primary) 0%, #4251aa 100%)',
-                color: 'white',
-              }}
-            >
+            <div className="app-card app-card-compact app-card-brand app-card-brand--indigo h-100 d-flex flex-column justify-content-center">
               <div className="d-flex align-items-center gap-3">
-                <div
-                  className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                  style={{ width: 44, height: 44, background: 'rgba(255,255,255,0.2)' }}
-                >
+                <div className="brand-icon d-flex align-items-center justify-content-center rounded-circle flex-shrink-0">
                   <CIcon icon={cilCalendar} size="xl" color="white" aria-hidden="true" />
                 </div>
                 <div className="flex-grow-1">
@@ -413,7 +404,7 @@ const Dashboard = () => {
             </div>
           </CCol>
           <CCol lg={6} className="mb-0">
-            <div className="app-card app-card-compact h-100 d-flex flex-column justify-content-center">
+            <div className="app-card app-card-compact app-card-stat app-card-stat--streak h-100 d-flex flex-column justify-content-center">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="fw-semibold d-flex align-items-center gap-2">
                   <CIcon icon={cilFire} className="text-danger" size="lg" aria-hidden="true" />
@@ -422,11 +413,11 @@ const Dashboard = () => {
                 <div className="text-medium-emphasis small">{streakDays} días seguidos</div>
               </div>
               <div className="d-flex align-items-center gap-3">
-                <div className="action-icon" style={{ '--action-color': '#ef4444' }}>
+                <div className="action-icon action-icon--danger">
                   <CIcon icon={cilFire} size="xl" aria-hidden="true" />
                 </div>
                 <div>
-                  <div className="fw-bold" style={{ fontSize: '1.25rem' }}>
+                  <div className="streak-value fw-bold">
                     {streakDays} {streakDays === 1 ? 'día' : 'días'}
                   </div>
                   <div className="text-medium-emphasis small">
@@ -475,7 +466,7 @@ const Dashboard = () => {
         />
       </CRow>
 
-      <CCard className="welcome-banner mb-4">
+      <CCard className="app-card app-card-brand app-card-brand--primary welcome-banner mb-4">
         <CCardBody>
           <h5 className="welcome-title">Bienvenido a Cosmic Muse</h5>
           <p className="welcome-text">
@@ -488,7 +479,7 @@ const Dashboard = () => {
 
       <CRow className="mb-4">
         <CCol md={6} className="mb-3">
-          <CCard className="chart-card h-100">
+          <CCard className="app-card app-card-elevated chart-card h-100">
             <CCardHeader>Ingresos mensuales</CCardHeader>
             <CCardBody>
               {paymentsByMonth.length > 0 ? (
@@ -508,7 +499,7 @@ const Dashboard = () => {
           </CCard>
         </CCol>
         <CCol md={6} className="mb-3">
-          <CCard className="chart-card h-100">
+          <CCard className="app-card app-card-elevated chart-card h-100">
             <CCardHeader>Estudiantes por instrumento</CCardHeader>
             <CCardBody>
               {instrumentData.length > 0 ? (
@@ -539,7 +530,7 @@ const Dashboard = () => {
 
       <CRow className="mb-4">
         <CCol>
-          <CCard className="chart-card">
+          <CCard className="app-card app-card-elevated chart-card">
             <CCardHeader>Progreso de estudiantes activos</CCardHeader>
             <CCardBody>
               {progressData.length > 0 ? (
@@ -570,7 +561,7 @@ const Dashboard = () => {
         {students.slice(0, 3).map((student, idx) => (
           <CCol xs={12} md={4} key={student.id} className="mb-3">
             <CCard
-              className={`h-100 student-card student-card--${['purple', 'cyan', 'magenta'][idx % 3]}`}
+              className={`app-card app-card-elevated app-card-accent app-card-accent--${['purple', 'cyan', 'magenta'][idx % 3]} h-100`}
             >
               <CCardHeader>{student.full_name}</CCardHeader>
               <CCardBody>
@@ -590,7 +581,7 @@ const Dashboard = () => {
 
       <CRow>
         <CCol>
-          <CCard className="chart-card">
+          <CCard className="app-card app-card-elevated chart-card">
             <CCardHeader>Tareas recientes</CCardHeader>
             <CCardBody>
               <div className="text-medium-emphasis mb-3">

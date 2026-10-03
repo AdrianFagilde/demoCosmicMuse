@@ -22,3 +22,113 @@
   margin-inline: auto;
   padding-inline: var(--space-3);
 }
+
+// =============================================
+// Utilidades locales
+//
+// Pequeños helpers que cubren patrones repetidos en las vistas. CoreUI ya
+// publica flex-shrink-0, d-none, etc.; aquí solo va lo que no existe.
+// =============================================
+
+.is-clickable {
+  cursor: pointer;
+}
+
+.auth-side-panel {
+  width: 44%;
+}
+
+.avatar-fallback {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+
+.legal-section-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.modal-body-scroll {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+}
+
+.text-2xs {
+  font-size: 0.65rem;
+}
+
+.min-w-120 {
+  min-width: 120px;
+}
+
+.min-w-160 {
+  min-width: 160px;
+}
+
+.min-w-200 {
+  min-width: 200px;
+}
+
+.min-w-250 {
+  min-width: 250px;
+}
+
+.max-w-200 {
+  max-width: 200px;
+}
+
+.w-130 {
+  width: 130px;
+}
+
+.w-140 {
+  width: 140px;
+}
+
+.scroll-area-200 {
+  max-height: 200px;
+  overflow: auto;
+}
+
+.drag-handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.drag-row {
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.text-pre-wrap {
+  white-space: pre-wrap;
+}
+
+.text-3xs {
+  font-size: 0.7rem;
+}
+
+.max-w-260 {
+  max-width: 260px;
+}
+
+.notif-badge {
+  font-size: 0.6rem;
+  min-width: 18px;
+}
+
+.notif-menu {
+  width: min(360px, calc(100vw - 2rem));
+  max-height: min(420px, 60vh);
+  overflow: auto;
+}
+
+.notif-dot {
+  width: 8px;
+  height: 8px;
+}

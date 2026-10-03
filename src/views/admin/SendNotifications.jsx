@@ -182,7 +182,7 @@ const SendNotifications = () => {
               </CFormSelect>
 
               {form.target === 'selected' && (
-                <div className="mb-3" style={{ maxHeight: '200px', overflow: 'auto' }}>
+                <div className="mb-3 scroll-area-200">
                   <div className="mb-2">
                     <CFormCheck
                       id="selectAll"
@@ -240,9 +240,7 @@ const SendNotifications = () => {
                           {n.recipient_id ? studentNamesById.get(n.recipient_id) || '—' : 'N/A'}
                         </td>
                         <td className="fw-semibold">{n.title}</td>
-                        <td className="text-truncate" style={{ maxWidth: '200px' }}>
-                          {n.message}
-                        </td>
+                        <td className="text-truncate max-w-200">{n.message}</td>
                         <td>{formatDateTime(n.created_at)}</td>
                       </tr>
                     ))}

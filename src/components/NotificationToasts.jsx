@@ -177,7 +177,7 @@ const NotificationToasts = () => {
         <CToastBody
           role="button"
           tabIndex={0}
-          style={{ cursor: 'pointer' }}
+          className="is-clickable"
           onClick={() => openToast(toast)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {

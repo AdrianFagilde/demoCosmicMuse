@@ -12,29 +12,20 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
   const isComplete = progress >= 100
 
   return (
-    <div className="daily-goal-card app-card" style={{ '--daily-color': '#6366f1' }}>
+    <div className="daily-goal-card app-card">
       <MusicNote className="daily-goal-note" size={34} color="#fff" />
       <div className="d-flex align-items-center justify-content-between mb-3">
         <div className="d-flex align-items-center gap-3">
-          <div
-            className="d-flex align-items-center justify-content-center rounded-circle"
-            style={{
-              width: 40,
-              height: 40,
-              background: 'rgba(255,255,255,0.2)',
-            }}
-          >
+          <div className="daily-goal-icon d-flex align-items-center justify-content-center rounded-circle">
             <CIcon icon={cilSpeedometer} size="lg" color="white" aria-hidden="true" />
           </div>
           <div>
-            <div className="fw-bold" style={{ fontSize: '1rem' }}>
-              Meta diaria
-            </div>
+            <div className="daily-goal-title fw-bold">Meta diaria</div>
             <div className="text-body-secondary small">{DAILY_GOAL_MINUTES} min de práctica</div>
           </div>
         </div>
         <div className="text-end">
-          <div className="fw-bold" style={{ fontSize: '1.15rem' }}>
+          <div className="daily-goal-remaining fw-bold">
             {isComplete ? '✓ Completada' : `${remaining} min`}
           </div>
           <div className="text-body-secondary small">
@@ -57,13 +48,12 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
           className="flex-shrink-0"
         />
 
-        <div className="d-flex flex-column gap-3 ms-3" style={{ minWidth: 120 }}>
+        <div className="daily-goal-actions d-flex flex-column gap-3 ms-3">
           <button
-            className={`btn ${isComplete ? 'btn-outline-light' : 'btn-light'} w-100`}
+            className={`daily-goal-btn btn ${isComplete ? 'btn-outline-light' : 'btn-light'} w-100`}
             onClick={onStartPractice}
             disabled={isComplete}
             type="button"
-            style={{ padding: '8px 12px', fontWeight: 600 }}
           >
             <CIcon icon={cilFire} className="me-2" aria-hidden="true" />
             {isComplete ? '¡Meta lograda!' : 'Practicar ahora'}
@@ -78,7 +68,7 @@ const DailyGoalCard = ({ practiceMinutesToday = 0, streak = 0, onStartPractice }
       </div>
 
       {isComplete && (
-        <div className="mt-3 p-3 rounded" style={{ background: 'rgba(255,255,255,0.15)' }}>
+        <div className="daily-goal-complete mt-3 p-3 rounded">
           <div className="d-flex align-items-center justify-content-center gap-2">
             <CIcon icon={cilCheck} size="lg" aria-hidden="true" />
             <span className="fw-semibold">¡Meta completada! Gran trabajo hoy.</span>
