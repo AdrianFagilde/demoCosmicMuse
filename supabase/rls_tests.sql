@@ -84,10 +84,10 @@ BEGIN
   INSERT INTO public.notification_log (student_id, student_name, message, method, trigger_type)
   VALUES (v_student1, 'RLS Student One', 'Reminder', 'whatsapp', 'Manual');
 
-  INSERT INTO public.lessons (id, student_id, instrument, lesson_date, lesson_time, duration, teacher)
+  INSERT INTO public.lessons (id, student_id, instrument, lesson_start, duration, teacher)
   VALUES
-    ('e1e1e1e1-e1e1-e1e1-e1e1-e1e1e1e1e1e1', v_student1, 'Piano', CURRENT_DATE, '10:00', '60 min', 'Profe'),
-    ('e2e2e2e2-e2e2-e2e2-e2e2-e2e2e2e2e2e2', v_student2, 'Piano', CURRENT_DATE, '11:00', '60 min', 'Profe');
+    ('e1e1e1e1-e1e1-e1e1-e1e1-e1e1e1e1e1e1', v_student1, 'Piano', now(), 60, 'Profe'),
+    ('e2e2e2e2-e2e2-e2e2-e2e2-e2e2e2e2e2e2', v_student2, 'Piano', now(), 60, 'Profe');
 
   INSERT INTO public.notifications (id, sender_id, recipient_id, title, message)
   VALUES
