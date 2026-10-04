@@ -27,7 +27,7 @@ const emptyForm = (studentId = '') => ({
   notes: '',
 })
 
-const PaymentForm = ({ studentOptions, onSubmit }) => {
+const PaymentForm = ({ studentOptions, onSubmit, onClose }) => {
   const [form, setForm] = useState(() => emptyForm(studentOptions[0]?.value || ''))
   const [proofFile, setProofFile] = useState(null)
   const [submitError, setSubmitError] = useState('')
@@ -64,6 +64,9 @@ const PaymentForm = ({ studentOptions, onSubmit }) => {
     setForm(emptyForm(studentOptions[0]?.value || ''))
     setProofFile(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
+    // Dentro de un modal el formulario se cierra solo al guardar bien: asi el
+    // admin registra varios pagos seguidos sin reabrirlo cada vez.
+    onClose?.()
   }
 
   const handleProofChange = (event) => {

@@ -1,0 +1,144 @@
+// =============================================
+// Vista de Pagos (admin)
+//
+// Los KPI y la banda de filtros son superficies propias de esta vista, asi que
+// viven aqui y no en el dashboard: `payments` solo se descarga cuando se entra a
+// /payments, que es justo cuando hacen falta.
+//
+// Los KPI se apoyan en .app-card (contrato de tarjeta en _card.scss) para heredar
+// radio, sombra y modo oscuro, y solo anaden el color de estado.
+// =============================================
+
+.app-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  height: 100%;
+}
+
+// Cabecera del KPI: icono + etiqueta en una linea, con el color del estado.
+.app-kpi-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.app-kpi-label {
+  color: var(--app-text-muted);
+}
+
+.app-kpi-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--cui-body-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-kpi-hint {
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+}
+
+.app-kpi-success .app-kpi-head {
+  color: var(--cui-success);
+}
+
+.app-kpi-danger .app-kpi-head {
+  color: var(--cui-danger);
+}
+
+.app-kpi-info .app-kpi-head {
+  color: var(--cui-info);
+}
+
+// El tinte es una pista de color, no el contenido: el numero grande va en el
+// color de texto del tema para no perder el contraste AAA del valor.
+.app-kpi-success {
+  background: rgba(var(--cui-success-rgb), 0.08);
+}
+
+.app-kpi-danger {
+  background: rgba(var(--cui-danger-rgb), 0.08);
+}
+
+.app-kpi-info {
+  background: rgba(var(--cui-info-rgb), 0.08);
+}
+
+[data-coreui-theme='dark'] .app-kpi-success {
+  background: rgba(var(--cui-success-rgb), 0.14);
+}
+
+[data-coreui-theme='dark'] .app-kpi-danger {
+  background: rgba(var(--cui-danger-rgb), 0.14);
+}
+
+[data-coreui-theme='dark'] .app-kpi-info {
+  background: rgba(var(--cui-info-rgb), 0.14);
+}
+
+// =============================================
+// Banda de filtros del historial
+// =============================================
+
+.app-filters {
+  padding: var(--space-3);
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-4);
+  background: rgba(var(--cui-secondary-rgb), 0.06);
+}
+
+.app-filters-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  color: var(--cui-body-color);
+}
+
+.app-filters-title {
+  font-size: 0.9375rem;
+}
+
+// Las etiquetas de los campos quedan algo petites para igualar la altura del
+// grupo de filtros; los inputs mandan en la jerarquía.
+.app-filters .form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--app-text-secondary);
+}
+
+// =============================================
+// Cabecera de acordeón (historial de notificaciones)
+// =============================================
+
+.app-accordion-head {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-accordion-head:hover {
+  background: rgba(var(--cui-secondary-rgb), 0.06);
+}
+
+// =============================================
+// Encabezados de tabla ordenables
+// =============================================
+
+.app-sortable {
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.app-sortable:hover {
+  color: var(--cui-primary);
+}
