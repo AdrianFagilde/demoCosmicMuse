@@ -8,7 +8,6 @@ import {
   CCardHeader,
   CCol,
   CFormInput,
-  CFormSelect,
   CRow,
   CTable,
   CTableBody,
@@ -26,12 +25,12 @@ import RestrictedAccess from '../../components/RestrictedAccess'
 import AvatarCropModal from '../../components/AvatarCropModal'
 import EmptyState from '../../components/EmptyState'
 import { TableSkeleton } from '../../components/Skeleton'
-import { INSTRUMENT_OPTIONS, formatInstrument } from '../../utils/students'
+import { formatInstrument } from '../../utils/students'
 
 const MyProfile = () => {
   const { user, profile, refreshProfile } = useAuth()
   const { lessons, loading } = useSupabaseLessons(user?.id)
-  const [form, setForm] = useState({ phone: '', instrument: '' })
+  const [form, setForm] = useState({ phone: '' })
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [avatarFile, setAvatarFile] = useState(null)
@@ -46,9 +45,10 @@ const MyProfile = () => {
     if (profile && syncedProfileId !== profile.id) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSyncedProfileId(profile.id)
+      // El instrumento no se edita aqui: solo el administrador puede
+      // cambiarlo, asi que se deja fuera del formulario del alumno.
       setForm({
         phone: profile.phone || '',
-        instrument: profile.instrument || '',
       })
     }
   }, [profile, syncedProfileId])
@@ -150,7 +150,6 @@ const MyProfile = () => {
       .from('profiles')
       .update({
         phone: form.phone || null,
-        instrument: form.instrument || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id)
@@ -271,7 +270,7 @@ const MyProfile = () => {
             </CCardBody>
           </CCard>
           <CCard className="app-card">
-            <CCardHeader>Editar perfil</CCardHeader>
+            <CCardHeader>Datos de contacto</CCardHeader>
             <CCardBody>
               <CFormInput
                 label="Telefono"
@@ -280,19 +279,6 @@ const MyProfile = () => {
                 value={form.phone}
                 onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               />
-              <CFormSelect
-                label="Instrumento"
-                className="mb-3"
-                value={form.instrument}
-                onChange={(e) => setForm((f) => ({ ...f, instrument: e.target.value }))}
-              >
-                <option value="">Seleccionar...</option>
-                {INSTRUMENT_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {formatInstrument(option)}
-                  </option>
-                ))}
-              </CFormSelect>
               <CButton color="primary" onClick={handleSave} disabled={saving}>
                 {saving ? 'Guardando...' : 'Guardar cambios'}
               </CButton>
