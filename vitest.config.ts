@@ -12,7 +12,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       include: [
-        'src/utils/{dates,students,colors,format,courses,linkify,notificationRouting,appToasts,version,forms,notifications,image}.js',
+        'src/utils/{dates,students,colors,format,courses,linkify,notificationRouting,appToasts,version,forms,notifications,image,payments}.js',
         'src/hooks/**/*.js',
       ],
       thresholds: {
