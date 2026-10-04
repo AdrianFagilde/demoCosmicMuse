@@ -205,6 +205,10 @@ const MyProfile = () => {
               <div className="mb-3">
                 <strong>Profesor:</strong> {profile.teacher || '—'}
               </div>
+              {/* Solo lectura: el instrumento lo asigna el administrador. */}
+              <div className="mb-3">
+                <strong>Instrumento:</strong> {formatInstrument(profile.instrument) || '—'}
+              </div>
               <div className="mb-3">
                 <strong>Progreso:</strong> <CBadge color="success">{profile.progress}%</CBadge>
               </div>
