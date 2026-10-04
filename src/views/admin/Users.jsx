@@ -22,6 +22,11 @@ import supabase from '../../lib/supabase'
 import RestrictedAccess from '../../components/RestrictedAccess'
 import EmptyState from '../../components/EmptyState'
 import { TableSkeletonRows } from '../../components/Skeleton'
+import {
+  INSTRUMENT_OPTIONS,
+  UNASSIGNED_INSTRUMENT_LABEL,
+  formatInstrument,
+} from '../../utils/students'
 
 const Users = () => {
   const { user, profile } = useAuth()
@@ -88,6 +93,24 @@ const Users = () => {
       return
     }
     setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u)))
+  }
+
+  const handleInstrumentChange = async (targetUser, newInstrument) => {
+    const instrument = newInstrument || null
+    const { error } = await supabase
+      .from('profiles')
+      .update({ instrument, updated_at: new Date().toISOString() })
+      .eq('id', targetUser.id)
+    if (error) {
+      console.error('[Users] Error cambiando instrumento:', error.message, error)
+      showNotice('danger', `No se pudo cambiar el instrumento de ${targetUser.full_name}.`)
+      return
+    }
+    setUsers((prev) => prev.map((u) => (u.id === targetUser.id ? { ...u, instrument } : u)))
+    showNotice(
+      'success',
+      `Instrumento de ${targetUser.full_name}: ${formatInstrument(instrument) || UNASSIGNED_INSTRUMENT_LABEL}.`,
+    )
   }
 
   const handleDelete = async (user) => {
@@ -229,7 +252,26 @@ const Users = () => {
                         </CFormSelect>
                       )}
                     </CTableDataCell>
-                    <CTableDataCell>{user.instrument || '—'}</CTableDataCell>
+                    <CTableDataCell>
+                      {user.id === currentUserId ? (
+                        formatInstrument(user.instrument) || UNASSIGNED_INSTRUMENT_LABEL
+                      ) : (
+                        <CFormSelect
+                          size="sm"
+                          value={user.instrument || ''}
+                          onChange={(e) => handleInstrumentChange(user, e.target.value)}
+                          className="w-140"
+                          aria-label={`Cambiar instrumento de ${user.full_name}`}
+                        >
+                          <option value="">{UNASSIGNED_INSTRUMENT_LABEL}</option>
+                          {INSTRUMENT_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {formatInstrument(option)}
+                            </option>
+                          ))}
+                        </CFormSelect>
+                      )}
+                    </CTableDataCell>
                     <CTableDataCell>
                       {user.created_at
                         ? new Date(user.created_at).toLocaleDateString('es-ES')
