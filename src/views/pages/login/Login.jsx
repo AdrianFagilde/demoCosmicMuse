@@ -47,12 +47,14 @@ const Login = () => {
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={8}>
-            <CCardGroup>
+            <CCardGroup className="flex-column-reverse flex-lg-row d-flex">
               <CCard className="p-4">
                 <CCardBody>
                   <CForm onSubmit={handleSubmit}>
-                    <h1>Login</h1>
-                    <p className="text-body-secondary">Bienvenido a Cosmic Muse</p>
+                    <h1 className="text-center text-lg-start">Login</h1>
+                    <p className="text-body-secondary text-center text-lg-start">
+                      Bienvenido a Cosmic Muse
+                    </p>
                     <StaffDivider caption="empieza a componer" className="mt-2 mb-4" />
                     {error && (
                       <CAlert color="danger" role="alert" id="login-error">
@@ -87,10 +89,10 @@ const Login = () => {
                         aria-invalid={!!error}
                       />
                     </CInputGroup>
-                    <CRow>
+                    <CRow className="align-items-center">
                       <CCol xs={6}>
                         <Link to="/register">
-                          <CButton color="link" className="px-0">
+                          <CButton color="link" className="px-0 text-start">
                             ¿No tienes cuenta? Regístrate
                           </CButton>
                         </Link>
@@ -110,7 +112,7 @@ const Login = () => {
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard className="auth-side-panel login-side-panel text-white bg-primary py-5 d-none d-lg-flex">
+              <CCard className="auth-side-panel login-side-panel text-white bg-primary py-3 py-lg-5 d-flex mb-0">
                 <CCardBody className="text-center">
                   <TrebleClef
                     size={210}
@@ -126,7 +128,7 @@ const Login = () => {
                   />
                   <div>
                     <h2>Cosmic Muse</h2>
-                    <p className="text-start">
+                    <p className="text-center text-lg-start mb-0">
                       Plataforma de gestión para estudiantes de música.
                       <br />
                       <br />

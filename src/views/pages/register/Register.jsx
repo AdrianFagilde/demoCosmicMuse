@@ -316,13 +316,14 @@ const Register = () => {
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={9}>
-            <CCardGroup>
+            <CCardGroup className="flex-column-reverse flex-lg-row d-flex my-4">
               <CCard className="p-4">
                 <CCardBody>
                   <CForm onSubmit={handleSubmit}>
-                    <h1>Registrarse</h1>
-                    <p className="text-body-secondary">Crea tu cuenta en Cosmic Muse</p>
-
+                    <h1 className="text-center text-lg-start">Registrarse</h1>
+                    <p className="text-body-secondary text-center text-lg-start">
+                      Crea tu cuenta en Cosmic Muse
+                    </p>
                     {submitError && (
                       <CAlert color="danger" className="mb-3">
                         {submitError}
@@ -587,10 +588,10 @@ const Register = () => {
                       </div>
                     </fieldset>
 
-                    <CRow>
+                    <CRow className="align-items-center">
                       <CCol xs={6}>
                         <Link to="/login">
-                          <CButton color="link" className="px-0" disabled={loading}>
+                          <CButton color="link" className="px-0 text-start" disabled={loading}>
                             ¿Ya tienes cuenta? Inicia sesión
                           </CButton>
                         </Link>
@@ -604,14 +605,14 @@ const Register = () => {
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard className="auth-side-panel text-white bg-primary py-5 login-side-panel d-none d-lg-flex">
+              <CCard className="auth-side-panel login-side-panel text-white bg-primary py-3 py-lg-5 d-flex mb-0">
                 <CCardBody className="text-center">
                   <TrebleClef size={210} color="#ffffff" className="treble-watermark" />
                   <Vinyl size={180} color="#ffffff" className="vinyl-watermark" />
-                  <StaffDivider caption="tu música empieza aquí" className="mt-2 mb-4" />
+                  <StaffDivider caption="tu música empieza aquí" className="mt-2 mb-4 " />
                   <div className="position-relative">
                     <h2>¿Por qué registrarte?</h2>
-                    <p className="text-start">
+                    <p className="text-center text-lg-start mb-0">
                       Accede a tus tareas y lecciones
                       <br />
                       <br />

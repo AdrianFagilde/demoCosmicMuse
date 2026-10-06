@@ -315,6 +315,10 @@ h6,
   .app-header-bar > nav[aria-label='breadcrumb'] {
     padding-inline: var(--space-3);
   }
+
+  .xs-text-right {
+    text-align: right;
+  }
 }
 
 // Filas ordenables de curso: llegan a ocho controles en una sola linea. Sin

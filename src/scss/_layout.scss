@@ -132,3 +132,10 @@
   width: 8px;
   height: 8px;
 }
+
+@media (max-width: 992px) {
+  .card-group > .card.auth-side-panel {
+    width: 100%;
+    flex: none;
+  }
+}
