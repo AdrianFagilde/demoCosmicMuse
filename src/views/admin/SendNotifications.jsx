@@ -151,7 +151,7 @@ const SendNotifications = () => {
         </CRow>
       )}
       <CRow className="mb-4">
-        <CCol md={5}>
+        <CCol xl={5}>
           <CCard>
             <CCardHeader>Enviar notificacion</CCardHeader>
             <CCardBody>
@@ -219,7 +219,7 @@ const SendNotifications = () => {
             </CCardBody>
           </CCard>
         </CCol>
-        <CCol md={7}>
+        <CCol xl={7}>
           <CCard>
             <CCardHeader>Historial de notificaciones enviadas</CCardHeader>
             <CCardBody>

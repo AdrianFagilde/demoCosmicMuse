@@ -6,7 +6,7 @@ const KpiCard = ({ color = 'purple', label, value, subtext, icon, xs = 12, md = 
   <CCol xs={xs} md={md} lg={lg} className="mb-3">
     <CCard className={`app-card app-card-brand app-card-brand--${color} kpi-card h-100`}>
       <CCardBody className="d-flex align-items-center justify-content-between gap-3">
-        <div>
+        <div style={{ flexBasis: '70%' }}>
           <div className="kpi-label">{label}</div>
           <div className="fs-3 fw-semibold">{value}</div>
           <div className="kpi-subtext mt-2">{subtext}</div>

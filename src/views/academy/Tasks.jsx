@@ -643,8 +643,9 @@ const Tasks = () => {
                       </CTableDataCell>
                       {isAdmin && (
                         <CTableDataCell>
-                          <div className="d-flex gap-2">
+                          <div className="d-flex gap-2 flex-wrap">
                             <CButton
+                              className="flex-shrink-0 flex-grow-1 text-light"
                               color="info"
                               size="sm"
                               onClick={() => handleStatusChange(task.id, 'En progreso')}
@@ -653,6 +654,7 @@ const Tasks = () => {
                               En progreso
                             </CButton>
                             <CButton
+                              className="flex-shrink-0 flex-grow-1 text-light"
                               color="success"
                               size="sm"
                               onClick={() => handleStatusChange(task.id, 'Completado')}
@@ -660,7 +662,12 @@ const Tasks = () => {
                               <CIcon icon={cilCheckCircle} className="me-1" aria-hidden="true" />
                               Completar
                             </CButton>
-                            <CButton color="danger" size="sm" onClick={() => handleDelete(task.id)}>
+                            <CButton
+                              className="flex-shrink-0 flex-grow-1"
+                              color="danger"
+                              size="sm"
+                              onClick={() => handleDelete(task.id)}
+                            >
                               <CIcon icon={cilTrash} className="me-1" aria-hidden="true" />
                               Eliminar
                             </CButton>

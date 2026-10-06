@@ -131,6 +131,8 @@ $cosmic-magenta-light: #a12666;
   // sobre los grises claros de la app. El skeleton brilla hacia blanco.
   --app-focus-ring: #{$cosmic-magenta};
   --app-skeleton-highlight: rgba(255, 255, 255, 0.5);
+  // --cui-link-color-rgb: 232 126 232;
+  --cui-success-rgb: 54, 200, 93;
 }
 
 // AAA sobre fondo oscuro: los grises suben de luminosidad y los colores de
@@ -151,6 +153,7 @@ $cosmic-magenta-light: #a12666;
 
   --app-focus-ring: #d88fd8; // mismo tono claro que --cui-primary en oscuro
   --app-skeleton-highlight: rgba(255, 255, 255, 0.06);
+  --cui-link-color-rgb: 219, 153, 219;
 }
 
 // =============================================
@@ -718,6 +721,10 @@ h6,
   background-color: rgba(255, 255, 255, 0.12);
 }
 
+.header-actions .nav-link:hover:has(.avatar) {
+  background-color: transparent;
+}
+
 .header-actions-divider {
   display: flex;
   align-items: center;
@@ -812,9 +819,9 @@ h6,
   }
 
   .kpi-icon {
-    font-size: 2.75rem;
+    // font-size: 2.75rem;
     opacity: 0.35;
-    flex-shrink: 0;
+    // flex-shrink: 0;
   }
 }
 

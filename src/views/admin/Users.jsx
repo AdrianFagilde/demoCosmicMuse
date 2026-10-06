@@ -217,7 +217,11 @@ const Users = () => {
                   <CTableRow key={user.id}>
                     <CTableDataCell>
                       <div className="d-flex align-items-center gap-2">
-                        <CIcon icon={cilUser} className="text-medium-emphasis" aria-hidden="true" />
+                        <CIcon
+                          icon={cilUser}
+                          className="text-medium-emphasis flex-shrink-0"
+                          aria-hidden="true"
+                        />
                         {user.full_name}
                       </div>
                     </CTableDataCell>
